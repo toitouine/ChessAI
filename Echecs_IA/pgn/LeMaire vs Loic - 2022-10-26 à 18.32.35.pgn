@@ -1,0 +1,10 @@
+[Event "Chess AI Tournament"]
+[Date "2022.10.26"]
+[White "LeMaire"]
+[Black "Loic"]
+[WhiteTitle "GM"]
+[BlackTitle "IM"]
+[WhiteElo "3845"]
+[BlackElo "-142"]
+
+1.g3 d6 2.Nf3 Nd7 3.e4 e6 4.d4 Ngf6 5.Nc3 Nh5 6.Bc4 b6 7.O-O Bb7 8.Re1 g6 9.Qd3 Bg7 10.Be3 a6 11.d5 exd5 12.Bxd5 Bxd5 13.Bg5 Bc4 14.Qxc4 Qc8 15.Nd5 Qb7 16.Nxc7+ Kf8 17.Nxa8 Qxa8 18.Qc7 Ke8 19.Qxd6 Bf8 20.Qd5 Qb8 21.Red1 Bd6 22.Qc6 Nxg3 23.Rxd6 Ne2+ 24.Kg2 Nf4+ 25.Bxf4 Qd8 26.Rad1 g5 27.R6xd7 Qf6 28.Qxf6 gxf4 29.R7d8# 1-0

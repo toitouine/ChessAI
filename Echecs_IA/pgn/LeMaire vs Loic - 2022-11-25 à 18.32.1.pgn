@@ -1,0 +1,11 @@
+[Event "Chess AI Tournament"]
+[FEN "8/k7/3p4/p2P1p2/P2P1P2/8/8/K7 w"]
+[Date "2022.11.25"]
+[White "LeMaire"]
+[Black "Loic"]
+[WhiteTitle "GM"]
+[BlackTitle "IM"]
+[WhiteElo "3845"]
+[BlackElo "-142"]
+
+1.Kb1 Ka8 2.Kb2 Ka7 3.Kb3 Ka8 4.Kc4 Ka7 5.Kb5 Ka8 6.Kc6 

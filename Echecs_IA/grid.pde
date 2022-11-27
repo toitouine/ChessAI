@@ -1,0 +1,88 @@
+class Cell {
+  float xNorm, yNorm;
+  float x, y;
+  int i, j;
+  String name;
+  boolean selected = false; //Pièce sur la case sélectionnée
+  boolean moveMark = false; //Dernier déplacement de pièce
+  boolean bookFrom = false;
+  boolean bookTarget = false;
+  boolean freeMove = false; //Mouvement n'importe où (ou presque)
+  Piece piece = null;
+  Move possibleMove = null;
+
+  Cell(int i, int j, int x, int y) {
+    this.i = i;
+    this.j = j;
+    this.xNorm = x;
+    this.yNorm = y;
+    this.piece = null;
+    this.possibleMove = null;
+    this.name = (char)(97+i) + String.valueOf(8 - j);
+  }
+
+  void show() {
+    noStroke();
+    if (j % 2 == 0) {
+      if (i % 2 == 0) fill(#f0d9b5); //blanc (235, 236, 208)
+      else fill(#b58863); //noir (119, 149, 86)
+    } else {
+      if (i % 2 == 0) fill(#b58863); //noir
+      else fill(#f0d9b5); //blanc
+    }
+
+    if (pointDeVue) {
+      this.x = this.xNorm;
+      this.y = this.yNorm;
+    } else {
+      this.x = width - (this.xNorm + w - offsetX);
+      this.y = height - (this.yNorm + w - offsetY);
+    }
+
+    rectMode(CORNER);
+    rect(this.x, this.y, w, w);
+
+    if (this.moveMark) {
+      fill(209, 206, 25, 100);
+      rect(this.x, this.y, w, w);
+    }
+    if (this.selected) {
+      fill(189, 186, 34, 100);
+      rect(this.x, this.y, w, w);
+    }
+    if (this.bookFrom) {
+      fill(237, 217, 36, 150);
+      rect(this.x, this.y, w, w);
+    }
+    if (this.bookTarget) {
+      fill(224, 76, 56, 200);
+      rect(this.x, this.y, w, w);
+    }
+    if (this.piece != null && this.piece.enPassantable == 1) {
+      fill(224, 76, 56, 200);
+      rect(this.x, this.y, w, w);
+    }
+
+    if (this.possibleMove != null && this.possibleMove.capture != null) {
+      noFill();
+      stroke(75, 75, 75, 100);
+      strokeWeight(w/16);
+      ellipse(this.x + w/2, this.y+w/2, w - w/16, w - w/16);
+    } else if (this.possibleMove != null) {
+      fill(75, 75, 75, 100);
+      ellipse(this.x + w/2, this.y + w/2, w/4, w/4);
+    }
+  }
+
+  boolean contains(int x, int y) {
+    if (x >= this.x && x < this.x + w && y >= this.y && y < this.y + w) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  void removePiece() {
+    this.piece = null;
+  }
+}
