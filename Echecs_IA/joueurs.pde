@@ -403,12 +403,12 @@ class LeMaire {
     // Distance pièces-roi
     for (int n = 0; n < pieces[opponent].size(); n++) {
       Piece p = pieces[opponent].get(n);
-      penalite += pc.getTropismDistance(p.i, p.j, roi.i, roi.j)*10;
+      penalite += pc.getTropismDistance(p.i, p.j, roi.i, roi.j)*7;
     }
 
     penalite *= materials[opponent];
     penalite /= 104000;
-    return penalite;
+    return penalite * (1 - endGameWeight);
   }
 
   float Evaluation() {
