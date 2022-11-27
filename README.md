@@ -1,5 +1,5 @@
 # Chess AI
-This is a chess AI, still in progress, using Java and Processing 3. It's based on the negamax algorithm with alpha-beta pruning and transposition table.
+This is a chess AI, still in progress, using Processing 3. It's based on the negamax algorithm with alpha-beta pruning and transposition table.
 
 You need to install the library ControlP5 and Processing Sound in order to use it.
 
