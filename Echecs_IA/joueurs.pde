@@ -214,9 +214,9 @@ class LeMaire {
       lastHigherPlyFromRoot = this.higherPlyFromRoot;
       lastNumTranspositions = this.numTranspositions;
 
-      float evalToDisplay = (this.c == 0) ? eval : -eval;
+      float evalToDisplay = (this.c == 0) ? -eval : eval;
       sa.setDepths(str(d), this.c);
-      sa.setEvals(str(eval/100), this.c);
+      sa.setEvals(str(evalToDisplay/100), this.c);
       sa.setPositions(str(this.numPos), this.c);
       sa.setTranspositions(str(this.numTranspositions), this.c);
 
