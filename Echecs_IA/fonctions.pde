@@ -11,6 +11,16 @@
 
 // Fonctions utiles (ou pas)
 
+void alert(String message, int time) {
+  alert = message;
+  alertTime = time;
+  alertStarted = millis();
+}
+
+boolean isSameColor(Color c1, Color c2) {
+  return c1.getRed() == c2.getRed() && c1.getGreen() == c2.getGreen() && c1.getBlue() == c2.getBlue();
+}
+
 String roundedString(float num) {
   boolean isInteger = num % 1 == 0;
   return (isInteger ? str((int)num) : nf(num, 1, 1));
@@ -123,6 +133,7 @@ void error(String function, String message) {
 // Hacker
 
 void cheat(int fromI, int fromJ, int i, int j) {
+  // Attention 2ème relance : i et j sont inversés !
   deselectAll();
 
   // Sauvegarde les coordonnées du curseur
@@ -134,8 +145,8 @@ void cheat(int fromI, int fromJ, int i, int j) {
   click(hackerCoords[0][0].x, hackerCoords[0][0].y);
 
   // Joue le coup
-  click(hackerCoords[fromI][fromJ].x, hackerCoords[fromI][fromJ].y);
-  click(hackerCoords[i][j].x, hackerCoords[i][j].y);
+  click(hackerCoords[fromJ][fromI].x, hackerCoords[fromJ][fromI].y);
+  click(hackerCoords[j][i].x, hackerCoords[j][i].y);
 
   // Revient à la position initiale
   click(x, y);
@@ -144,25 +155,176 @@ void cheat(int fromI, int fromJ, int i, int j) {
   deselectAll();
 }
 
+Color[][] scanBoard() {
+  Color[][] scannedBoard = new Color[8][8];
+
+  int caseWidth = (downRightCorner.x - upLeftCorner.x)/7;
+  int caseHeight = (downRightCorner.y - upLeftCorner.y)/7;
+
+  for (int i = 0; i < 8; i++) {
+    for (int j = 0; j < 8; j++) {
+      int x = hackerCoords[i][j].x + (caseWidth/3);
+      int y = hackerCoords[i][j].y - (caseHeight/3);
+      scannedBoard[i][j] = hacker.getPixelColor(x, y);
+      if (isSameColor(scannedBoard[i][j], hackerWhiteSquare)) print("B ");
+      else if (isSameColor(scannedBoard[i][j], hackerBlackSquare)) print("N ");
+      else print("/ ");
+    }
+    println();
+  }
+
+  return scannedBoard;
+}
+
+Move getMoveOnBoard() {
+  int caseWidth = (downRightCorner.x - upLeftCorner.x)/7;
+  int caseHeight = (downRightCorner.y - upLeftCorner.y)/7;
+  ArrayList<Integer> coordsFound = new ArrayList<Integer>();
+
+  for (int i = 0; i < 8; i++) {
+    for (int j = 0; j < 8; j++) {
+      int x = hackerCoords[i][j].x + (caseWidth/3);
+      int y = hackerCoords[i][j].y - (caseHeight/3);
+      Color scannedColor = hacker.getPixelColor(x, y);
+      if (isSameColor(scannedColor, hackerWhiteSquare) || isSameColor(scannedColor, hackerBlackSquare)) continue;
+      coordsFound.add(j);
+      coordsFound.add(i);
+      if (coordsFound.size() == 4) break;
+    }
+  }
+
+  // en passant
+  if (coordsFound.size() == 4) {
+    Cell case1 = grid[coordsFound.get(0)][coordsFound.get(1)];
+    Cell case2 = grid[coordsFound.get(2)][coordsFound.get(3)];
+    int special = 0;
+
+    if (case1.piece != null && case1.piece.c == tourDeQui) {
+      if (case1.piece.type == "pion" && case1.piece.j == tourDeQui*5+1) special = 4; // promotion
+      if (case1.piece.type == "roi" && case1.piece.j == -7*tourDeQui+7 && case2.i - case1.i == 2) special = 1; // petit roque
+      if (case1.piece.type == "roi" && case1.piece.j == -7*tourDeQui+7 && case2.i - case1.i == -2) special = 2; // grand roque
+
+      return new Move(case1.piece, coordsFound.get(2), coordsFound.get(3), case2.piece, special);
+    }
+
+    if (case2.piece != null && case2.piece.c == tourDeQui) {
+      if (case2.piece.type == "pion" && case2.piece.j == tourDeQui*5+1) special = 4; // promotion
+      if (case2.piece.type == "roi" && case2.piece.j == -7*tourDeQui+7 && case1.i - case2.i == 2) special = 1; // petit roque
+      if (case2.piece.type == "roi" && case2.piece.j == -7*tourDeQui+7 && case1.i - case2.i == -2) special = 2; // grand roque
+
+      return new Move(case2.piece, coordsFound.get(0), coordsFound.get(1), case1.piece, special);
+    }
+  }
+  return null;
+}
+
+void doCompleteScan() {
+  lastHackerScan = millis();
+  Move sm = getMoveOnBoard();
+  if (sm != null) {
+    sm.play();
+    if (!blockPlaying) {
+      if ((joueurs.get(0).name == "Humain" && joueurs.get(1).name != "Humain") || (joueurs.get(0).name != "Humain" && joueurs.get(1).name == "Humain")) {
+        if (joueurs.get(tourDeQui).name != "Humain") { engineToPlay = true; }
+      }
+    }
+  }
+}
+
+boolean verifyCalibration() {
+  Color B = hackerWhiteSquare;
+  Color N = hackerBlackSquare;
+
+  if (isSameColor(B, N)) return false;
+
+  Color[][] expectedBoard = {{B, N, B, N, B, N, B, N},
+                             {N, B, N, B, N, B, N, B},
+                             {B, N, B, N, B, N, B, N},
+                             {N, B, N, B, N, B, N, B},
+                             {B, N, B, N, B, N, B, N},
+                             {N, B, N, B, N, B, N, B},
+                             {B, N, B, N, B, N, B, N},
+                             {N, B, N, B, N, B, N, B}};
+
+  Color[][] scannedBoard = scanBoard();
+  for (int i = 0; i < 8; i++) {
+    for (int j = 0; j < 8; j++) {
+      if (!isSameColor(scannedBoard[i][j], expectedBoard[i][j])) return false;
+    }
+  }
+  return true;
+}
+
 void click(int x, int y) {
   hacker.mouseMove(x, y);
+  delay(2);
   hacker.mousePress(InputEvent.BUTTON1_DOWN_MASK);
+  delay(2);
   hacker.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
   delay(10);
 }
 
 void restoreCalibrationSaves() {
-  if (saveUpLeftCorner == null || saveDownRightCorner == null) {
+  if (saveUpLeftCorner == null || saveDownRightCorner == null || saveWhiteColor == null || saveBlackColor == null) {
+    alert("Aucune sauvegarde", 2500);
     println("Aucune sauvegarde");
     return;
   }
 
-  upLeftCorner = saveUpLeftCorner;
-  downRightCorner = saveDownRightCorner;
+  upLeftCorner = copyPoint(saveUpLeftCorner);
+  downRightCorner = copyPoint(saveDownRightCorner);
+  hackerWhiteSquare = copyColor(saveWhiteColor);
+  hackerBlackSquare = copyColor(saveBlackColor);
+  hackerCoords = copyCoords(saveHackerCoords);
+
+  if (!verifyCalibration()) {
+    upLeftCorner = null;
+    downRightCorner = null;
+    hackerWhiteSquare = null;
+    hackerBlackSquare = null;
+    for (int i = 0; i < 8; i++) {
+      for (int j = 0; j < 8; j++) {
+        hackerCoords[i][j] = new Point();
+      }
+    }
+    alert("Échec de la calibration", 2500);
+    return;
+  }
+
+  if (play && !gameEnded && !rewind) {
+    if ((joueurs.get(0).name == "Humain" && joueurs.get(1).name != "Humain") || (joueurs.get(0).name != "Humain" && joueurs.get(1).name == "Humain")) {
+      if (joueurs.get(tourDeQui).name != "Humain") { engineToPlay = true; }
+    }
+  }
+
+  hackerPret = true;
 
   println("Sauvegardes restaurées");
+}
 
-  calibrerHacker();
+void forceCalibrationRestore() {
+  if (saveUpLeftCorner == null || saveDownRightCorner == null || hackerWhiteSquare == null || hackerBlackSquare == null) {
+    alert("Aucune sauvegarde", 2500);
+    println("Aucune sauvegarde");
+    return;
+  }
+
+  upLeftCorner = copyPoint(saveUpLeftCorner);
+  downRightCorner = copyPoint(saveDownRightCorner);
+  hackerWhiteSquare = copyColor(saveWhiteColor);
+  hackerBlackSquare = copyColor(saveBlackColor);
+  hackerCoords = copyCoords(saveHackerCoords);
+
+  if (play && !gameEnded && !rewind) {
+    if ((joueurs.get(0).name == "Humain" && joueurs.get(1).name != "Humain") || (joueurs.get(0).name != "Humain" && joueurs.get(1).name == "Humain")) {
+      if (joueurs.get(tourDeQui).name != "Humain") { engineToPlay = true; }
+    }
+  }
+
+  hackerPret = true;
+
+  alert("Sauvegarde forcée", 1500);
+  println("Restauration forcée des sauvegardes");
 }
 
 void addPointToCalibration() {
@@ -182,19 +344,41 @@ void calibrerHacker() {
   println("Haut-gauche :", upLeftCorner.x, upLeftCorner.y);
   println("Bas-droite :", downRightCorner.x, downRightCorner.y);
 
-  saveUpLeftCorner = upLeftCorner;
-  saveDownRightCorner = downRightCorner;
-  println("Coordonnées sauvegardées");
-
   int boardWidth = downRightCorner.x - upLeftCorner.x;
   int boardHeight = downRightCorner.y - upLeftCorner.y;
 
   for (int i = 0; i < 8; i++) {
     for (int j = 0; j < 8; j++) {
-      hackerCoords[i][j].x = upLeftCorner.x + i*(boardWidth/7);
-      hackerCoords[i][j].y = upLeftCorner.y + j*(boardHeight/7);
+      // attention c'est inversé
+      hackerCoords[j][i].x = upLeftCorner.x + i*(boardWidth/7);
+      hackerCoords[j][i].y = upLeftCorner.y + j*(boardHeight/7);
     }
   }
+
+  hackerWhiteSquare = hacker.getPixelColor(hackerCoords[3][3].x, hackerCoords[3][3].y);
+  hackerBlackSquare = hacker.getPixelColor(hackerCoords[4][3].x, hackerCoords[4][3].y);
+
+  if (!verifyCalibration()) {
+    upLeftCorner = null;
+    downRightCorner = null;
+    hackerWhiteSquare = null;
+    hackerBlackSquare = null;
+    for (int i = 0; i < 8; i++) {
+      for (int j = 0; j < 8; j++) {
+        hackerCoords[i][j] = new Point();
+      }
+    }
+    alert("Échec de la calibration", 2500);
+    return;
+  }
+
+  saveUpLeftCorner = upLeftCorner;
+  saveDownRightCorner = downRightCorner;
+  saveHackerCoords = copyCoords(hackerCoords);
+  println("Coordonnées sauvegardées");
+  saveWhiteColor = hackerWhiteSquare;
+  saveBlackColor = hackerBlackSquare;
+  println("Couleurs sauvegardées");
 
   // Si jamais c'est au tour d'un bot, le fait jouer
   if (play && !gameEnded && !rewind) {
@@ -210,9 +394,52 @@ void calibrerHacker() {
   println();
 }
 
+Color copyColor(Color c) {
+  int r = c.getRed();
+  int g = c.getGreen();
+  int b = c.getBlue();
+  return new Color(r, g, b);
+}
+
+Point copyPoint(Point p) {
+  Point result = new Point();
+  result.x = p.x;
+  result.y = p.y;
+  return result;
+}
+
+Point[][] copyCoords(Point[][] array) {
+  Point[][] result = new Point[8][8];
+  for (int i = 0; i < array.length; i++) {
+    for (int j = 0; j < array.length; j++) {
+      result[i][j] = array[i][j];
+    }
+  }
+  return result;
+}
+
 /////////////////////////////////////////////////////////////////
 
 // Affichages
+
+void displayAlert() {
+  if (millis() - alertStarted >= alertTime) {
+    alert = ""; alertStarted = 0; alertTime = 0;
+    return;
+  }
+
+  fill(255);
+  rectMode(CORNER);
+  rect(offsetX + w/2, offsetY + w/2, 7*w, 1.5*w, 5, 5, 5, 5);
+
+  imageMode(CORNER);
+  image(warning, offsetX + 0.625*w, offsetY + 0.625*w, 1.25*w, 1.25*w);
+
+  textAlign(CENTER, CENTER);
+  fill(color(#b33430));
+  textSize(28 * w/75);
+  text(alert, offsetX + 4.5*w, offsetY + 1.25*w);
+}
 
 void blur(int alpha) {
   fill(220, 220, 220, alpha);

@@ -3,13 +3,12 @@ void test() {
   // Move move2 = new Move(grid[4][6].piece, 4, 4, null, 0);
   // Move move = new Move(grid[4][4].piece, 3, 3, grid[3][3].piece, 0);
   // Move move = new Move(grid[5][5].piece, 5, 2, grid[5][2].piece, 0);
-  LeMaire m = new LeMaire(1, 2, 3, true);
+  // LeMaire m = new LeMaire(1, 2, 3, true);
 
   int before = millis();
 
   int count = 0;
   for (int i = 0; i < 1000000; i++) {
-    m.EvaluationRelative();
     if (i % 100000 == 0) println(i);
   }
   println(count);
@@ -38,6 +37,7 @@ void keyPressed() {
     if (useHacker && !hackerPret) {
       if (keyCode == ENTER) addPointToCalibration();
       if (keyCode == BACKSPACE) restoreCalibrationSaves();
+      if (keyCode == SHIFT) forceCalibrationRestore();
     }
 
     if (key == ' ') playPause();

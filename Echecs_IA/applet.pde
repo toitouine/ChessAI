@@ -2,6 +2,8 @@
 
 // Search controller (contrôle les paramètres des recherches et temps pour iterative deepening)
 
+// TODO
+
 public class SearchApplet extends PApplet {
   int sizeW = 500, sizeH = 198;
   boolean show = true;
@@ -418,6 +420,14 @@ public class TimerApplet extends PApplet {
   public void hide() {
     show = false;
     surface.setVisible(false);
+  }
+
+  public void goToHackerPosition() {
+    surface.setLocation(displayWidth - gameWidth + 2, displayHeight-height-51);
+  }
+
+  public void goToDefaultPosition() {
+    surface.setLocation(displayWidth - (gameWidth + width), 45 + offsetY + 4*w - windowHeight/2);
   }
 
   public void mouseDragged() {

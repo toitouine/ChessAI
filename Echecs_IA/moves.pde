@@ -2,6 +2,8 @@
 
 // Move class
 
+// Constructeur : Piece, targetI, targetJ, Capture, Special
+
 // Play et Unplay : Jouer (vraiment) le coup
 // Make et Unmake : Jouer (prévisualiser) le coup
 // Handle et Unhandle : Commun aux deux

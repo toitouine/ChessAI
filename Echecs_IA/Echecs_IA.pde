@@ -1,3 +1,16 @@
+// TODO :
+
+// Bon en finale, très bon en finale de pion et de roi
+// Correct en ouverture, très mauvais en milieu de jeu (sécurité du roi)
+
+// Sécurité du roi
+// Editeur de position : Trait et roques
+// Structures de pion
+// Bouton d'abandon
+// Plus d'ouvertures
+// Bouton rematch
+// Système de vérification de fens
+
 /////////////////////////////////////////////////////////////////
 
 // Libraries
@@ -71,6 +84,7 @@ PImage bot;
 PImage botLarge;
 PImage idIcon;
 PImage idIconOff;
+PImage warning;
 
 Robot hacker;
 
@@ -153,6 +167,9 @@ int rewindCount = 0;
 int requestToRestart = -1;
 long rngState = 1804289383;
 String endReason = "";
+String alert = "";
+int alertTime = 0;
+long alertStarted = 0;
 
 int slider; //en mémoire du vecteur vitesse
 int speed = 30;
@@ -169,9 +186,14 @@ int j2Time = 1000;
 // Hacker
 Point upLeftCorner, downRightCorner;
 Point saveUpLeftCorner, saveDownRightCorner;
+long lastHackerScan = 0;
+int hackerScanCooldown = 500;
 boolean useHacker = false;
 boolean hackerPret = false;
+Color hackerWhiteSquare, hackerBlackSquare;
+Color saveWhiteColor, saveBlackColor;
 Point[][] hackerCoords = new Point[8][8];
+Point[][] saveHackerCoords = new Point[8][8];
 
 /////////////////////////////////////////////////////////////////
 
@@ -336,6 +358,7 @@ void setup() {
   chess = loadImage("icons/chess.png");
   bot = loadImage("icons/hacker.png");
   botLarge = loadImage("icons/hacker-large.png");
+  warning = loadImage("icons/warning.png");
 
   loic = loadImage("joueurs/loic.jpeg");
   antoine = loadImage("joueurs/antoine.jpg");
@@ -495,15 +518,25 @@ void draw() {
       drawEndScreen(yEndScreen);
     }
 
-    // Affichages
+    // Variantes
     if (showVariante) {
       for (Arrow arrow : varianteArrows) arrow.show();
     }
+
+    // Hacker
+    if (useHacker) {
+      if (!hackerPret) { drawHackerPage(); }
+      else {
+        if (play && !gameEnded && enPromotion == null && millis() - lastHackerScan >= hackerScanCooldown) doCompleteScan();
+      }
+    }
+
+    // Affichages
+    if (alert != "") displayAlert();
     if (infoBox != "") drawInfoBox(infoBox);
-    if (useHacker && !hackerPret) drawHackerPage();
 
+    // Actualise "block playing", qui empêche éventuellement un joueur de jouer
     updateBlockPlaying();
-
   }
 
   ////////////////////////////////////////////////////////////////

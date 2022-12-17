@@ -1,0 +1,10 @@
+[Event "Chess AI Tournament"]
+[Date "2022.11.27"]
+[White "LeMaire"]
+[Black "LeMaire"]
+[WhiteTitle "GM"]
+[BlackTitle "GM"]
+[WhiteElo "3845"]
+[BlackElo "3845"]
+
+1.c4 e6 2.Nc3 d5 3.e3 Nf6 4.Nf3 a6 5.b3 c5 6.Bb2 Nc6 7.cxd5 exd5 8.Rc1 Bg4 9.h3 Bh5 10.Na4 Nd7 11.g4 Bg6 12.Be2 h5 13.O-O hxg4 14.hxg4 b5 15.Nc3 Nf6 16.d4 b4 17.Na4 Qd7 18.Ng5 Qd8 19.Nxc5 Nxg4 20.Nxf7 Kxf7 21.Ne6 Qh4 22.Ng5+ Kg8 23.Nh3 Qxh3 24.Bxg4 Qh2# 0-1

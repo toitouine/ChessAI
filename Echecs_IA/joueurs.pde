@@ -220,11 +220,12 @@ class LeMaire {
       sa.setPositions(str(this.numPos), this.c);
       sa.setTranspositions(str(this.numTranspositions), this.c);
 
-      // si la valeur est un mat, la retourne
+      // si la valeur est un mat, arrête la recherche
       if (abs(eval) > 40000) {
         this.depthSearched = d;
         this.time = sa.getTime(this.c);
         sa.endSearch();
+        delay(500);
         return -eval;
       }
     }
@@ -321,6 +322,7 @@ class LeMaire {
   boolean tryPlayingBookMove() {
     String[] moves = getMovesFromFen(generateFEN());
     if (moves.length > 0 && !gameEnded) {
+      delay(250);
       playMoveFromBook(moves);
       if (stats) {
         print("Le Maire : ");
@@ -382,6 +384,9 @@ class LeMaire {
   }
 
   float getKingSafetyEval(int friendly, int opponent) {
+    // TODO marée de pion, king danger zone, tour sur colonne ouverte près du roi
+    // r2q1b1r/5kp1/p1n1N1b1/3p4/1p1P2n1/1P2P3/PB2BP2/2RQ1RK1 b
+
     int sign = (friendly == 0) ? -1 : 1;
     float penalite = 0;
     Piece roi = rois[friendly];

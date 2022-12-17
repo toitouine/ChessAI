@@ -87,7 +87,11 @@ void startGame() {
   for (int i = 0; i < 2; i++) materials[i] = countMaireMaterial(i);
 
   if (soundControl >= 1) start_sound.play();
-  if (timeControl) ta.show();
+  if (timeControl) {
+    ta.show();
+    if (useHacker) ta.goToHackerPosition();
+  }
+
   sa.setTimes(j1Time, j2Time);
   showSearchController = true;
   sa.show();
@@ -103,6 +107,7 @@ void resetGame() {
   if (timeControl) {
     ta.resetTimers();
     ta.hide();
+    ta.goToDefaultPosition();
   }
   ga.hide();
   sa.hide();
@@ -169,6 +174,9 @@ void resetSettingsToDefault() {
   }
 
   // Variables
+  alert = "";
+  alertTime = 0;
+  alertStarted = 0;
   showSavedPositions = false;
   upLeftCorner = null;
   downRightCorner = null;

@@ -22,8 +22,8 @@ boolean stats = true;
 boolean details = true;
 boolean timeControl = false;
 int[][] times = {
-  {3, 0, 0}, //blancs : minutes, secondes, incrément
-  {5, 0, 0}  //noirs : minutes, secondes, incrément
+  {1, 0, 0}, //blancs : minutes, secondes, incrément
+  {1, 0, 0}  //noirs : minutes, secondes, incrément
 };
 
 /////////////////////////////////////////////////////////////////
