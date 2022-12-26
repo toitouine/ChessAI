@@ -8,8 +8,15 @@
 // Structures de pion
 // Bouton d'abandon
 // Plus d'ouvertures
-// Bouton rematch
 // Système de vérification de fens
+// Analyse de parties
+// Les moutons :
+//   - Menaces OK
+//   - Missclick
+//   - Pièces qui apparaissent (ou pas)
+//   - Arnaques au temps OK
+// Scan automatique d'échiquier
+// Gestion du temps dans le menu
 
 /////////////////////////////////////////////////////////////////
 
@@ -22,6 +29,7 @@ import java.awt.Point;
 import java.awt.datatransfer.*;
 import java.awt.event.InputEvent;
 import java.awt.Robot;
+import com.sun.awt.AWTUtilities;
 import processing.awt.PSurfaceAWT;
 import processing.awt.PSurfaceAWT.SmoothCanvas;
 import processing.sound.*;
@@ -47,6 +55,7 @@ SoundFile prise_sound;
 TimerApplet ta;
 GraphApplet ga;
 SearchApplet sa;
+HackerApplet ha;
 
 PImage cavalier_b;
 PImage cavalier_n;
@@ -65,6 +74,7 @@ PImage loic;
 PImage antoine;
 PImage stockfish;
 PImage lemaire;
+PImage lesmoutons;
 PImage human;
 PImage mark;
 
@@ -130,6 +140,8 @@ Bouton positionEditor;
 Bouton hackerButton;
 Piece pieceSelectionne = null;
 Piece enPromotion = null;
+TextBouton rematchButton;
+TextBouton newGameButton;
 DragAndDrop enAjoutPiece = null;
 Slider s1, s2, q1, q2, t1, t2;
 
@@ -138,11 +150,10 @@ Shortcut sc = new Shortcut();
 /////////////////////////////////////////////////////////////////
 
 // Variables pour la partie
-
 int cols = 8;
 int rows = 8;
 int tourDeQui = 0; //dakin
-float nbTour = 0.5; //nombre de tour
+float nbTour = 0.5;
 float endGameWeight = 0;
 boolean gameEnded = false;
 String infos = "";
@@ -161,7 +172,7 @@ boolean showSavedPositions = false;
 boolean showSearchController = false;
 boolean blockPlaying = false;
 int gameState = 0;
-int winner = -1; //2 pour nulle
+int winner = -1;
 int timeAtEnd = 0;
 int rewindCount = 0;
 int requestToRestart = -1;
@@ -171,9 +182,14 @@ String alert = "";
 int alertTime = 0;
 long alertStarted = 0;
 
-int slider; //en mémoire du vecteur vitesse
+// Les Moutons !
+boolean missClickDragNextMove = false;
+
+// En mémoire du vecteur vitesse
+int slider;
 int speed = 30;
 
+// Joueurs
 String j1;
 String j2;
 int j1depth = 3;
@@ -186,12 +202,12 @@ int j2Time = 1000;
 // Hacker
 Point upLeftCorner, downRightCorner;
 Point saveUpLeftCorner, saveDownRightCorner;
+Color hackerWhitePieceColor, hackerBlackPieceColor;
+Color saveWhitePieceColor, saveBlackPieceColor;
 long lastHackerScan = 0;
-int hackerScanCooldown = 500;
+int hackerScanCooldown = 400;
 boolean useHacker = false;
 boolean hackerPret = false;
-Color hackerWhiteSquare, hackerBlackSquare;
-Color saveWhiteColor, saveBlackColor;
 Point[][] hackerCoords = new Point[8][8];
 Point[][] saveHackerCoords = new Point[8][8];
 
@@ -226,6 +242,11 @@ void setup() {
   PApplet.runSketch(argsS, sa);
   sa.hide();
 
+  String[] argsH = {"Hacker"};
+  ha = new HackerApplet();
+  PApplet.runSketch(argsH, ha);
+  ha.hide();
+
   surface.setVisible(true);
   surface.setTitle(name + " - Selection des joueurs");
   surface.setLocation(displayWidth/2 - width/2, 23);
@@ -258,7 +279,7 @@ void setup() {
   // Control P5
   cp5 = new ControlP5(this);
   s1 = cp5.addSlider("j1depth")
-     .setPosition(990, 80)
+     .setPosition(1180, 80)
      .setSize(30,140)
      .setLabel("Profondeur")
      .setRange(1,30)
@@ -269,7 +290,7 @@ void setup() {
      .setColorBackground(#5d6e3b);
 
   s2 = cp5.addSlider("j2depth")
-     .setPosition(990, 290)
+     .setPosition(1180, 290)
      .setSize(30, 140)
      .setLabel("Profondeur")
      .setRange(1,30)
@@ -280,7 +301,7 @@ void setup() {
      .setColorBackground(#5d6e3b);
 
   q1 = cp5.addSlider("j1Quiet")
-     .setPosition(1060, 80)
+     .setPosition(1250, 80)
      .setSize(30, 140)
      .setLabel("Max Quiet")
      .setRange(0,30)
@@ -291,7 +312,7 @@ void setup() {
      .setColorBackground(#5d6e3b);
 
   q2 = cp5.addSlider("j2Quiet")
-     .setPosition(1060, 290)
+     .setPosition(1250, 290)
      .setSize(30, 140)
      .setLabel("Max Quiet")
      .setRange(0,30)
@@ -302,7 +323,7 @@ void setup() {
      .setColorBackground(#5d6e3b);
 
   t1 = cp5.addSlider("j1Time")
-      .setPosition(1130, 80)
+      .setPosition(1320, 80)
       .setSize(30, 140)
       .setLabel("Temps")
       .setRange(0, 10000)
@@ -312,7 +333,7 @@ void setup() {
       .setColorBackground(#827e40);
 
   t2 = cp5.addSlider("j2Time")
-      .setPosition(1130, 290)
+      .setPosition(1320, 290)
       .setSize(30, 140)
       .setLabel("Temps")
       .setRange(0, 10000)
@@ -364,6 +385,7 @@ void setup() {
   antoine = loadImage("joueurs/antoine.jpg");
   stockfish = loadImage("joueurs/stockfish.png");
   lemaire = loadImage("joueurs/lemaire.jpg");
+  lesmoutons = loadImage("joueurs/lesmoutons.jpg");
   human = loadImage("joueurs/human.png");
   mark = loadImage("checkmark.png");
 
@@ -385,9 +407,9 @@ void setup() {
   }
 
   // Initialise les boutons et interfaces
-  hubButtons.add(new TextBouton(width/2 - 190, 480, 380, 75, "Nouvelle partie", 30));
-  hubButtons.add(new TextBouton(width-110, height-40, 100, 30, "Coller FEN", 18)); hubButtons.get(1).setColors(#1d1c1a, #ffffff);
-  hubButtons.add(new TextBouton(width-220, height-40, 100, 30, "Copier FEN", 18)); hubButtons.get(2).setColors(#1d1c1a, #ffffff);
+  hubButtons.add(new TextBouton(width/2 - 190, 480, 380, 75, "Nouvelle partie", 30, 10));
+  hubButtons.add(new TextBouton(width-110, height-40, 100, 30, "Coller FEN", 18, 8)); hubButtons.get(1).setColors(#1d1c1a, #ffffff);
+  hubButtons.add(new TextBouton(width-220, height-40, 100, 30, "Copier FEN", 18, 8)); hubButtons.get(2).setColors(#1d1c1a, #ffffff);
 
   promoButtons.add(new Bouton(0.25*w + offsetX, 3.25*w + offsetY, 1.5*w, imageArrayB[1], imageArrayN[1]));
   promoButtons.add(new Bouton(2.25*w + offsetX, 3.25*w + offsetY, 1.5*w, imageArrayB[2], imageArrayN[2]));
@@ -397,18 +419,24 @@ void setup() {
   toggles1.add(new Toggle(40, 80, 150, stockfish, "Stockfish"));
   toggles1.add(new Toggle(230, 80, 150, antoine, "Antoine"));
   toggles1.add(new Toggle(420, 80, 150, loic, "Loic"));
-  toggles1.add(new Toggle(610, 80, 150, lemaire, "LeMaire"));
-  toggles1.add(new Toggle(800, 80, 150, human, "Humain"));
+  toggles1.add(new Toggle(610, 80, 150, lesmoutons, "LesMoutons"));
+  toggles1.add(new Toggle(800, 80, 150, lemaire, "LeMaire"));
+  toggles1.add(new Toggle(990, 80, 150, human, "Humain"));
 
   toggles2.add(new Toggle(40, 290, 150, stockfish, "Stockfish"));
   toggles2.add(new Toggle(230, 290, 150, antoine, "Antoine"));
   toggles2.add(new Toggle(420, 290, 150, loic, "Loic"));
-  toggles2.add(new Toggle(610, 290, 150, lemaire, "LeMaire"));
-  toggles2.add(new Toggle(800, 290, 150, human, "Humain"));
+  toggles2.add(new Toggle(610, 290, 150, lesmoutons, "LesMoutons"));
+  toggles2.add(new Toggle(800, 290, 150, lemaire, "LeMaire"));
+  toggles2.add(new Toggle(990, 290, 150, human, "Humain"));
 
   addPiecesColorSwitch = new CircleToggle(offsetX/2, (offsetY+w/2 + w*6) + 70, w/1.3);
   positionEditor = new Bouton(width-55, 10, 50, chess, chess);
   hackerButton = new Bouton(width-100, 11, 40, bot, bot);
+  rematchButton = new TextBouton(offsetX - offsetX/1.08, offsetY+4*w-29, offsetX-2*(offsetX - offsetX/1.08), 24, "Revanche", 15, 3);
+  rematchButton.setColors(#1d1c1a, #ffffff);
+  newGameButton = new TextBouton(offsetX - offsetX/1.08, offsetY+4*w+5, offsetX-2*(offsetX - offsetX/1.08), 24, "Menu", 15, 3);
+  newGameButton.setColors(#1d1c1a, #ffffff);
 
   // Drag and drops
   addPiecesButtons[0] = new ArrayList<DragAndDrop>();
@@ -517,6 +545,10 @@ void draw() {
       if (targetEndScreenY - yEndScreen <= 1 && mousePressed && (mouseX < rectX || mouseX >= rectX+rectW || mouseY < yEndScreen || mouseY >= yEndScreen+rectH)) disableEndScreen = true;
       drawEndScreen(yEndScreen);
     }
+    if (gameEnded) {
+      newGameButton.show();
+      rematchButton.show();
+    }
 
     // Variantes
     if (showVariante) {
@@ -527,7 +559,7 @@ void draw() {
     if (useHacker) {
       if (!hackerPret) { drawHackerPage(); }
       else {
-        if (play && !gameEnded && enPromotion == null && millis() - lastHackerScan >= hackerScanCooldown) doCompleteScan();
+        if (play && !gameEnded && enPromotion == null && millis() - lastHackerScan >= hackerScanCooldown) scanMoveOnBoard();
       }
     }
 

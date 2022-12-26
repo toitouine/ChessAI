@@ -116,14 +116,16 @@ class TextBouton {
   int textColor = color(#ffffff);
   String text;
   int textSize;
+  int arrondi;
 
-  TextBouton(float x, float y, float w, float h, String t, int textSize) {
+  TextBouton(float x, float y, float w, float h, String t, int textSize, int arrondi) {
     this.x = x;
     this.y = y;
     this.w = w;
     this.h = h;
     this.text = t;
     this.textSize = textSize;
+    this.arrondi = arrondi;
   }
 
   void setColors(int b, int t) {
@@ -135,7 +137,7 @@ class TextBouton {
     noStroke();
     fill(this.backColor);
     rectMode(CORNER);
-    rect(this.x, this.y, this.w, this.h, 10);
+    rect(this.x, this.y, this.w, this.h, this.arrondi);
 
     textAlign(CENTER, CENTER);
     textSize(this.textSize);

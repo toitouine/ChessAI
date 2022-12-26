@@ -21,7 +21,7 @@ void keyPressed() {
     if (requestToRestart != -1) {
       requestToRestart = -1;
       println(">>> Retour à la sélection des joueurs" + (!gameEnded ? " (partie annulée)" : "" + "\n"));
-      resetGame();
+      resetGame(true);
     }
   }
 
@@ -183,17 +183,18 @@ void mouseDragged() {
 void mousePressed() {
   if (gameState == 1) {
 
+    // Boutons rematch
+    if (gameEnded) {
+      if (rematchButton.contains(mouseX, mouseY)) { rematch(); return; }
+      if (newGameButton.contains(mouseX, mouseY)) { resetGame(true); return; }
+    }
+
     // Barre d'outils
     for (Bouton b : iconButtons) {
       if (b.contains(mouseX, mouseY)) b.callShortcut();
     }
 
     // Échiquier
-
-    // if (joueurs.get(tourDeQui).name == "Humain" && !gameEnded && play && !rewind) {
-    //
-    //   if (useHacker && !hackerPret) return;
-
     if (joueurs.get(tourDeQui).name == "Humain" && !blockPlaying) {
 
       if (enPromotion == null) {
@@ -365,16 +366,21 @@ void mousePressed() {
 void mouseMoved() {
   if (gameState == 1) {
 
-    //barre d'outils
+    // Bouton rematch
+    if (gameEnded && (rematchButton.contains(mouseX, mouseY) || newGameButton.contains(mouseX, mouseY))) {
+      cursor(HAND);
+      return;
+    }
+
+    // Barre d'outils
     for (int i = 0; i < iconButtons.size(); i++) {
       if (iconButtons.get(i).contains(mouseX, mouseY)) {
-        //icon hover
         cursor(HAND);
         infoBox = iconButtons.get(i).getDescription();
         return;
       }
     }
-    infoBox = ""; //aucun outil hovered
+    infoBox = "";
 
     if (enPromotion == null) {
 
@@ -408,19 +414,19 @@ void mouseMoved() {
 
   else if (gameState == 0) {
 
-    for (Toggle t :  toggles1) {
+    for (Toggle t : toggles1) {
       if (t.contains(mouseX, mouseY)) {
         cursor(HAND);
         return;
       }
     }
-    for (Toggle t2 :  toggles2) {
+    for (Toggle t2 : toggles2) {
       if (t2.contains(mouseX, mouseY)) {
         cursor(HAND);
         return;
       }
     }
-    for (TextBouton b :  hubButtons) {
+    for (TextBouton b : hubButtons) {
       if (b.contains(mouseX, mouseY)) {
         cursor(HAND);
         return;

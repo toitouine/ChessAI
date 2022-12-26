@@ -21,6 +21,10 @@ boolean isSameColor(Color c1, Color c2) {
   return c1.getRed() == c2.getRed() && c1.getGreen() == c2.getGreen() && c1.getBlue() == c2.getBlue();
 }
 
+boolean isSimilarColor(Color c1, Color c2) {
+  return abs(c1.getRed()-c2.getRed()) <= 10 && abs(c1.getGreen()-c2.getGreen()) <= 10 && abs(c1.getBlue()-c2.getBlue()) <= 10;
+}
+
 String roundedString(float num) {
   boolean isInteger = num % 1 == 0;
   return (isInteger ? str((int)num) : nf(num, 1, 1));
@@ -146,7 +150,9 @@ void cheat(int fromI, int fromJ, int i, int j) {
 
   // Joue le coup
   click(hackerCoords[fromJ][fromI].x, hackerCoords[fromJ][fromI].y);
+  delay(2);
   click(hackerCoords[j][i].x, hackerCoords[j][i].y);
+  delay(2);
 
   // Revient à la position initiale
   click(x, y);
@@ -156,69 +162,57 @@ void cheat(int fromI, int fromJ, int i, int j) {
 }
 
 Color[][] scanBoard() {
-  Color[][] scannedBoard = new Color[8][8];
+  // int before = millis();
 
-  int caseWidth = (downRightCorner.x - upLeftCorner.x)/7;
-  int caseHeight = (downRightCorner.y - upLeftCorner.y)/7;
+  Color[][] scannedBoard = new Color[8][8];
 
   for (int i = 0; i < 8; i++) {
     for (int j = 0; j < 8; j++) {
-      int x = hackerCoords[i][j].x + (caseWidth/3);
-      int y = hackerCoords[i][j].y - (caseHeight/3);
+      int x = hackerCoords[i][j].x;
+      int y = hackerCoords[i][j].y;
       scannedBoard[i][j] = hacker.getPixelColor(x, y);
-      if (isSameColor(scannedBoard[i][j], hackerWhiteSquare)) print("B ");
-      else if (isSameColor(scannedBoard[i][j], hackerBlackSquare)) print("N ");
+      if (isSimilarColor(scannedBoard[i][j], hackerWhitePieceColor)) print("B ");
+      else if (isSimilarColor(scannedBoard[i][j], hackerBlackPieceColor)) print("N ");
       else print("/ ");
     }
     println();
   }
 
+  // println("Scan completed in " + (millis()-before) + " ms");
+
   return scannedBoard;
 }
 
 Move getMoveOnBoard() {
-  int caseWidth = (downRightCorner.x - upLeftCorner.x)/7;
-  int caseHeight = (downRightCorner.y - upLeftCorner.y)/7;
-  ArrayList<Integer> coordsFound = new ArrayList<Integer>();
 
-  for (int i = 0; i < 8; i++) {
-    for (int j = 0; j < 8; j++) {
-      int x = hackerCoords[i][j].x + (caseWidth/3);
-      int y = hackerCoords[i][j].y - (caseHeight/3);
-      Color scannedColor = hacker.getPixelColor(x, y);
-      if (isSameColor(scannedColor, hackerWhiteSquare) || isSameColor(scannedColor, hackerBlackSquare)) continue;
-      coordsFound.add(j);
-      coordsFound.add(i);
-      if (coordsFound.size() == 4) break;
+  Color pieceColor = (tourDeQui == 0) ? hackerWhitePieceColor : hackerBlackPieceColor;
+
+  for (int n = 0; n < pieces[tourDeQui].size(); n++) {
+    // On regarde si les pièces sont à la bonne case (i et j sont inversés)
+    Piece p = pieces[tourDeQui].get(n);
+    Color scannedColor = hacker.getPixelColor(hackerCoords[p.j][p.i].x, hackerCoords[p.j][p.i].y);
+    if (isSimilarColor(scannedColor, pieceColor)) continue;
+
+    // C'est cette pièce qui s'est déplacé, on génère ses coups (les spéciaux sont regardés en premier pour régler le problème du roque)
+    ArrayList<Move> moves = p.generateLegalMoves(true, false);
+    for (int k = 0; k < moves.size(); k++) {
+      if (moves.get(k).special != 0) {
+        Move m = moves.remove(k);
+        moves.add(0, m);
+      }
+    }
+
+    for (int k = 0; k < moves.size(); k++) {
+      Move m = moves.get(k);
+      Color scannedColorMove = hacker.getPixelColor(hackerCoords[m.j][m.i].x, hackerCoords[m.j][m.i].y);
+      if (isSimilarColor(scannedColorMove, pieceColor)) return m;
     }
   }
 
-  // en passant
-  if (coordsFound.size() == 4) {
-    Cell case1 = grid[coordsFound.get(0)][coordsFound.get(1)];
-    Cell case2 = grid[coordsFound.get(2)][coordsFound.get(3)];
-    int special = 0;
-
-    if (case1.piece != null && case1.piece.c == tourDeQui) {
-      if (case1.piece.type == "pion" && case1.piece.j == tourDeQui*5+1) special = 4; // promotion
-      if (case1.piece.type == "roi" && case1.piece.j == -7*tourDeQui+7 && case2.i - case1.i == 2) special = 1; // petit roque
-      if (case1.piece.type == "roi" && case1.piece.j == -7*tourDeQui+7 && case2.i - case1.i == -2) special = 2; // grand roque
-
-      return new Move(case1.piece, coordsFound.get(2), coordsFound.get(3), case2.piece, special);
-    }
-
-    if (case2.piece != null && case2.piece.c == tourDeQui) {
-      if (case2.piece.type == "pion" && case2.piece.j == tourDeQui*5+1) special = 4; // promotion
-      if (case2.piece.type == "roi" && case2.piece.j == -7*tourDeQui+7 && case1.i - case2.i == 2) special = 1; // petit roque
-      if (case2.piece.type == "roi" && case2.piece.j == -7*tourDeQui+7 && case1.i - case2.i == -2) special = 2; // grand roque
-
-      return new Move(case2.piece, coordsFound.get(0), coordsFound.get(1), case1.piece, special);
-    }
-  }
   return null;
 }
 
-void doCompleteScan() {
+void scanMoveOnBoard() {
   lastHackerScan = millis();
   Move sm = getMoveOnBoard();
   if (sm != null) {
@@ -232,24 +226,29 @@ void doCompleteScan() {
 }
 
 boolean verifyCalibration() {
-  Color B = hackerWhiteSquare;
-  Color N = hackerBlackSquare;
+  Color B = hackerWhitePieceColor;
+  Color N = hackerBlackPieceColor;
+  Color A = null;
 
   if (isSameColor(B, N)) return false;
 
-  Color[][] expectedBoard = {{B, N, B, N, B, N, B, N},
-                             {N, B, N, B, N, B, N, B},
-                             {B, N, B, N, B, N, B, N},
-                             {N, B, N, B, N, B, N, B},
-                             {B, N, B, N, B, N, B, N},
-                             {N, B, N, B, N, B, N, B},
-                             {B, N, B, N, B, N, B, N},
-                             {N, B, N, B, N, B, N, B}};
+  Color[][] expectedBoard = {{N, N, N, N, N, N, N, N},
+                             {N, N, N, N, N, N, N, N},
+                             {A, A, A, A, A, A, A, A},
+                             {A, A, A, A, A, A, A, A},
+                             {A, A, A, A, A, A, A, A},
+                             {A, A, A, A, A, A, A, A},
+                             {B, B, B, B, B, B, B, B},
+                             {B, B, B, B, B, B, B, B}};
 
   Color[][] scannedBoard = scanBoard();
   for (int i = 0; i < 8; i++) {
     for (int j = 0; j < 8; j++) {
-      if (!isSameColor(scannedBoard[i][j], expectedBoard[i][j])) return false;
+      if (expectedBoard[i][j] == null) {
+        if (isSimilarColor(scannedBoard[i][j], hackerWhitePieceColor) || isSimilarColor(scannedBoard[i][j], hackerBlackPieceColor)) return false;
+        continue;
+      }
+      if (!isSimilarColor(scannedBoard[i][j], expectedBoard[i][j])) return false;
     }
   }
   return true;
@@ -257,15 +256,12 @@ boolean verifyCalibration() {
 
 void click(int x, int y) {
   hacker.mouseMove(x, y);
-  delay(2);
   hacker.mousePress(InputEvent.BUTTON1_DOWN_MASK);
-  delay(2);
   hacker.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
-  delay(10);
 }
 
 void restoreCalibrationSaves() {
-  if (saveUpLeftCorner == null || saveDownRightCorner == null || saveWhiteColor == null || saveBlackColor == null) {
+  if (saveUpLeftCorner == null || saveDownRightCorner == null || saveWhitePieceColor == null || saveBlackPieceColor == null) {
     alert("Aucune sauvegarde", 2500);
     println("Aucune sauvegarde");
     return;
@@ -273,15 +269,15 @@ void restoreCalibrationSaves() {
 
   upLeftCorner = copyPoint(saveUpLeftCorner);
   downRightCorner = copyPoint(saveDownRightCorner);
-  hackerWhiteSquare = copyColor(saveWhiteColor);
-  hackerBlackSquare = copyColor(saveBlackColor);
+  hackerWhitePieceColor = copyColor(saveWhitePieceColor);
+  hackerBlackPieceColor = copyColor(saveBlackPieceColor);
   hackerCoords = copyCoords(saveHackerCoords);
 
   if (!verifyCalibration()) {
     upLeftCorner = null;
     downRightCorner = null;
-    hackerWhiteSquare = null;
-    hackerBlackSquare = null;
+    hackerWhitePieceColor = null;
+    hackerBlackPieceColor = null;
     for (int i = 0; i < 8; i++) {
       for (int j = 0; j < 8; j++) {
         hackerCoords[i][j] = new Point();
@@ -303,7 +299,7 @@ void restoreCalibrationSaves() {
 }
 
 void forceCalibrationRestore() {
-  if (saveUpLeftCorner == null || saveDownRightCorner == null || hackerWhiteSquare == null || hackerBlackSquare == null) {
+  if (saveUpLeftCorner == null || saveDownRightCorner == null || hackerWhitePieceColor == null || hackerBlackPieceColor == null) {
     alert("Aucune sauvegarde", 2500);
     println("Aucune sauvegarde");
     return;
@@ -311,8 +307,8 @@ void forceCalibrationRestore() {
 
   upLeftCorner = copyPoint(saveUpLeftCorner);
   downRightCorner = copyPoint(saveDownRightCorner);
-  hackerWhiteSquare = copyColor(saveWhiteColor);
-  hackerBlackSquare = copyColor(saveBlackColor);
+  hackerWhitePieceColor = copyColor(saveWhitePieceColor);
+  hackerBlackPieceColor = copyColor(saveBlackPieceColor);
   hackerCoords = copyCoords(saveHackerCoords);
 
   if (play && !gameEnded && !rewind) {
@@ -349,20 +345,19 @@ void calibrerHacker() {
 
   for (int i = 0; i < 8; i++) {
     for (int j = 0; j < 8; j++) {
-      // attention c'est inversé
       hackerCoords[j][i].x = upLeftCorner.x + i*(boardWidth/7);
       hackerCoords[j][i].y = upLeftCorner.y + j*(boardHeight/7);
     }
   }
 
-  hackerWhiteSquare = hacker.getPixelColor(hackerCoords[3][3].x, hackerCoords[3][3].y);
-  hackerBlackSquare = hacker.getPixelColor(hackerCoords[4][3].x, hackerCoords[4][3].y);
+  hackerWhitePieceColor = hacker.getPixelColor(hackerCoords[7][7].x, hackerCoords[7][7].y);
+  hackerBlackPieceColor = hacker.getPixelColor(hackerCoords[0][0].x, hackerCoords[0][0].y);
 
   if (!verifyCalibration()) {
     upLeftCorner = null;
     downRightCorner = null;
-    hackerWhiteSquare = null;
-    hackerBlackSquare = null;
+    hackerWhitePieceColor = null;
+    hackerBlackPieceColor = null;
     for (int i = 0; i < 8; i++) {
       for (int j = 0; j < 8; j++) {
         hackerCoords[i][j] = new Point();
@@ -375,12 +370,12 @@ void calibrerHacker() {
   saveUpLeftCorner = upLeftCorner;
   saveDownRightCorner = downRightCorner;
   saveHackerCoords = copyCoords(hackerCoords);
-  println("Coordonnées sauvegardées");
-  saveWhiteColor = hackerWhiteSquare;
-  saveBlackColor = hackerBlackSquare;
-  println("Couleurs sauvegardées");
+  saveWhitePieceColor = hackerWhitePieceColor;
+  saveBlackPieceColor = hackerBlackPieceColor;
+  println("Données du hacker sauvegardées");
 
-  // Si jamais c'est au tour d'un bot, le fait jouer
+  // ha.sendCoords(hackerCoords);
+
   if (play && !gameEnded && !rewind) {
     if ((joueurs.get(0).name == "Humain" && joueurs.get(1).name != "Humain") || (joueurs.get(0).name != "Humain" && joueurs.get(1).name == "Humain")) {
       if (joueurs.get(tourDeQui).name != "Humain") { engineToPlay = true; }
@@ -512,8 +507,10 @@ void drawPlayersInfos() {
   if (pointDeVue) {
     image(j1Img, space, height-(space+w), w, w);
     image(j2Img, space, offsetY + ( (offsetY<=10) ? space : 0), w, w);
-    text(j1.name + " (" + j1.elo + ")", space+w/2, height-(space+w)-space-5);
-    text(j2.name + " (" + j2.elo + ")", space+w/2, (offsetY + ( (offsetY<=10) ? space : 0))+space+w);
+
+    text( (j1.name == "LesMoutons" ? "Mouton" : j1.name)  + " (" + j1.elo + ")", space+w/2, height-(space+w)-space-5);
+    text( (j2.name == "LesMoutons" ? "Mouton" : j2.name) + " (" + j2.elo + ")", space+w/2, (offsetY + ( (offsetY<=10) ? space : 0))+space+w);
+
     text(roundedString(j1.getScore()) + "/" + j1.getTotalScore(), space+w/2, height-(space+w)-space-40);
     text(roundedString(j2.getScore()) + "/" + j2.getTotalScore(), space+w/2, (offsetY + ( (offsetY<=10) ? space : 0))+space+w+40);
     if (j1.lastEval != "") text("Eval : " + j1.lastEval, space+w/2, height-(space+w)-space-80);
@@ -521,8 +518,10 @@ void drawPlayersInfos() {
   } else {
     image(j1Img, space, offsetY + ( (offsetY<=10) ? space : 0), w, w);
     image(j2Img, space, height-(space+w), w, w);
-    text(j1.name + " (" + j1.elo + ")", space+w/2, (offsetY + ( (offsetY<=10) ? space : 0))+space+w);
-    text(j2.name + " (" + j2.elo + ")", space+w/2, height-(space+w)-space-5);
+
+    text( (j1.name == "LesMoutons" ? "Mouton" : j1.name) + " (" + j1.elo + ")", space+w/2, (offsetY + ( (offsetY<=10) ? space : 0))+space+w);
+    text( (j2.name == "LesMoutons" ? "Mouton" : j2.name) + " (" + j2.elo + ")", space+w/2, height-(space+w)-space-5);
+    
     text(roundedString(j1.getScore()) + "/" + j1.getTotalScore(), space+w/2, (offsetY + ( (offsetY<=10) ? space : 0))+space+w+40);
     text(roundedString(j2.getScore()) + "/" + j2.getTotalScore(), space+w/2, height-(space+w)-space-40);
     if (j1.lastEval != "") text("Eval : " + j1.lastEval, space+w/2, (offsetY + ( (offsetY<=10) ? space : 0))+space+w+80);

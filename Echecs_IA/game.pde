@@ -1,31 +1,3 @@
-void startEditor() {
-  gameState = 3;
-
-  if (attach) infos = "Épinglé";
-
-  surface.setSize(gameWidth, gameHeight);
-  surface.setLocation(displayWidth - width, 0);
-  surface.setAlwaysOnTop(attach);
-  surface.setVisible(true); //pour avoir le focus sur la main page
-  s1.hide();
-  s2.hide();
-
-  cursor(ARROW);
-
-  if (soundControl >= 2) {
-    violons.stop();
-    pachamama.play(); pachamama.loop();
-  }
-}
-
-void verifStartGame() {
-  if (j1 != null && j2 != null) {
-    startGame();
-  } else {
-    println("Veuillez selectionner 2 joueurs");
-  }
-}
-
 void startGame() {
   joueurs.add(new Joueur(j1, 0, j1depth, j1Quiet, (j1Time == 0) ? false : true));
   joueurs.add(new Joueur(j2, 1, j2depth, j2Quiet, (j2Time == 0) ? false : true));
@@ -34,12 +6,14 @@ void startGame() {
   surface.setAlwaysOnTop(attach);
 
   if (j1 == "Loic") { j1Img = loadImage("joueurs/loicImg.jpeg"); j1ImgEnd = loadImage("joueurs/loicImgEnd.jpeg"); }
+  else if (j1 == "LesMoutons") { j1Img = loadImage("joueurs/lesmoutonsImg.jpg"); j1ImgEnd = loadImage("joueurs/lesmoutonsImgEnd.jpg"); }
   else if (j1 == "LeMaire") { j1Img = loadImage("joueurs/lemaireImg.jpg"); j1ImgEnd = loadImage("joueurs/lemaireImgEnd.jpg"); }
   else if (j1 == "Antoine") { j1Img = loadImage("joueurs/antoineImg.jpg"); j1ImgEnd = loadImage("joueurs/antoineImgEnd.jpg"); }
   else if (j1 == "Stockfish") { j1Img = loadImage("joueurs/stockfishImg.png"); j1ImgEnd = loadImage("joueurs/stockfishImgEnd.png"); }
   else if (j1 == "Humain") { j1Img = loadImage("joueurs/humanImg.png"); j1ImgEnd = loadImage("joueurs/humanImgEnd.png"); }
 
   if (j2 == "Loic") { j2Img = loadImage("joueurs/loicImg.jpeg"); j2ImgEnd = loadImage("joueurs/loicImgEnd.jpeg"); }
+  else if (j2 == "LesMoutons") { j2Img = loadImage("joueurs/lesmoutonsImg.jpg"); j2ImgEnd = loadImage("joueurs/lesmoutonsImgEnd.jpg"); }
   else if (j2 == "LeMaire") { j2Img = loadImage("joueurs/lemaireImg.jpg"); j2ImgEnd = loadImage("joueurs/lemaireImgEnd.jpg"); }
   else if (j2 == "Antoine") { j2Img = loadImage("joueurs/antoineImg.jpg"); j2ImgEnd = loadImage("joueurs/antoineImgEnd.jpg"); }
   else if (j2 == "Stockfish") { j2Img = loadImage("joueurs/stockfishImg.png"); j2ImgEnd = loadImage("joueurs/stockfishImgEnd.png"); }
@@ -89,6 +63,12 @@ void startGame() {
   if (soundControl >= 1) start_sound.play();
   if (timeControl) {
     ta.show();
+
+    // Les Moutons !
+    if (joueurs.get(0).name == "LesMoutons") { ta.timers[0].setDurationOfSecond(950); ta.timers[1].setDurationOfSecond(1050); ta.timers[0].increment = times[0][2]*1200; ta.timers[1].increment = times[1][2]*800; }
+    if (joueurs.get(1).name == "LesMoutons") { ta.timers[1].setDurationOfSecond(950); ta.timers[0].setDurationOfSecond(1050); ta.timers[0].increment = times[0][2]*800; ta.timers[1].increment = times[1][2]*1200; }
+    if (joueurs.get(0).name == "LesMoutons" && joueurs.get(1).name == "LesMoutons") { ta.timers[0].setDurationOfSecond(1000); ta.timers[1].setDurationOfSecond(1000); ta.timers[0].increment = times[0][2]*1000; ta.timers[1].increment = times[1][2]*1000; }
+
     if (useHacker) ta.goToHackerPosition();
   }
 
@@ -96,13 +76,51 @@ void startGame() {
   showSearchController = true;
   sa.show();
 
-  surface.setVisible(true); //pour avoir le focus sur la partie
-
   setPieces();
   checkGameState();
+
+  delay(3);
+  surface.setVisible(true);
 }
 
-void resetGame() {
+void startEditor() {
+  gameState = 3;
+
+  if (attach) infos = "Épinglé";
+
+  surface.setSize(gameWidth, gameHeight);
+  surface.setLocation(displayWidth - width, 0);
+  surface.setAlwaysOnTop(attach);
+  surface.setVisible(true);
+  s1.hide();
+  s2.hide();
+
+  cursor(ARROW);
+
+  if (soundControl >= 2) {
+    violons.stop();
+    pachamama.play(); pachamama.loop();
+  }
+}
+
+void verifStartGame() {
+  if (j1 != null && j2 != null) {
+    startGame();
+  } else {
+    println("Veuillez selectionner 2 joueurs");
+  }
+}
+
+void rematch() {
+  String savedJ1 = j1;
+  String savedJ2 = j2;
+  resetGame(false);
+  j1 = savedJ1;
+  j2 = savedJ2;
+  startGame();
+}
+
+void resetGame(boolean menu) {
   // reset les timers
   if (timeControl) {
     ta.resetTimers();
@@ -111,16 +129,20 @@ void resetGame() {
   }
   ga.hide();
   sa.hide();
+  ha.reset();
 
   // réinitialise les variables
   resetSettingsToDefault();
 
-  // resize la fenêtre
-  surface.setSize(selectWidth, selectHeight);
-  surface.setLocation(displayWidth/2 - width/2, 0);
-  surface.setTitle(name + " - Selection des joueurs");
-  surface.setAlwaysOnTop(false);
-  surface.setVisible(true);
+  // resize la fenêtre et gameState en mode sélection
+  if (menu) {
+    surface.setSize(selectWidth, selectHeight);
+    surface.setLocation(displayWidth/2 - width/2, 0);
+    surface.setTitle(name + " - Selection des joueurs");
+    surface.setAlwaysOnTop(false);
+    surface.setVisible(true);
+    gameState = 0;
+  }
 
   // arrête la musique :(
   if (soundControl >= 2) {
@@ -128,9 +150,6 @@ void resetGame() {
     diagnostic.stop();
     violons.play(); violons.loop();
   }
-
-  // gameState en mode sélection
-  gameState = 0;
 
   // replace les pièces
   setPieces();
@@ -150,8 +169,6 @@ void resetSettingsToDefault() {
   varianteArrows.clear();
   tt.clear();
   sa.reset();
-
-  // Clear la table de transposition
 
   // Reset la grille
   for (int i = 0; i < cols; i++) {
@@ -273,7 +290,7 @@ void checkGameState() {
     infos = "Game ended";
 
     if (soundControl >= 1) nulle_sound.play();
-    if (timeControl) ta.pauseTimers();
+    if (timeControl) ta.stopTimers();
     return;
   }
 
@@ -293,7 +310,7 @@ void checkGameState() {
     infos = "Game ended";
 
     if (soundControl >= 1) nulle_sound.play();
-    if (timeControl) ta.pauseTimers();
+    if (timeControl) ta.stopTimers();
     return;
   }
 
@@ -330,7 +347,7 @@ void checkGameState() {
     infos = "Game ended";
     timeAtEnd = millis();
 
-    if (timeControl) ta.pauseTimers();
+    if (timeControl) ta.stopTimers();
     return;
   }
 
@@ -355,7 +372,7 @@ void loseOnTime(int loser) {
   infos = "Game ended";
 
   if (soundControl >= 1) nulle_sound.play();
-  if (timeControl) ta.pauseTimers();
+  if (timeControl) ta.stopTimers();
 }
 
 void updateScores(float num) {

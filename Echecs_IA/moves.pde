@@ -169,9 +169,13 @@ class Move {
     // Hacker
     if (useHacker && hackerPret) cheat(this.fromI, this.fromJ, this.i, this.j);
 
+    // Les Moutons !
+    if (joueurs.get((int)pow(tourDeQui-1, 2)).name == "LesMoutons") {
+      if (ta.timers[tourDeQui].currentTime >= 45000 && random(1) <= 0.3) ta.timers[tourDeQui].removeTime(5000);
+    }
+
     // Efface la table de transposition
-    // On le fait à chaque coup pour éviter des conflits à propos de la table quand deux maires jouent ensemble
-    // if (this.capture != null || (joueurs.get(0).name == "LeMaire" && joueurs.get(1).name == "LeMaire")) {
+    // On le fait à chaque coup pour éviter des conflits à propos de la table quand deux maires jouent ensemble, ou quand les moutons interviennent...
     tt.clear();
   }
 

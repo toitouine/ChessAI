@@ -2,15 +2,14 @@
 
 // Search controller (contrôle les paramètres des recherches et temps pour iterative deepening)
 
-// TODO
-
 public class SearchApplet extends PApplet {
-  int sizeW = 500, sizeH = 198;
+  int sizeW = 503, sizeH = 198;
   boolean show = true;
 
   // -1 : aucun, 0 : blanc, 1 : noir
   int inSearch = -1;
   int searchStartTime;
+  int[] savedTimes = {0, 0};
   int[] times = {0, 0};
 
   String[] evals = {"0", "0"};
@@ -29,6 +28,7 @@ public class SearchApplet extends PApplet {
     surface.setLocation(displayWidth-sizeW, gameHeight+46);
     surface.setTitle("Search controller");
     surface.setFrameRate(30);
+    surface.setAlwaysOnTop(attach);
   }
 
   public void draw() {
@@ -41,6 +41,7 @@ public class SearchApplet extends PApplet {
     }
 
     if (!show) return;
+    surface.setAlwaysOnTop(attach);
 
     background(#272522);
 
@@ -57,7 +58,6 @@ public class SearchApplet extends PApplet {
 
     if (joueurs.get(1) != null && !joueurs.get(1).name.equals("Humain")) text(joueurs.get(1).name + " (noirs)", (3*width)/4, 27);
     else text(joueurs.get(1).name + " (noirs)", (3*width)/4, height/2);
-
 
     // Stats
     textSize(17);
@@ -86,6 +86,12 @@ public class SearchApplet extends PApplet {
   public void setTimes(int timeForSearch1, int timeForSearch2) {
     this.times[0] = timeForSearch1;
     this.times[1] = timeForSearch2;
+    this.savedTimes[0] = timeForSearch1;
+    this.savedTimes[1] = timeForSearch2;
+  }
+
+  public void setTime(int c, int time) {
+    this.times[c] = time;
   }
 
   public int getTime(int c) {
@@ -272,14 +278,15 @@ public class GraphApplet extends PApplet {
     }
 
     void legende() {
-      float ecart = (this.w) / (this.legendes.size()+1);
+      float ecartEnPlus = 30;
+      float ecart = (this.w) / (this.legendes.size()+1) + ecartEnPlus;
       float lineSize = 35;
       float distanceLineText = 10;
       float yDistance = this.y + this.h + 25;
 
       for (int i = 0; i < this.legendes.size(); i++) {
         float totalDistance = lineSize + distanceLineText + textWidth(this.legendes.get(i));
-        float centerOfPoint = this.x + ecart * (i+1);
+        float centerOfPoint = this.x + ecart * (i+1) - ecartEnPlus;
         if (this.colors.size() > 0 && this.colors.size() > i) stroke(this.colors.get(i));
         strokeWeight(3);
         line(centerOfPoint - totalDistance/2, yDistance, centerOfPoint - totalDistance/2 + lineSize, yDistance);
@@ -346,7 +353,8 @@ void updateGraph() {
 void activateGraph() {
   ga.initGraph();
   sendValuesToGraph();
-  surface.setVisible(true); //focus main
+  delay(3);
+  surface.setVisible(true);
 }
 
 void sendValuesToGraph() {
@@ -382,6 +390,8 @@ public class TimerApplet extends PApplet {
   int downY = windowHeight-upY;
   int timersX = windowWidth/2, timersTextSize = 30;
 
+  int rate = 15;
+
   public void settings() {
     size(windowWidth, windowHeight);
   }
@@ -391,7 +401,7 @@ public class TimerApplet extends PApplet {
     surface.setLocation(displayWidth - (gameWidth + width), 45 + offsetY + 4*w - windowHeight/2);
     surface.setTitle("Pendules");
     surface.setAlwaysOnTop(attach);
-    surface.setFrameRate(30);
+    surface.setFrameRate(rate);
 
     initTimers();
   }
@@ -423,7 +433,7 @@ public class TimerApplet extends PApplet {
   }
 
   public void goToHackerPosition() {
-    surface.setLocation(displayWidth - gameWidth + 2, displayHeight-height-51);
+    surface.setLocation(displayWidth - gameWidth, displayHeight-height-51);
   }
 
   public void goToDefaultPosition() {
@@ -431,14 +441,14 @@ public class TimerApplet extends PApplet {
   }
 
   public void mouseDragged() {
-    surface.setFrameRate(60);
+    // surface.setFrameRate(60);
     Point mouse;
     mouse = MouseInfo.getPointerInfo().getLocation();
     surface.setLocation(mouse.x - windowWidth/2, mouse.y - windowHeight/2);
   }
 
   public void mouseReleased() {
-    surface.setFrameRate(30);
+    // surface.setFrameRate(30);
   }
 
   public void switchTimers(int toward) {
@@ -460,6 +470,11 @@ public class TimerApplet extends PApplet {
     timers[1].pause();
   }
 
+  public void stopTimers() {
+    timers[0].stop();
+    timers[1].stop();
+  }
+
   public void resetTimers() {
     timers[0] = null;
     timers[1] = null;
@@ -469,7 +484,6 @@ public class TimerApplet extends PApplet {
   public void initTimers() {
     for (int i = 0; i < timers.length; i++) {
       timers[i] = new Timer(times[i][0], times[i][1], times[i][2]);
-      timers[i].pause();
     }
     timers[0].setColors(#ffffff, #26211b, #989795, #615e5b);
     timers[1].setColors(#26211b, #ffffff, #2b2722, #82807e);
@@ -477,13 +491,11 @@ public class TimerApplet extends PApplet {
 
   public class Timer {
     int currentTime = 0; //temps à afficher
-    int totalTime; //temps entré par l'utilisateur
-    int timeWhenTimerStart = millis();
-    int timeInLastPause = millis(), totalTimeInPause = 0;
-    int enteredInPauseAt = millis();
+    int totalTime; //temps entré par l'utilisateur (ms)
     int backColorActive = #ffffff, textColorActive = #ffffff, backColor = #ffffff, textColor = #ffffff;
     int increment = 0;
-    boolean pause = false;
+    int timeOfSecond = 1000;
+    boolean pause = true;
 
     Timer(int min, int sec, int increment) {
       this.totalTime = (min*60 + sec)*1000;
@@ -498,23 +510,35 @@ public class TimerApplet extends PApplet {
       this.textColor = tc;
     }
 
+    void setDurationOfSecond(int timeInMillis) {
+      this.timeOfSecond = timeInMillis;
+    }
+
+    void addTime(int timeInMillis) {
+      this.currentTime += timeInMillis;
+    }
+
+    void removeTime(int timeInMillis) {
+      this.currentTime -= timeInMillis;
+    }
+
     void update() {
-      if (!this.pause) this.currentTime = this.totalTime - millis() + this.totalTimeInPause + timeWhenTimerStart;
-      else this.timeInLastPause = millis() - this.enteredInPauseAt;
+      if (!this.pause) {
+        this.currentTime -= timeOfSecond/rate;
+      }
     }
 
     void pause() {
-      if (!this.pause) {
-        this.pause = true;
-        this.enteredInPauseAt = millis();
-      }
+      this.pause = true;
+      this.currentTime += this.increment;
+    }
+
+    void stop() {
+      this.pause = true;
     }
 
     void resume() {
-      if (this.pause) {
-        this.pause = false;
-        this.totalTimeInPause += this.timeInLastPause;
-      }
+      this.pause = false;
     }
 
     void show(int x, int y, int size) {
@@ -547,6 +571,85 @@ public class TimerApplet extends PApplet {
     SmoothCanvas smoothCanvas = (SmoothCanvas) awtSurface.getNative();
     Frame frame = smoothCanvas.getFrame();
     frame.setUndecorated(true);
+    return pSurface;
+  }
+}
+
+/////////////////////////////////////////////////////////////////
+
+// Hacker applet (aide à la calibration)
+
+public class HackerApplet extends PApplet {
+  boolean show = false, dataReceived = false;
+  Point[][] coords = new Point[8][8];
+
+  public void settings() {
+    size(100, 100);
+  }
+
+  public void setup() {
+    background(49, 46, 43);
+    surface.setTitle("Transparent applet");
+    surface.setLocation(0, 0);
+    surface.setAlwaysOnTop(true);
+    surface.setVisible(false);
+    surface.setFrameRate(5);
+  }
+
+  public void draw() {
+    if (!show || !dataReceived) return;
+
+    int caseWidth = (this.coords[7][7].x - this.coords[0][0].x)/7;
+    int caseHeight = (this.coords[7][7].y - this.coords[0][0].y)/7;
+
+    push();
+    translate(-this.coords[0][0].x+caseWidth/2, -this.coords[0][0].y+caseWidth/2);
+    stroke(255, 0, 0);
+    strokeWeight(2);
+    for (int i = 0; i < 8; i++) {
+      for (int j = 0; j < 8; j++) {
+        if (i+1 < 8) line(this.coords[i][j].x, this.coords[i][j].y, this.coords[i+1][j].x, this.coords[i+1][j].y);
+        if (j+1 < 8) line(this.coords[i][j].x, this.coords[i][j].y, this.coords[i][j+1].x, this.coords[i][j+1].y);
+      }
+    }
+    pop();
+  }
+
+  public void sendCoords(Point[][] sent) {
+    this.coords = sent;
+    int caseWidth = (this.coords[7][7].x - this.coords[0][0].x)/7;
+    int caseHeight = (this.coords[7][7].y - this.coords[0][0].y)/7;
+    surface.setSize(sent[7][7].x - sent[0][0].x + caseWidth, sent[7][7].y - sent[0][0].y + caseHeight);
+    surface.setLocation(sent[0][0].x - caseWidth/2, sent[0][0].y - caseHeight/2);
+    this.show();
+    dataReceived = true;
+  }
+
+  public void reset() {
+    this.coords = new Point[8][8];
+    dataReceived = false;
+    this.hide();
+  }
+
+  public void show() {
+    show = true;
+    surface.setVisible(true);
+  }
+
+  public void hide() {
+    show = false;
+    surface.setVisible(false);
+  }
+
+  PSurface initSurface() {
+    PSurface pSurface = super.initSurface();
+    PSurfaceAWT awtSurface = (PSurfaceAWT) surface;
+    SmoothCanvas smoothCanvas = (SmoothCanvas) awtSurface.getNative();
+    Frame frame = smoothCanvas.getFrame();
+    frame.removeNotify();
+    frame.setUndecorated(true);
+    AWTUtilities.setWindowOpacity(frame, 0.4f);
+    frame.addNotify();
     return pSurface;
   }
 }

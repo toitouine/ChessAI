@@ -10,6 +10,7 @@ import java.awt.Point;
 import java.awt.datatransfer.*; 
 import java.awt.event.InputEvent; 
 import java.awt.Robot; 
+import com.sun.awt.AWTUtilities; 
 import processing.awt.PSurfaceAWT; 
 import processing.awt.PSurfaceAWT.SmoothCanvas; 
 import processing.sound.*; 
@@ -36,12 +37,20 @@ public class Echecs_IA extends PApplet {
 // Structures de pion
 // Bouton d'abandon
 // Plus d'ouvertures
-// Bouton rematch
 // Système de vérification de fens
+// Analyse de parties
+// Les moutons :
+//   - Menaces OK
+//   - Missclick
+//   - Pièces qui apparaissent (ou pas)
+//   - Arnaques au temps OK
+// Scan automatique d'échiquier
+// Gestion du temps dans le menu
 
 /////////////////////////////////////////////////////////////////
 
 // Libraries
+
 
 
 
@@ -75,6 +84,7 @@ SoundFile prise_sound;
 TimerApplet ta;
 GraphApplet ga;
 SearchApplet sa;
+HackerApplet ha;
 
 PImage cavalier_b;
 PImage cavalier_n;
@@ -93,6 +103,7 @@ PImage loic;
 PImage antoine;
 PImage stockfish;
 PImage lemaire;
+PImage lesmoutons;
 PImage human;
 PImage mark;
 
@@ -158,6 +169,8 @@ Bouton positionEditor;
 Bouton hackerButton;
 Piece pieceSelectionne = null;
 Piece enPromotion = null;
+TextBouton rematchButton;
+TextBouton newGameButton;
 DragAndDrop enAjoutPiece = null;
 Slider s1, s2, q1, q2, t1, t2;
 
@@ -166,11 +179,10 @@ Shortcut sc = new Shortcut();
 /////////////////////////////////////////////////////////////////
 
 // Variables pour la partie
-
 int cols = 8;
 int rows = 8;
 int tourDeQui = 0; //dakin
-float nbTour = 0.5f; //nombre de tour
+float nbTour = 0.5f;
 float endGameWeight = 0;
 boolean gameEnded = false;
 String infos = "";
@@ -189,7 +201,7 @@ boolean showSavedPositions = false;
 boolean showSearchController = false;
 boolean blockPlaying = false;
 int gameState = 0;
-int winner = -1; //2 pour nulle
+int winner = -1;
 int timeAtEnd = 0;
 int rewindCount = 0;
 int requestToRestart = -1;
@@ -199,9 +211,14 @@ String alert = "";
 int alertTime = 0;
 long alertStarted = 0;
 
-int slider; //en mémoire du vecteur vitesse
+// Les Moutons !
+boolean missClickDragNextMove = false;
+
+// En mémoire du vecteur vitesse
+int slider;
 int speed = 30;
 
+// Joueurs
 String j1;
 String j2;
 int j1depth = 3;
@@ -214,12 +231,12 @@ int j2Time = 1000;
 // Hacker
 Point upLeftCorner, downRightCorner;
 Point saveUpLeftCorner, saveDownRightCorner;
+Color hackerWhitePieceColor, hackerBlackPieceColor;
+Color saveWhitePieceColor, saveBlackPieceColor;
 long lastHackerScan = 0;
-int hackerScanCooldown = 500;
+int hackerScanCooldown = 400;
 boolean useHacker = false;
 boolean hackerPret = false;
-Color hackerWhiteSquare, hackerBlackSquare;
-Color saveWhiteColor, saveBlackColor;
 Point[][] hackerCoords = new Point[8][8];
 Point[][] saveHackerCoords = new Point[8][8];
 
@@ -254,6 +271,11 @@ public void setup() {
   PApplet.runSketch(argsS, sa);
   sa.hide();
 
+  String[] argsH = {"Hacker"};
+  ha = new HackerApplet();
+  PApplet.runSketch(argsH, ha);
+  ha.hide();
+
   surface.setVisible(true);
   surface.setTitle(name + " - Selection des joueurs");
   surface.setLocation(displayWidth/2 - width/2, 23);
@@ -286,7 +308,7 @@ public void setup() {
   // Control P5
   cp5 = new ControlP5(this);
   s1 = cp5.addSlider("j1depth")
-     .setPosition(990, 80)
+     .setPosition(1180, 80)
      .setSize(30,140)
      .setLabel("Profondeur")
      .setRange(1,30)
@@ -297,7 +319,7 @@ public void setup() {
      .setColorBackground(0xff5d6e3b);
 
   s2 = cp5.addSlider("j2depth")
-     .setPosition(990, 290)
+     .setPosition(1180, 290)
      .setSize(30, 140)
      .setLabel("Profondeur")
      .setRange(1,30)
@@ -308,7 +330,7 @@ public void setup() {
      .setColorBackground(0xff5d6e3b);
 
   q1 = cp5.addSlider("j1Quiet")
-     .setPosition(1060, 80)
+     .setPosition(1250, 80)
      .setSize(30, 140)
      .setLabel("Max Quiet")
      .setRange(0,30)
@@ -319,7 +341,7 @@ public void setup() {
      .setColorBackground(0xff5d6e3b);
 
   q2 = cp5.addSlider("j2Quiet")
-     .setPosition(1060, 290)
+     .setPosition(1250, 290)
      .setSize(30, 140)
      .setLabel("Max Quiet")
      .setRange(0,30)
@@ -330,7 +352,7 @@ public void setup() {
      .setColorBackground(0xff5d6e3b);
 
   t1 = cp5.addSlider("j1Time")
-      .setPosition(1130, 80)
+      .setPosition(1320, 80)
       .setSize(30, 140)
       .setLabel("Temps")
       .setRange(0, 10000)
@@ -340,7 +362,7 @@ public void setup() {
       .setColorBackground(0xff827e40);
 
   t2 = cp5.addSlider("j2Time")
-      .setPosition(1130, 290)
+      .setPosition(1320, 290)
       .setSize(30, 140)
       .setLabel("Temps")
       .setRange(0, 10000)
@@ -392,6 +414,7 @@ public void setup() {
   antoine = loadImage("joueurs/antoine.jpg");
   stockfish = loadImage("joueurs/stockfish.png");
   lemaire = loadImage("joueurs/lemaire.jpg");
+  lesmoutons = loadImage("joueurs/lesmoutons.jpg");
   human = loadImage("joueurs/human.png");
   mark = loadImage("checkmark.png");
 
@@ -413,9 +436,9 @@ public void setup() {
   }
 
   // Initialise les boutons et interfaces
-  hubButtons.add(new TextBouton(width/2 - 190, 480, 380, 75, "Nouvelle partie", 30));
-  hubButtons.add(new TextBouton(width-110, height-40, 100, 30, "Coller FEN", 18)); hubButtons.get(1).setColors(0xff1d1c1a, 0xffffffff);
-  hubButtons.add(new TextBouton(width-220, height-40, 100, 30, "Copier FEN", 18)); hubButtons.get(2).setColors(0xff1d1c1a, 0xffffffff);
+  hubButtons.add(new TextBouton(width/2 - 190, 480, 380, 75, "Nouvelle partie", 30, 10));
+  hubButtons.add(new TextBouton(width-110, height-40, 100, 30, "Coller FEN", 18, 8)); hubButtons.get(1).setColors(0xff1d1c1a, 0xffffffff);
+  hubButtons.add(new TextBouton(width-220, height-40, 100, 30, "Copier FEN", 18, 8)); hubButtons.get(2).setColors(0xff1d1c1a, 0xffffffff);
 
   promoButtons.add(new Bouton(0.25f*w + offsetX, 3.25f*w + offsetY, 1.5f*w, imageArrayB[1], imageArrayN[1]));
   promoButtons.add(new Bouton(2.25f*w + offsetX, 3.25f*w + offsetY, 1.5f*w, imageArrayB[2], imageArrayN[2]));
@@ -425,18 +448,24 @@ public void setup() {
   toggles1.add(new Toggle(40, 80, 150, stockfish, "Stockfish"));
   toggles1.add(new Toggle(230, 80, 150, antoine, "Antoine"));
   toggles1.add(new Toggle(420, 80, 150, loic, "Loic"));
-  toggles1.add(new Toggle(610, 80, 150, lemaire, "LeMaire"));
-  toggles1.add(new Toggle(800, 80, 150, human, "Humain"));
+  toggles1.add(new Toggle(610, 80, 150, lesmoutons, "LesMoutons"));
+  toggles1.add(new Toggle(800, 80, 150, lemaire, "LeMaire"));
+  toggles1.add(new Toggle(990, 80, 150, human, "Humain"));
 
   toggles2.add(new Toggle(40, 290, 150, stockfish, "Stockfish"));
   toggles2.add(new Toggle(230, 290, 150, antoine, "Antoine"));
   toggles2.add(new Toggle(420, 290, 150, loic, "Loic"));
-  toggles2.add(new Toggle(610, 290, 150, lemaire, "LeMaire"));
-  toggles2.add(new Toggle(800, 290, 150, human, "Humain"));
+  toggles2.add(new Toggle(610, 290, 150, lesmoutons, "LesMoutons"));
+  toggles2.add(new Toggle(800, 290, 150, lemaire, "LeMaire"));
+  toggles2.add(new Toggle(990, 290, 150, human, "Humain"));
 
   addPiecesColorSwitch = new CircleToggle(offsetX/2, (offsetY+w/2 + w*6) + 70, w/1.3f);
   positionEditor = new Bouton(width-55, 10, 50, chess, chess);
   hackerButton = new Bouton(width-100, 11, 40, bot, bot);
+  rematchButton = new TextBouton(offsetX - offsetX/1.08f, offsetY+4*w-29, offsetX-2*(offsetX - offsetX/1.08f), 24, "Revanche", 15, 3);
+  rematchButton.setColors(0xff1d1c1a, 0xffffffff);
+  newGameButton = new TextBouton(offsetX - offsetX/1.08f, offsetY+4*w+5, offsetX-2*(offsetX - offsetX/1.08f), 24, "Menu", 15, 3);
+  newGameButton.setColors(0xff1d1c1a, 0xffffffff);
 
   // Drag and drops
   addPiecesButtons[0] = new ArrayList<DragAndDrop>();
@@ -545,6 +574,10 @@ public void draw() {
       if (targetEndScreenY - yEndScreen <= 1 && mousePressed && (mouseX < rectX || mouseX >= rectX+rectW || mouseY < yEndScreen || mouseY >= yEndScreen+rectH)) disableEndScreen = true;
       drawEndScreen(yEndScreen);
     }
+    if (gameEnded) {
+      newGameButton.show();
+      rematchButton.show();
+    }
 
     // Variantes
     if (showVariante) {
@@ -555,7 +588,7 @@ public void draw() {
     if (useHacker) {
       if (!hackerPret) { drawHackerPage(); }
       else {
-        if (play && !gameEnded && enPromotion == null && millis() - lastHackerScan >= hackerScanCooldown) doCompleteScan();
+        if (play && !gameEnded && enPromotion == null && millis() - lastHackerScan >= hackerScanCooldown) scanMoveOnBoard();
       }
     }
 
@@ -627,15 +660,14 @@ public void draw() {
 
 // Search controller (contrôle les paramètres des recherches et temps pour iterative deepening)
 
-// TODO
-
 public class SearchApplet extends PApplet {
-  int sizeW = 500, sizeH = 198;
+  int sizeW = 503, sizeH = 198;
   boolean show = true;
 
   // -1 : aucun, 0 : blanc, 1 : noir
   int inSearch = -1;
   int searchStartTime;
+  int[] savedTimes = {0, 0};
   int[] times = {0, 0};
 
   String[] evals = {"0", "0"};
@@ -654,6 +686,7 @@ public class SearchApplet extends PApplet {
     surface.setLocation(displayWidth-sizeW, gameHeight+46);
     surface.setTitle("Search controller");
     surface.setFrameRate(30);
+    surface.setAlwaysOnTop(attach);
   }
 
   public void draw() {
@@ -666,6 +699,7 @@ public class SearchApplet extends PApplet {
     }
 
     if (!show) return;
+    surface.setAlwaysOnTop(attach);
 
     background(0xff272522);
 
@@ -682,7 +716,6 @@ public class SearchApplet extends PApplet {
 
     if (joueurs.get(1) != null && !joueurs.get(1).name.equals("Humain")) text(joueurs.get(1).name + " (noirs)", (3*width)/4, 27);
     else text(joueurs.get(1).name + " (noirs)", (3*width)/4, height/2);
-
 
     // Stats
     textSize(17);
@@ -711,6 +744,12 @@ public class SearchApplet extends PApplet {
   public void setTimes(int timeForSearch1, int timeForSearch2) {
     this.times[0] = timeForSearch1;
     this.times[1] = timeForSearch2;
+    this.savedTimes[0] = timeForSearch1;
+    this.savedTimes[1] = timeForSearch2;
+  }
+
+  public void setTime(int c, int time) {
+    this.times[c] = time;
   }
 
   public int getTime(int c) {
@@ -897,14 +936,15 @@ public class GraphApplet extends PApplet {
     }
 
     public void legende() {
-      float ecart = (this.w) / (this.legendes.size()+1);
+      float ecartEnPlus = 30;
+      float ecart = (this.w) / (this.legendes.size()+1) + ecartEnPlus;
       float lineSize = 35;
       float distanceLineText = 10;
       float yDistance = this.y + this.h + 25;
 
       for (int i = 0; i < this.legendes.size(); i++) {
         float totalDistance = lineSize + distanceLineText + textWidth(this.legendes.get(i));
-        float centerOfPoint = this.x + ecart * (i+1);
+        float centerOfPoint = this.x + ecart * (i+1) - ecartEnPlus;
         if (this.colors.size() > 0 && this.colors.size() > i) stroke(this.colors.get(i));
         strokeWeight(3);
         line(centerOfPoint - totalDistance/2, yDistance, centerOfPoint - totalDistance/2 + lineSize, yDistance);
@@ -971,7 +1011,8 @@ public void updateGraph() {
 public void activateGraph() {
   ga.initGraph();
   sendValuesToGraph();
-  surface.setVisible(true); //focus main
+  delay(3);
+  surface.setVisible(true);
 }
 
 public void sendValuesToGraph() {
@@ -1007,6 +1048,8 @@ public class TimerApplet extends PApplet {
   int downY = windowHeight-upY;
   int timersX = windowWidth/2, timersTextSize = 30;
 
+  int rate = 15;
+
   public void settings() {
     size(windowWidth, windowHeight);
   }
@@ -1016,7 +1059,7 @@ public class TimerApplet extends PApplet {
     surface.setLocation(displayWidth - (gameWidth + width), 45 + offsetY + 4*w - windowHeight/2);
     surface.setTitle("Pendules");
     surface.setAlwaysOnTop(attach);
-    surface.setFrameRate(30);
+    surface.setFrameRate(rate);
 
     initTimers();
   }
@@ -1048,7 +1091,7 @@ public class TimerApplet extends PApplet {
   }
 
   public void goToHackerPosition() {
-    surface.setLocation(displayWidth - gameWidth + 2, displayHeight-height-51);
+    surface.setLocation(displayWidth - gameWidth, displayHeight-height-51);
   }
 
   public void goToDefaultPosition() {
@@ -1056,14 +1099,14 @@ public class TimerApplet extends PApplet {
   }
 
   public void mouseDragged() {
-    surface.setFrameRate(60);
+    // surface.setFrameRate(60);
     Point mouse;
     mouse = MouseInfo.getPointerInfo().getLocation();
     surface.setLocation(mouse.x - windowWidth/2, mouse.y - windowHeight/2);
   }
 
   public void mouseReleased() {
-    surface.setFrameRate(30);
+    // surface.setFrameRate(30);
   }
 
   public void switchTimers(int toward) {
@@ -1085,6 +1128,11 @@ public class TimerApplet extends PApplet {
     timers[1].pause();
   }
 
+  public void stopTimers() {
+    timers[0].stop();
+    timers[1].stop();
+  }
+
   public void resetTimers() {
     timers[0] = null;
     timers[1] = null;
@@ -1094,7 +1142,6 @@ public class TimerApplet extends PApplet {
   public void initTimers() {
     for (int i = 0; i < timers.length; i++) {
       timers[i] = new Timer(times[i][0], times[i][1], times[i][2]);
-      timers[i].pause();
     }
     timers[0].setColors(0xffffffff, 0xff26211b, 0xff989795, 0xff615e5b);
     timers[1].setColors(0xff26211b, 0xffffffff, 0xff2b2722, 0xff82807e);
@@ -1102,13 +1149,11 @@ public class TimerApplet extends PApplet {
 
   public class Timer {
     int currentTime = 0; //temps à afficher
-    int totalTime; //temps entré par l'utilisateur
-    int timeWhenTimerStart = millis();
-    int timeInLastPause = millis(), totalTimeInPause = 0;
-    int enteredInPauseAt = millis();
+    int totalTime; //temps entré par l'utilisateur (ms)
     int backColorActive = 0xffffffff, textColorActive = 0xffffffff, backColor = 0xffffffff, textColor = 0xffffffff;
     int increment = 0;
-    boolean pause = false;
+    int timeOfSecond = 1000;
+    boolean pause = true;
 
     Timer(int min, int sec, int increment) {
       this.totalTime = (min*60 + sec)*1000;
@@ -1123,23 +1168,35 @@ public class TimerApplet extends PApplet {
       this.textColor = tc;
     }
 
+    public void setDurationOfSecond(int timeInMillis) {
+      this.timeOfSecond = timeInMillis;
+    }
+
+    public void addTime(int timeInMillis) {
+      this.currentTime += timeInMillis;
+    }
+
+    public void removeTime(int timeInMillis) {
+      this.currentTime -= timeInMillis;
+    }
+
     public void update() {
-      if (!this.pause) this.currentTime = this.totalTime - millis() + this.totalTimeInPause + timeWhenTimerStart;
-      else this.timeInLastPause = millis() - this.enteredInPauseAt;
+      if (!this.pause) {
+        this.currentTime -= timeOfSecond/rate;
+      }
     }
 
     public void pause() {
-      if (!this.pause) {
-        this.pause = true;
-        this.enteredInPauseAt = millis();
-      }
+      this.pause = true;
+      this.currentTime += this.increment;
+    }
+
+    public void stop() {
+      this.pause = true;
     }
 
     public void resume() {
-      if (this.pause) {
-        this.pause = false;
-        this.totalTimeInPause += this.timeInLastPause;
-      }
+      this.pause = false;
     }
 
     public void show(int x, int y, int size) {
@@ -1172,6 +1229,85 @@ public class TimerApplet extends PApplet {
     SmoothCanvas smoothCanvas = (SmoothCanvas) awtSurface.getNative();
     Frame frame = smoothCanvas.getFrame();
     frame.setUndecorated(true);
+    return pSurface;
+  }
+}
+
+/////////////////////////////////////////////////////////////////
+
+// Hacker applet (aide à la calibration)
+
+public class HackerApplet extends PApplet {
+  boolean show = false, dataReceived = false;
+  Point[][] coords = new Point[8][8];
+
+  public void settings() {
+    size(100, 100);
+  }
+
+  public void setup() {
+    background(49, 46, 43);
+    surface.setTitle("Transparent applet");
+    surface.setLocation(0, 0);
+    surface.setAlwaysOnTop(true);
+    surface.setVisible(false);
+    surface.setFrameRate(5);
+  }
+
+  public void draw() {
+    if (!show || !dataReceived) return;
+
+    int caseWidth = (this.coords[7][7].x - this.coords[0][0].x)/7;
+    int caseHeight = (this.coords[7][7].y - this.coords[0][0].y)/7;
+
+    push();
+    translate(-this.coords[0][0].x+caseWidth/2, -this.coords[0][0].y+caseWidth/2);
+    stroke(255, 0, 0);
+    strokeWeight(2);
+    for (int i = 0; i < 8; i++) {
+      for (int j = 0; j < 8; j++) {
+        if (i+1 < 8) line(this.coords[i][j].x, this.coords[i][j].y, this.coords[i+1][j].x, this.coords[i+1][j].y);
+        if (j+1 < 8) line(this.coords[i][j].x, this.coords[i][j].y, this.coords[i][j+1].x, this.coords[i][j+1].y);
+      }
+    }
+    pop();
+  }
+
+  public void sendCoords(Point[][] sent) {
+    this.coords = sent;
+    int caseWidth = (this.coords[7][7].x - this.coords[0][0].x)/7;
+    int caseHeight = (this.coords[7][7].y - this.coords[0][0].y)/7;
+    surface.setSize(sent[7][7].x - sent[0][0].x + caseWidth, sent[7][7].y - sent[0][0].y + caseHeight);
+    surface.setLocation(sent[0][0].x - caseWidth/2, sent[0][0].y - caseHeight/2);
+    this.show();
+    dataReceived = true;
+  }
+
+  public void reset() {
+    this.coords = new Point[8][8];
+    dataReceived = false;
+    this.hide();
+  }
+
+  public void show() {
+    show = true;
+    surface.setVisible(true);
+  }
+
+  public void hide() {
+    show = false;
+    surface.setVisible(false);
+  }
+
+  public PSurface initSurface() {
+    PSurface pSurface = super.initSurface();
+    PSurfaceAWT awtSurface = (PSurfaceAWT) surface;
+    SmoothCanvas smoothCanvas = (SmoothCanvas) awtSurface.getNative();
+    Frame frame = smoothCanvas.getFrame();
+    frame.removeNotify();
+    frame.setUndecorated(true);
+    AWTUtilities.setWindowOpacity(frame, 0.4f);
+    frame.addNotify();
     return pSurface;
   }
 }
@@ -1499,14 +1635,16 @@ class TextBouton {
   int textColor = color(0xffffffff);
   String text;
   int textSize;
+  int arrondi;
 
-  TextBouton(float x, float y, float w, float h, String t, int textSize) {
+  TextBouton(float x, float y, float w, float h, String t, int textSize, int arrondi) {
     this.x = x;
     this.y = y;
     this.w = w;
     this.h = h;
     this.text = t;
     this.textSize = textSize;
+    this.arrondi = arrondi;
   }
 
   public void setColors(int b, int t) {
@@ -1518,7 +1656,7 @@ class TextBouton {
     noStroke();
     fill(this.backColor);
     rectMode(CORNER);
-    rect(this.x, this.y, this.w, this.h, 10);
+    rect(this.x, this.y, this.w, this.h, this.arrondi);
 
     textAlign(CENTER, CENTER);
     textSize(this.textSize);
@@ -1670,6 +1808,8 @@ class PreComputedData {
 String name = "Echecs on java";
 
 String startFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq"; // Position de départ
+// String startFEN = "r3k1nr/p2p1ppp/1p1Rp3/8/5N2/4B3/PPP2PPP/2K2R2 b kq"; // Partie Bete-a-corne - LeMaire
+// String startFEN = "r1bqkbnr/pppp1ppp/2n5/4p2Q/8/4P3/PPPP1PPP/RNB1KBNR w KQkq"; // Partie Lewis - LeMaire
 // String startFEN = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w"; // Vecteur vitesse
 // String startFEN = "r5k1/6pp/5b2/4N3/8/q7/5PPP/3Q1RK1 w"; // Mat à l'étouffée
 // String startFEN = "8/1RK5/8/3k4/8/8/8/8 w"; // Finale facile : Mat roi-tour
@@ -1681,14 +1821,14 @@ String startFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq"; // Posit
 
 // Sound control et time control
 
-int soundControl = 1; //0 = aucun, 1 = partie, 2 = musique
+int soundControl = 0; //0 = aucun, 1 = partie, 2 = musique
 boolean attach = true;
 boolean stats = true;
 boolean details = true;
 boolean timeControl = false;
 int[][] times = {
-  {1, 0, 0}, //blancs : minutes, secondes, incrément
-  {1, 0, 0}  //noirs : minutes, secondes, incrément
+  {3, 0, 2}, //blancs : minutes, secondes, incrément
+  {3, 0, 2}  //noirs : minutes, secondes, incrément
 };
 
 /////////////////////////////////////////////////////////////////
@@ -1700,7 +1840,7 @@ float pieceSize = w;
 boolean pointDeVue = true;
 int offsetX = 100 * w/75; //100 * w/100 pour Windows
 int offsetY = 50 * w/75; //50 * w/100 pour Windows
-int selectWidth = 1190;
+int selectWidth = 1380;
 int selectHeight = 595;
 int gameWidth = cols * w + offsetX;
 int gameHeight = rows * w + offsetY;
@@ -1993,7 +2133,7 @@ public void keyPressed() {
     if (requestToRestart != -1) {
       requestToRestart = -1;
       println(">>> Retour à la sélection des joueurs" + (!gameEnded ? " (partie annulée)" : "" + "\n"));
-      resetGame();
+      resetGame(true);
     }
   }
 
@@ -2155,17 +2295,18 @@ public void mouseDragged() {
 public void mousePressed() {
   if (gameState == 1) {
 
+    // Boutons rematch
+    if (gameEnded) {
+      if (rematchButton.contains(mouseX, mouseY)) { rematch(); return; }
+      if (newGameButton.contains(mouseX, mouseY)) { resetGame(true); return; }
+    }
+
     // Barre d'outils
     for (Bouton b : iconButtons) {
       if (b.contains(mouseX, mouseY)) b.callShortcut();
     }
 
     // Échiquier
-
-    // if (joueurs.get(tourDeQui).name == "Humain" && !gameEnded && play && !rewind) {
-    //
-    //   if (useHacker && !hackerPret) return;
-
     if (joueurs.get(tourDeQui).name == "Humain" && !blockPlaying) {
 
       if (enPromotion == null) {
@@ -2337,16 +2478,21 @@ public void mousePressed() {
 public void mouseMoved() {
   if (gameState == 1) {
 
-    //barre d'outils
+    // Bouton rematch
+    if (gameEnded && (rematchButton.contains(mouseX, mouseY) || newGameButton.contains(mouseX, mouseY))) {
+      cursor(HAND);
+      return;
+    }
+
+    // Barre d'outils
     for (int i = 0; i < iconButtons.size(); i++) {
       if (iconButtons.get(i).contains(mouseX, mouseY)) {
-        //icon hover
         cursor(HAND);
         infoBox = iconButtons.get(i).getDescription();
         return;
       }
     }
-    infoBox = ""; //aucun outil hovered
+    infoBox = "";
 
     if (enPromotion == null) {
 
@@ -2380,19 +2526,19 @@ public void mouseMoved() {
 
   else if (gameState == 0) {
 
-    for (Toggle t :  toggles1) {
+    for (Toggle t : toggles1) {
       if (t.contains(mouseX, mouseY)) {
         cursor(HAND);
         return;
       }
     }
-    for (Toggle t2 :  toggles2) {
+    for (Toggle t2 : toggles2) {
       if (t2.contains(mouseX, mouseY)) {
         cursor(HAND);
         return;
       }
     }
-    for (TextBouton b :  hubButtons) {
+    for (TextBouton b : hubButtons) {
       if (b.contains(mouseX, mouseY)) {
         cursor(HAND);
         return;
@@ -2467,6 +2613,10 @@ public void alert(String message, int time) {
 
 public boolean isSameColor(Color c1, Color c2) {
   return c1.getRed() == c2.getRed() && c1.getGreen() == c2.getGreen() && c1.getBlue() == c2.getBlue();
+}
+
+public boolean isSimilarColor(Color c1, Color c2) {
+  return abs(c1.getRed()-c2.getRed()) <= 10 && abs(c1.getGreen()-c2.getGreen()) <= 10 && abs(c1.getBlue()-c2.getBlue()) <= 10;
 }
 
 public String roundedString(float num) {
@@ -2594,7 +2744,9 @@ public void cheat(int fromI, int fromJ, int i, int j) {
 
   // Joue le coup
   click(hackerCoords[fromJ][fromI].x, hackerCoords[fromJ][fromI].y);
+  delay(2);
   click(hackerCoords[j][i].x, hackerCoords[j][i].y);
+  delay(2);
 
   // Revient à la position initiale
   click(x, y);
@@ -2604,69 +2756,57 @@ public void cheat(int fromI, int fromJ, int i, int j) {
 }
 
 public Color[][] scanBoard() {
-  Color[][] scannedBoard = new Color[8][8];
+  // int before = millis();
 
-  int caseWidth = (downRightCorner.x - upLeftCorner.x)/7;
-  int caseHeight = (downRightCorner.y - upLeftCorner.y)/7;
+  Color[][] scannedBoard = new Color[8][8];
 
   for (int i = 0; i < 8; i++) {
     for (int j = 0; j < 8; j++) {
-      int x = hackerCoords[i][j].x + (caseWidth/3);
-      int y = hackerCoords[i][j].y - (caseHeight/3);
+      int x = hackerCoords[i][j].x;
+      int y = hackerCoords[i][j].y;
       scannedBoard[i][j] = hacker.getPixelColor(x, y);
-      if (isSameColor(scannedBoard[i][j], hackerWhiteSquare)) print("B ");
-      else if (isSameColor(scannedBoard[i][j], hackerBlackSquare)) print("N ");
+      if (isSimilarColor(scannedBoard[i][j], hackerWhitePieceColor)) print("B ");
+      else if (isSimilarColor(scannedBoard[i][j], hackerBlackPieceColor)) print("N ");
       else print("/ ");
     }
     println();
   }
 
+  // println("Scan completed in " + (millis()-before) + " ms");
+
   return scannedBoard;
 }
 
 public Move getMoveOnBoard() {
-  int caseWidth = (downRightCorner.x - upLeftCorner.x)/7;
-  int caseHeight = (downRightCorner.y - upLeftCorner.y)/7;
-  ArrayList<Integer> coordsFound = new ArrayList<Integer>();
 
-  for (int i = 0; i < 8; i++) {
-    for (int j = 0; j < 8; j++) {
-      int x = hackerCoords[i][j].x + (caseWidth/3);
-      int y = hackerCoords[i][j].y - (caseHeight/3);
-      Color scannedColor = hacker.getPixelColor(x, y);
-      if (isSameColor(scannedColor, hackerWhiteSquare) || isSameColor(scannedColor, hackerBlackSquare)) continue;
-      coordsFound.add(j);
-      coordsFound.add(i);
-      if (coordsFound.size() == 4) break;
+  Color pieceColor = (tourDeQui == 0) ? hackerWhitePieceColor : hackerBlackPieceColor;
+
+  for (int n = 0; n < pieces[tourDeQui].size(); n++) {
+    // On regarde si les pièces sont à la bonne case (i et j sont inversés)
+    Piece p = pieces[tourDeQui].get(n);
+    Color scannedColor = hacker.getPixelColor(hackerCoords[p.j][p.i].x, hackerCoords[p.j][p.i].y);
+    if (isSimilarColor(scannedColor, pieceColor)) continue;
+
+    // C'est cette pièce qui s'est déplacé, on génère ses coups (les spéciaux sont regardés en premier pour régler le problème du roque)
+    ArrayList<Move> moves = p.generateLegalMoves(true, false);
+    for (int k = 0; k < moves.size(); k++) {
+      if (moves.get(k).special != 0) {
+        Move m = moves.remove(k);
+        moves.add(0, m);
+      }
+    }
+
+    for (int k = 0; k < moves.size(); k++) {
+      Move m = moves.get(k);
+      Color scannedColorMove = hacker.getPixelColor(hackerCoords[m.j][m.i].x, hackerCoords[m.j][m.i].y);
+      if (isSimilarColor(scannedColorMove, pieceColor)) return m;
     }
   }
 
-  // en passant
-  if (coordsFound.size() == 4) {
-    Cell case1 = grid[coordsFound.get(0)][coordsFound.get(1)];
-    Cell case2 = grid[coordsFound.get(2)][coordsFound.get(3)];
-    int special = 0;
-
-    if (case1.piece != null && case1.piece.c == tourDeQui) {
-      if (case1.piece.type == "pion" && case1.piece.j == tourDeQui*5+1) special = 4; // promotion
-      if (case1.piece.type == "roi" && case1.piece.j == -7*tourDeQui+7 && case2.i - case1.i == 2) special = 1; // petit roque
-      if (case1.piece.type == "roi" && case1.piece.j == -7*tourDeQui+7 && case2.i - case1.i == -2) special = 2; // grand roque
-
-      return new Move(case1.piece, coordsFound.get(2), coordsFound.get(3), case2.piece, special);
-    }
-
-    if (case2.piece != null && case2.piece.c == tourDeQui) {
-      if (case2.piece.type == "pion" && case2.piece.j == tourDeQui*5+1) special = 4; // promotion
-      if (case2.piece.type == "roi" && case2.piece.j == -7*tourDeQui+7 && case1.i - case2.i == 2) special = 1; // petit roque
-      if (case2.piece.type == "roi" && case2.piece.j == -7*tourDeQui+7 && case1.i - case2.i == -2) special = 2; // grand roque
-
-      return new Move(case2.piece, coordsFound.get(0), coordsFound.get(1), case1.piece, special);
-    }
-  }
   return null;
 }
 
-public void doCompleteScan() {
+public void scanMoveOnBoard() {
   lastHackerScan = millis();
   Move sm = getMoveOnBoard();
   if (sm != null) {
@@ -2680,24 +2820,29 @@ public void doCompleteScan() {
 }
 
 public boolean verifyCalibration() {
-  Color B = hackerWhiteSquare;
-  Color N = hackerBlackSquare;
+  Color B = hackerWhitePieceColor;
+  Color N = hackerBlackPieceColor;
+  Color A = null;
 
   if (isSameColor(B, N)) return false;
 
-  Color[][] expectedBoard = {{B, N, B, N, B, N, B, N},
-                             {N, B, N, B, N, B, N, B},
-                             {B, N, B, N, B, N, B, N},
-                             {N, B, N, B, N, B, N, B},
-                             {B, N, B, N, B, N, B, N},
-                             {N, B, N, B, N, B, N, B},
-                             {B, N, B, N, B, N, B, N},
-                             {N, B, N, B, N, B, N, B}};
+  Color[][] expectedBoard = {{N, N, N, N, N, N, N, N},
+                             {N, N, N, N, N, N, N, N},
+                             {A, A, A, A, A, A, A, A},
+                             {A, A, A, A, A, A, A, A},
+                             {A, A, A, A, A, A, A, A},
+                             {A, A, A, A, A, A, A, A},
+                             {B, B, B, B, B, B, B, B},
+                             {B, B, B, B, B, B, B, B}};
 
   Color[][] scannedBoard = scanBoard();
   for (int i = 0; i < 8; i++) {
     for (int j = 0; j < 8; j++) {
-      if (!isSameColor(scannedBoard[i][j], expectedBoard[i][j])) return false;
+      if (expectedBoard[i][j] == null) {
+        if (isSimilarColor(scannedBoard[i][j], hackerWhitePieceColor) || isSimilarColor(scannedBoard[i][j], hackerBlackPieceColor)) return false;
+        continue;
+      }
+      if (!isSimilarColor(scannedBoard[i][j], expectedBoard[i][j])) return false;
     }
   }
   return true;
@@ -2705,15 +2850,12 @@ public boolean verifyCalibration() {
 
 public void click(int x, int y) {
   hacker.mouseMove(x, y);
-  delay(2);
   hacker.mousePress(InputEvent.BUTTON1_DOWN_MASK);
-  delay(2);
   hacker.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
-  delay(10);
 }
 
 public void restoreCalibrationSaves() {
-  if (saveUpLeftCorner == null || saveDownRightCorner == null || saveWhiteColor == null || saveBlackColor == null) {
+  if (saveUpLeftCorner == null || saveDownRightCorner == null || saveWhitePieceColor == null || saveBlackPieceColor == null) {
     alert("Aucune sauvegarde", 2500);
     println("Aucune sauvegarde");
     return;
@@ -2721,15 +2863,15 @@ public void restoreCalibrationSaves() {
 
   upLeftCorner = copyPoint(saveUpLeftCorner);
   downRightCorner = copyPoint(saveDownRightCorner);
-  hackerWhiteSquare = copyColor(saveWhiteColor);
-  hackerBlackSquare = copyColor(saveBlackColor);
+  hackerWhitePieceColor = copyColor(saveWhitePieceColor);
+  hackerBlackPieceColor = copyColor(saveBlackPieceColor);
   hackerCoords = copyCoords(saveHackerCoords);
 
   if (!verifyCalibration()) {
     upLeftCorner = null;
     downRightCorner = null;
-    hackerWhiteSquare = null;
-    hackerBlackSquare = null;
+    hackerWhitePieceColor = null;
+    hackerBlackPieceColor = null;
     for (int i = 0; i < 8; i++) {
       for (int j = 0; j < 8; j++) {
         hackerCoords[i][j] = new Point();
@@ -2751,7 +2893,7 @@ public void restoreCalibrationSaves() {
 }
 
 public void forceCalibrationRestore() {
-  if (saveUpLeftCorner == null || saveDownRightCorner == null || hackerWhiteSquare == null || hackerBlackSquare == null) {
+  if (saveUpLeftCorner == null || saveDownRightCorner == null || hackerWhitePieceColor == null || hackerBlackPieceColor == null) {
     alert("Aucune sauvegarde", 2500);
     println("Aucune sauvegarde");
     return;
@@ -2759,8 +2901,8 @@ public void forceCalibrationRestore() {
 
   upLeftCorner = copyPoint(saveUpLeftCorner);
   downRightCorner = copyPoint(saveDownRightCorner);
-  hackerWhiteSquare = copyColor(saveWhiteColor);
-  hackerBlackSquare = copyColor(saveBlackColor);
+  hackerWhitePieceColor = copyColor(saveWhitePieceColor);
+  hackerBlackPieceColor = copyColor(saveBlackPieceColor);
   hackerCoords = copyCoords(saveHackerCoords);
 
   if (play && !gameEnded && !rewind) {
@@ -2797,20 +2939,19 @@ public void calibrerHacker() {
 
   for (int i = 0; i < 8; i++) {
     for (int j = 0; j < 8; j++) {
-      // attention c'est inversé
       hackerCoords[j][i].x = upLeftCorner.x + i*(boardWidth/7);
       hackerCoords[j][i].y = upLeftCorner.y + j*(boardHeight/7);
     }
   }
 
-  hackerWhiteSquare = hacker.getPixelColor(hackerCoords[3][3].x, hackerCoords[3][3].y);
-  hackerBlackSquare = hacker.getPixelColor(hackerCoords[4][3].x, hackerCoords[4][3].y);
+  hackerWhitePieceColor = hacker.getPixelColor(hackerCoords[7][7].x, hackerCoords[7][7].y);
+  hackerBlackPieceColor = hacker.getPixelColor(hackerCoords[0][0].x, hackerCoords[0][0].y);
 
   if (!verifyCalibration()) {
     upLeftCorner = null;
     downRightCorner = null;
-    hackerWhiteSquare = null;
-    hackerBlackSquare = null;
+    hackerWhitePieceColor = null;
+    hackerBlackPieceColor = null;
     for (int i = 0; i < 8; i++) {
       for (int j = 0; j < 8; j++) {
         hackerCoords[i][j] = new Point();
@@ -2823,12 +2964,12 @@ public void calibrerHacker() {
   saveUpLeftCorner = upLeftCorner;
   saveDownRightCorner = downRightCorner;
   saveHackerCoords = copyCoords(hackerCoords);
-  println("Coordonnées sauvegardées");
-  saveWhiteColor = hackerWhiteSquare;
-  saveBlackColor = hackerBlackSquare;
-  println("Couleurs sauvegardées");
+  saveWhitePieceColor = hackerWhitePieceColor;
+  saveBlackPieceColor = hackerBlackPieceColor;
+  println("Données du hacker sauvegardées");
 
-  // Si jamais c'est au tour d'un bot, le fait jouer
+  // ha.sendCoords(hackerCoords);
+
   if (play && !gameEnded && !rewind) {
     if ((joueurs.get(0).name == "Humain" && joueurs.get(1).name != "Humain") || (joueurs.get(0).name != "Humain" && joueurs.get(1).name == "Humain")) {
       if (joueurs.get(tourDeQui).name != "Humain") { engineToPlay = true; }
@@ -2960,8 +3101,10 @@ public void drawPlayersInfos() {
   if (pointDeVue) {
     image(j1Img, space, height-(space+w), w, w);
     image(j2Img, space, offsetY + ( (offsetY<=10) ? space : 0), w, w);
-    text(j1.name + " (" + j1.elo + ")", space+w/2, height-(space+w)-space-5);
-    text(j2.name + " (" + j2.elo + ")", space+w/2, (offsetY + ( (offsetY<=10) ? space : 0))+space+w);
+
+    text( (j1.name == "LesMoutons" ? "Mouton" : j1.name)  + " (" + j1.elo + ")", space+w/2, height-(space+w)-space-5);
+    text( (j2.name == "LesMoutons" ? "Mouton" : j2.name) + " (" + j2.elo + ")", space+w/2, (offsetY + ( (offsetY<=10) ? space : 0))+space+w);
+
     text(roundedString(j1.getScore()) + "/" + j1.getTotalScore(), space+w/2, height-(space+w)-space-40);
     text(roundedString(j2.getScore()) + "/" + j2.getTotalScore(), space+w/2, (offsetY + ( (offsetY<=10) ? space : 0))+space+w+40);
     if (j1.lastEval != "") text("Eval : " + j1.lastEval, space+w/2, height-(space+w)-space-80);
@@ -2969,8 +3112,10 @@ public void drawPlayersInfos() {
   } else {
     image(j1Img, space, offsetY + ( (offsetY<=10) ? space : 0), w, w);
     image(j2Img, space, height-(space+w), w, w);
-    text(j1.name + " (" + j1.elo + ")", space+w/2, (offsetY + ( (offsetY<=10) ? space : 0))+space+w);
-    text(j2.name + " (" + j2.elo + ")", space+w/2, height-(space+w)-space-5);
+
+    text( (j1.name == "LesMoutons" ? "Mouton" : j1.name) + " (" + j1.elo + ")", space+w/2, (offsetY + ( (offsetY<=10) ? space : 0))+space+w);
+    text( (j2.name == "LesMoutons" ? "Mouton" : j2.name) + " (" + j2.elo + ")", space+w/2, height-(space+w)-space-5);
+    
     text(roundedString(j1.getScore()) + "/" + j1.getTotalScore(), space+w/2, (offsetY + ( (offsetY<=10) ? space : 0))+space+w+40);
     text(roundedString(j2.getScore()) + "/" + j2.getTotalScore(), space+w/2, height-(space+w)-space-40);
     if (j1.lastEval != "") text("Eval : " + j1.lastEval, space+w/2, (offsetY + ( (offsetY<=10) ? space : 0))+space+w+80);
@@ -3555,34 +3700,6 @@ public ArrayList<Move> removeIllegalMoves(Piece piece, ArrayList<Move> pseudoMov
 }
 
 /////////////////////////////////////////////////////////////////
-public void startEditor() {
-  gameState = 3;
-
-  if (attach) infos = "Épinglé";
-
-  surface.setSize(gameWidth, gameHeight);
-  surface.setLocation(displayWidth - width, 0);
-  surface.setAlwaysOnTop(attach);
-  surface.setVisible(true); //pour avoir le focus sur la main page
-  s1.hide();
-  s2.hide();
-
-  cursor(ARROW);
-
-  if (soundControl >= 2) {
-    violons.stop();
-    pachamama.play(); pachamama.loop();
-  }
-}
-
-public void verifStartGame() {
-  if (j1 != null && j2 != null) {
-    startGame();
-  } else {
-    println("Veuillez selectionner 2 joueurs");
-  }
-}
-
 public void startGame() {
   joueurs.add(new Joueur(j1, 0, j1depth, j1Quiet, (j1Time == 0) ? false : true));
   joueurs.add(new Joueur(j2, 1, j2depth, j2Quiet, (j2Time == 0) ? false : true));
@@ -3591,12 +3708,14 @@ public void startGame() {
   surface.setAlwaysOnTop(attach);
 
   if (j1 == "Loic") { j1Img = loadImage("joueurs/loicImg.jpeg"); j1ImgEnd = loadImage("joueurs/loicImgEnd.jpeg"); }
+  else if (j1 == "LesMoutons") { j1Img = loadImage("joueurs/lesmoutonsImg.jpg"); j1ImgEnd = loadImage("joueurs/lesmoutonsImgEnd.jpg"); }
   else if (j1 == "LeMaire") { j1Img = loadImage("joueurs/lemaireImg.jpg"); j1ImgEnd = loadImage("joueurs/lemaireImgEnd.jpg"); }
   else if (j1 == "Antoine") { j1Img = loadImage("joueurs/antoineImg.jpg"); j1ImgEnd = loadImage("joueurs/antoineImgEnd.jpg"); }
   else if (j1 == "Stockfish") { j1Img = loadImage("joueurs/stockfishImg.png"); j1ImgEnd = loadImage("joueurs/stockfishImgEnd.png"); }
   else if (j1 == "Humain") { j1Img = loadImage("joueurs/humanImg.png"); j1ImgEnd = loadImage("joueurs/humanImgEnd.png"); }
 
   if (j2 == "Loic") { j2Img = loadImage("joueurs/loicImg.jpeg"); j2ImgEnd = loadImage("joueurs/loicImgEnd.jpeg"); }
+  else if (j2 == "LesMoutons") { j2Img = loadImage("joueurs/lesmoutonsImg.jpg"); j2ImgEnd = loadImage("joueurs/lesmoutonsImgEnd.jpg"); }
   else if (j2 == "LeMaire") { j2Img = loadImage("joueurs/lemaireImg.jpg"); j2ImgEnd = loadImage("joueurs/lemaireImgEnd.jpg"); }
   else if (j2 == "Antoine") { j2Img = loadImage("joueurs/antoineImg.jpg"); j2ImgEnd = loadImage("joueurs/antoineImgEnd.jpg"); }
   else if (j2 == "Stockfish") { j2Img = loadImage("joueurs/stockfishImg.png"); j2ImgEnd = loadImage("joueurs/stockfishImgEnd.png"); }
@@ -3646,6 +3765,12 @@ public void startGame() {
   if (soundControl >= 1) start_sound.play();
   if (timeControl) {
     ta.show();
+
+    // Les Moutons !
+    if (joueurs.get(0).name == "LesMoutons") { ta.timers[0].setDurationOfSecond(950); ta.timers[1].setDurationOfSecond(1050); ta.timers[0].increment = times[0][2]*1200; ta.timers[1].increment = times[1][2]*800; }
+    if (joueurs.get(1).name == "LesMoutons") { ta.timers[1].setDurationOfSecond(950); ta.timers[0].setDurationOfSecond(1050); ta.timers[0].increment = times[0][2]*800; ta.timers[1].increment = times[1][2]*1200; }
+    if (joueurs.get(0).name == "LesMoutons" && joueurs.get(1).name == "LesMoutons") { ta.timers[0].setDurationOfSecond(1000); ta.timers[1].setDurationOfSecond(1000); ta.timers[0].increment = times[0][2]*1000; ta.timers[1].increment = times[1][2]*1000; }
+
     if (useHacker) ta.goToHackerPosition();
   }
 
@@ -3653,13 +3778,51 @@ public void startGame() {
   showSearchController = true;
   sa.show();
 
-  surface.setVisible(true); //pour avoir le focus sur la partie
-
   setPieces();
   checkGameState();
+
+  delay(3);
+  surface.setVisible(true);
 }
 
-public void resetGame() {
+public void startEditor() {
+  gameState = 3;
+
+  if (attach) infos = "Épinglé";
+
+  surface.setSize(gameWidth, gameHeight);
+  surface.setLocation(displayWidth - width, 0);
+  surface.setAlwaysOnTop(attach);
+  surface.setVisible(true);
+  s1.hide();
+  s2.hide();
+
+  cursor(ARROW);
+
+  if (soundControl >= 2) {
+    violons.stop();
+    pachamama.play(); pachamama.loop();
+  }
+}
+
+public void verifStartGame() {
+  if (j1 != null && j2 != null) {
+    startGame();
+  } else {
+    println("Veuillez selectionner 2 joueurs");
+  }
+}
+
+public void rematch() {
+  String savedJ1 = j1;
+  String savedJ2 = j2;
+  resetGame(false);
+  j1 = savedJ1;
+  j2 = savedJ2;
+  startGame();
+}
+
+public void resetGame(boolean menu) {
   // reset les timers
   if (timeControl) {
     ta.resetTimers();
@@ -3668,16 +3831,20 @@ public void resetGame() {
   }
   ga.hide();
   sa.hide();
+  ha.reset();
 
   // réinitialise les variables
   resetSettingsToDefault();
 
-  // resize la fenêtre
-  surface.setSize(selectWidth, selectHeight);
-  surface.setLocation(displayWidth/2 - width/2, 0);
-  surface.setTitle(name + " - Selection des joueurs");
-  surface.setAlwaysOnTop(false);
-  surface.setVisible(true);
+  // resize la fenêtre et gameState en mode sélection
+  if (menu) {
+    surface.setSize(selectWidth, selectHeight);
+    surface.setLocation(displayWidth/2 - width/2, 0);
+    surface.setTitle(name + " - Selection des joueurs");
+    surface.setAlwaysOnTop(false);
+    surface.setVisible(true);
+    gameState = 0;
+  }
 
   // arrête la musique :(
   if (soundControl >= 2) {
@@ -3685,9 +3852,6 @@ public void resetGame() {
     diagnostic.stop();
     violons.play(); violons.loop();
   }
-
-  // gameState en mode sélection
-  gameState = 0;
 
   // replace les pièces
   setPieces();
@@ -3707,8 +3871,6 @@ public void resetSettingsToDefault() {
   varianteArrows.clear();
   tt.clear();
   sa.reset();
-
-  // Clear la table de transposition
 
   // Reset la grille
   for (int i = 0; i < cols; i++) {
@@ -3830,7 +3992,7 @@ public void checkGameState() {
     infos = "Game ended";
 
     if (soundControl >= 1) nulle_sound.play();
-    if (timeControl) ta.pauseTimers();
+    if (timeControl) ta.stopTimers();
     return;
   }
 
@@ -3850,7 +4012,7 @@ public void checkGameState() {
     infos = "Game ended";
 
     if (soundControl >= 1) nulle_sound.play();
-    if (timeControl) ta.pauseTimers();
+    if (timeControl) ta.stopTimers();
     return;
   }
 
@@ -3887,7 +4049,7 @@ public void checkGameState() {
     infos = "Game ended";
     timeAtEnd = millis();
 
-    if (timeControl) ta.pauseTimers();
+    if (timeControl) ta.stopTimers();
     return;
   }
 
@@ -3912,7 +4074,7 @@ public void loseOnTime(int loser) {
   infos = "Game ended";
 
   if (soundControl >= 1) nulle_sound.play();
-  if (timeControl) ta.pauseTimers();
+  if (timeControl) ta.stopTimers();
 }
 
 public void updateScores(float num) {
@@ -4027,8 +4189,8 @@ class Cell {
     this.piece = null;
   }
 }
-int[] totalScores = {0, 0, 0, 0, 0};
-float[] scores = {0, 0, 0, 0, 0};
+int[] totalScores = {0, 0, 0, 0, 0, 0};
+float[] scores = {0, 0, 0, 0, 0, 0};
 
 class Joueur {
   String name, elo, title = "", victoryTitle, lastEval = "";
@@ -4038,6 +4200,7 @@ class Joueur {
 
   Antoine random;
   LeMaire maire;
+  LesMoutons mouton;
   Stockfish worst;
   Loic loic;
 
@@ -4060,6 +4223,13 @@ class Joueur {
       this.title = "GM";
       this.index = 3;
       this.victoryTitle = "Cmaire";
+
+    } else if (name == "LesMoutons") {
+      mouton = new LesMoutons(this.c, this.depth, this.maxDepth, this.useIterativeDeepening);
+      this.elo = str(PApplet.parseInt(random(1300, 1500)));
+      this.title = "Mouton";
+      this.index = 5;
+      this.victoryTitle = "YOU LOUSE";
 
     } else if (name == "Stockfish") {
       worst = new Stockfish(this.c, this.depth);
@@ -4085,6 +4255,7 @@ class Joueur {
   public void play() {
     if (this.name == "Antoine") random.play();
     else if (this.name == "LeMaire") maire.play();
+    else if (this.name == "LesMoutons") mouton.play();
     else if (this.name == "Stockfish") worst.play();
     else if (name == "Loic") loic.play();
     else if  (name == "Humain") return;
@@ -4198,6 +4369,12 @@ class LeMaire {
     int[] lastCuts = {0};  int lastCutsFirst = 0;
 
     // démarre la recherche
+    if (useHacker && hackerPret) {
+      int time = sa.savedTimes[this.c];
+      float change = time * 0.42f;
+      int newTime = time + (int)random(-change, change);
+      sa.setTime(this.c, newTime);
+    }
     sa.startSearch(this.c);
 
     for (int d = 1; d < 1000; d++) {
@@ -4437,7 +4614,7 @@ class LeMaire {
     // Distance pièces-roi
     for (int n = 0; n < pieces[opponent].size(); n++) {
       Piece p = pieces[opponent].get(n);
-      penalite += pc.getTropismDistance(p.i, p.j, roi.i, roi.j)*7;
+      penalite += pc.getTropismDistance(p.i, p.j, roi.i, roi.j)*3;
     }
 
     penalite *= materials[opponent];
@@ -4485,7 +4662,7 @@ class LeMaire {
 
       // La valeur stockée est exacte
       if (entry.nodeType == EXACT) {
-        if (plyFromRoot == 0) bestMoveFound = entry.bestMove;
+        if (plyFromRoot == 0) this.bestMoveFound = entry.bestMove;
         return entry.value;
       }
 
@@ -4496,15 +4673,15 @@ class LeMaire {
       else if (entry.nodeType == UPPERBOUND) beta = min(beta, entry.value);
 
       if (alpha >= beta) {
-        if (plyFromRoot == 0) bestMoveFound = entry.bestMove;
+        if (plyFromRoot == 0) this.bestMoveFound = entry.bestMove;
         return entry.value; // si la valeur de la table a provoqué un élagage alpha ou beta
       }
     }
 
     // Détection des répétitions
-    // On ne regarde que si la position est arrivée une fois, pour la rapidité et éviter des bugs de transpositions
-    if (checkFastRepetition(zobrist.hash)) {
-      tt.Store(zobrist.hash, 0, null, depth, plyFromRoot, EXACT);
+    // On ne regarde que si la position est arrivée une fois, pour la rapidité (et éviter des bugs de transpositions)
+    if (plyFromRoot != 0 && checkFastRepetition(zobrist.hash)) {
+      // tt.Store(zobrist.hash, 0, null, depth, plyFromRoot, EXACT);
       return 0;
     }
 
@@ -4514,7 +4691,7 @@ class LeMaire {
       return this.searchAllCaptures(alpha, beta, plyFromRoot);
     }
 
-    // Génération et classement heuristique des coups
+    // Génération et classement des coups
     ArrayList<Move> moves = generateAllLegalMoves(tourDeQui, true, true);
     moves = this.OrderMoves(moves);
     this.numMoves += moves.size();
@@ -4547,7 +4724,7 @@ class LeMaire {
         return beta;
       }
 
-      // Nouveau  meilleur  coup
+      // Nouveau meilleur coup
       if (evaluation > alpha) {
         nodeType = EXACT;
         alpha = evaluation;
@@ -4599,6 +4776,395 @@ class LeMaire {
 
   }
 
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////
+
+class LesMoutons {
+  int c, depth, maxQuietDepth;
+  boolean useIterativeDeepening = false;
+
+  float time;
+  int depthSearched;
+  int numPos, numQuiet;
+  int numMoves, numCaptures, numQuietCuts, numTranspositions;
+  int firstPlyMoves, higherPlyFromRoot;
+  int[] cuts;  int cutsFirst;
+
+  float Infinity = 999999999;
+  Move bestMoveFound = null;
+
+  LesMoutons(int c, int d, int md, boolean useID) {
+    this.c = c;
+    this.depth = d;
+    this.maxQuietDepth = md;
+    this.useIterativeDeepening = useID;
+  }
+
+  public void play() {
+    if (gameEnded || stopSearch) return;
+    cursor(WAIT);
+
+    // Recherche du meilleur coup
+    float posEval;
+    if (this.useIterativeDeepening) posEval = this.iterativeDeepening();
+    else posEval = this.findBestMove();
+
+    // Joue le coup
+    this.bestMoveFound.play();
+
+    // Affichage des statistiques dans la console et l'interface
+    this.updateStats(posEval);
+
+    // Reset les statistiques pour la prochaine recherche
+    this.resetStats();
+
+    stopSearch = false;
+    cursor(ARROW);
+  }
+
+  public float iterativeDeepening() {
+    // sauvegardes
+    Move lastBestMove = null;
+    float lastEval = 0;
+    int lastNumPos = 0, lastNumQuiet = 0, lastNumMoves = 0, lastNumCaptures = 0, lastNumQuietCuts = 0, lastNumTranspositions = 0;
+    int lastFirstPlyMoves = 0, lastHigherPlyFromRoot = 0;
+    int[] lastCuts = {0};  int lastCutsFirst = 0;
+
+    // démarre la recherche
+    sa.startSearch(this.c);
+
+    for (int d = 1; d < 1000; d++) {
+      this.resetStats();
+      this.cuts = new int[d];
+
+      // effectue la recherche à la profondeur
+      SheepEval sheep = this.moyennemax(d, 0, -Infinity, Infinity, null);
+      float eval = -sheep.eval;
+
+      // si la recherche a été interrompue par search controller
+      if (stopSearch) {
+        this.numQuiet = lastNumQuiet;
+        this.numPos = lastNumPos;
+        this.depthSearched = d-1;
+        this.cuts = lastCuts;
+        this.cutsFirst = lastCutsFirst;
+        this.numMoves = lastNumMoves;
+        this.numCaptures = lastNumCaptures;
+        this.numPos = lastNumPos;
+        this.numQuiet = lastNumQuiet;
+        this.numQuietCuts = lastNumQuietCuts;
+        this.firstPlyMoves = lastFirstPlyMoves;
+        this.higherPlyFromRoot = lastHigherPlyFromRoot;
+        this.numTranspositions = lastNumTranspositions;
+        this.time = sa.getTime(this.c);
+        this.bestMoveFound = lastBestMove;
+        return -lastEval;
+      }
+
+      // sauvegarde les résultats et statistiques
+      lastEval = eval;
+      lastBestMove = this.bestMoveFound;
+      lastNumQuiet = this.numQuiet;
+      lastNumPos = this.numPos;
+      lastCuts = this.cuts;
+      lastCutsFirst = this.cutsFirst;
+      lastNumMoves = this.numMoves;
+      lastNumCaptures = this.numCaptures;
+      lastNumPos = this.numPos;
+      lastNumQuiet = this.numQuiet;
+      lastNumQuietCuts = this.numQuietCuts;
+      lastFirstPlyMoves = this.firstPlyMoves;
+      lastHigherPlyFromRoot = this.higherPlyFromRoot;
+      lastNumTranspositions = this.numTranspositions;
+
+      float evalToDisplay = (this.c == 0) ? -eval : eval;
+      sa.setDepths(str(d), this.c);
+      sa.setEvals(str(evalToDisplay/100), this.c);
+      sa.setPositions(str(this.numPos), this.c);
+      sa.setTranspositions(str(this.numTranspositions), this.c);
+
+      // si la valeur est un mat, arrête la recherche
+      if (abs(eval) > 40000) {
+        this.depthSearched = d;
+        this.time = sa.getTime(this.c);
+        sa.endSearch();
+        delay(500);
+        return -eval;
+      }
+    }
+
+    return 0;
+  }
+
+  public float findBestMove() {
+    this.depthSearched = floor(this.depth + CONSTANTE_DE_STOCKFISH * pow(endGameWeight, 5));
+    this.cuts = new int[depthSearched];
+    float timeBefore = millis();
+
+    SheepEval sheep = this.moyennemax(this.depthSearched, 0, -Infinity, Infinity, null);
+    float posEval = -sheep.eval;
+
+    this.time = millis() - timeBefore;
+
+    return posEval;
+  }
+
+  public void resetStats() {
+    this.numQuiet = 0;
+    this.numPos = 0;
+    this.time = 0;
+    this.depthSearched = 0;
+    this.cuts = null;
+    this.cutsFirst = 0;
+    this.numMoves = 0;
+    this.numCaptures = 0;
+    this.numPos = 0;
+    this.numQuiet = 0;
+    this.numQuietCuts = 0;
+    this.firstPlyMoves = 0;
+    this.higherPlyFromRoot = 0;
+    this.numTranspositions = 0;
+  }
+
+  public void updateStats(float posEval) {
+    // Calculs des statistiques
+    if (tourDeQui == 0) posEval = -posEval;
+    if (abs(posEval) == 0) posEval = 0;
+
+    float totalCuts = 0;
+    for (int i = 0; i < this.cuts.length; i++) totalCuts += this.cuts[i];
+    float tri = 0;
+    if (totalCuts != 0) tri = (float)this.cutsFirst / totalCuts;
+
+    // Calcul de la variante
+    varianteArrows.clear();
+    String varianteText = "";
+    varianteText = varianteText + getPGNString(bestMoveFound) + " ";
+    Move actualMove = bestMoveFound;
+
+    while (actualMove.bestChild != null) {
+      varianteText = varianteText + getPGNString(actualMove.bestChild) + " ";
+      varianteArrows.add(new Arrow(actualMove.bestChild.fromI, actualMove.bestChild.fromJ, actualMove.bestChild.i, actualMove.bestChild.j));
+      actualMove = actualMove.bestChild;
+    }
+
+    // Affichage des statistiques de la console
+    if (stats) {
+      print("Les Moutons : ");
+      print(posEval/100 + ", ");
+
+      String timeText;
+      if (this.time >= 1000) timeText = this.time/1000 + " s";
+      else timeText = this.time + " ms";
+      println(formatInt(this.numPos) + " positions analysées ("
+              + formatInt(numTranspositions) + " transposition" + ( (numTranspositions > 1) ? "s) + " : ") + ")
+              + formatInt(this.numQuiet) + " quiets en",
+              timeText,
+              "(Profondeur " + (this.depthSearched) + ")");
+    }
+    if (details) {
+      print(formatInt(this.numMoves) + " coups générés (" + this.firstPlyMoves + "), " + formatInt(this.numCaptures) + " captures générées (m" + this.higherPlyFromRoot + "), [");
+      for (int i = 0; i < this.cuts.length; i++) print(this.cuts[i] + (i < this.cuts.length-1 ? ", " : ""));
+      println("] cuts alpha-bêta (" + tri + "), " + formatInt(this.numQuietCuts) + " quiets cuts");
+    }
+    if (stats) println();
+
+    // Update le graphique, la valeur de l'évaluation et search controller
+    this.updateSearchController(posEval, tri);
+    joueurs.get(this.c).lastEval = evalToStringMaire(posEval);
+    joueurs.get(this.c).evals.add(posEval/100.0f);
+  }
+
+  public void updateSearchController(float posEval, float tri) {
+    sa.setEvals(evalToStringMaire(posEval), this.c);
+    sa.setDepths(str(this.depthSearched), this.c);
+    sa.setPositions(formatInt(this.numPos), this.c);
+    sa.setTris(roundNumber(tri, 2), this.c);
+    sa.setTranspositions(formatInt(this.numTranspositions), this.c);
+  }
+
+  public ArrayList OrderMoves(ArrayList<Move> moves) {
+
+    // Place le meilleur coup de la table de transposition en premier
+    Move hashMove = tt.getBestMove(zobrist.hash);
+
+    for (int i = 0; i < moves.size(); i++) {
+      Move m = moves.get(i);
+
+      // hash move
+      if (m.equals(hashMove)) m.scoreGuess += 10000;
+
+      // captures
+      if (m.capture != null) {
+        int scoreGuess = (m.capture.maireEval - m.piece.maireEval);
+        m.scoreGuess += scoreGuess;
+      }
+
+      // pièce vers le centre
+      Piece p = m.piece;
+      m.scoreGuess -= pc.getDistanceFromCenter(p.i, p.j);
+    }
+
+    return selectionSortMoves(moves);
+  }
+
+  public int getManhattanDistanceBetweenKing() {
+    int xDist = abs(rois[1].i - rois[0].i);
+    int yDist = abs(rois[1].j - rois[0].j);
+    return xDist + yDist;
+  }
+
+  public float getEndGameKingEval(int friendlyMaterial, int opponentMaterial, Piece friendlyKing, Piece enemyKing) {
+    if (friendlyMaterial > opponentMaterial + 150) {
+      // Formule pas du tout copiée d'internet : 4,7 * CMD + 1,6 * (14 - MD)
+      float eval = ( 4.7f * pc.getDistanceFromCenter(enemyKing.i, enemyKing.j) + 1.6f * (14 - this.getManhattanDistanceBetweenKing()) );
+      return eval * endGameWeight;
+    } else {
+      return -pc.getDistanceFromCenter(friendlyKing.i, friendlyKing.j) * endGameWeight;
+      // return 0;
+    }
+  }
+
+  public float getKingSafetyEval(int friendly, int opponent) {
+    int sign = (friendly == 0) ? -1 : 1;
+    float penalite = 0;
+    Piece roi = rois[friendly];
+
+    // Bouclier de pions
+    int pawnShieldCount = 0;
+    for (int i = -1; i < 2; i++) {
+      if (roi.j + sign < 0 || roi.j + sign >= 8) break;
+      if (roi.i + i < 0 || roi.i + i >= 8) continue;
+      if (grid[roi.i+i][roi.j + sign].piece != null && grid[roi.i+i][roi.j + sign].piece.c == friendly && grid[roi.i+i][roi.j + sign].piece.pieceIndex == PION_INDEX) {
+        pawnShieldCount++;
+      }
+    }
+    if (pawnShieldCount == 0) penalite += 100;
+    if (pawnShieldCount == 1) penalite += 75;
+    if (pawnShieldCount == 2) penalite += 10;
+    if (pawnShieldCount == 3) penalite += 0;
+
+    // Distance pièces-roi
+    for (int n = 0; n < pieces[opponent].size(); n++) {
+      Piece p = pieces[opponent].get(n);
+      penalite += pc.getTropismDistance(p.i, p.j, roi.i, roi.j)*3;
+    }
+
+    penalite *= materials[opponent];
+    penalite /= 104000;
+    return penalite * (1 - endGameWeight);
+  }
+
+  public SheepEval Evaluation() {
+    float[] Evals = {0, 0};
+
+    for (int i = 0; i < 2; i++) {
+      int opponent = (i == 0) ? 1 : 0;
+
+      Evals[i] += materials[i];
+
+      for (int j = 0; j < pieces[i].size(); j++) {
+        Evals[i] += pieces[i].get(j).mairePosEval;
+      }
+
+      Evals[i] -= this.getKingSafetyEval(i, opponent);
+      Evals[i] += this.getEndGameKingEval(materials[i], materials[opponent], rois[i], rois[opponent]);
+    }
+
+    float evaluation = Evals[0] - Evals[1];
+    return new SheepEval(evaluation, evaluation);
+  }
+
+  public SheepEval EvaluationRelative() {
+    SheepEval evaluation = this.Evaluation();
+    if (tourDeQui == 0) {
+      return evaluation;
+    } else {
+      return new SheepEval(-evaluation.moyenne, -evaluation.eval);
+    }
+  }
+
+  public SheepEval moyennemax(int depth, int plyFromRoot, float alpha, float beta, Move Cpere) {
+
+    if (stopSearch || gameEnded) return new SheepEval(0, 0);
+
+    if (plyFromRoot != 0 && checkFastRepetition(zobrist.hash)) return new SheepEval(0, 0);
+
+    if (depth == 0) {
+      this.numPos++;
+      return this.EvaluationRelative();
+    }
+
+    ArrayList<Move> moves = generateAllLegalMoves(tourDeQui, true, true);
+    moves = this.OrderMoves(moves);
+    this.numMoves += moves.size();
+    if (plyFromRoot == 0) firstPlyMoves += moves.size();
+
+    if (moves.size() == 0) {
+      if (playerInCheck(tourDeQui) == tourDeQui) {
+        int mateScore = 50000 - plyFromRoot;
+        return new SheepEval(-mateScore, -mateScore);
+      } else {
+        return new SheepEval(0, 0);
+      }
+    }
+
+    float moyenneOfPosition;
+    if (tourDeQui == this.c) moyenneOfPosition = 0;
+    else moyenneOfPosition = -Infinity;
+    float bestMoyenneAtRoot = -Infinity;
+    boolean isBestMoveCapture = false;
+
+    for (int i = 0; i < moves.size(); i++) {
+      moves.get(i).make();
+      SheepEval sheep = this.moyennemax(depth-1, plyFromRoot+1, -beta, -alpha, moves.get(i));
+      float evaluation = -sheep.eval;
+      float moyenne = -sheep.moyenne;
+      moves.get(i).unmake();
+
+      if (tourDeQui == this.c) moyenneOfPosition += (moyenne - moyenneOfPosition) / (i+1);
+      else moyenneOfPosition = max(alpha, moyenneOfPosition);
+
+      // Élagage alpha-beta
+      if (alpha >= beta) {
+        this.cuts[plyFromRoot]++;
+        if (i == 0) cutsFirst++;
+        if (isBestMoveCapture) return new SheepEval(beta, beta);
+        else return new SheepEval(moyenneOfPosition, beta);
+      }
+
+      // Recherche du meilleur coup
+      if (evaluation > alpha) {
+        alpha = evaluation;
+        if (moves.get(i).capture != null) isBestMoveCapture = true;
+        else isBestMoveCapture = false;
+      }
+
+      if (plyFromRoot == 0) {
+        if (moyenne > bestMoyenneAtRoot) {
+          bestMoyenneAtRoot = moyenne;
+          this.bestMoveFound = moves.get(i);
+        }
+      }
+
+    }
+
+    if (isBestMoveCapture) return new SheepEval(alpha, alpha);
+    else return new SheepEval(moyenneOfPosition, alpha);
+  }
+
+}
+
+// Classe pour les moutons qui contient la valeur de l'évaluation et la moyenne des évaluations filles
+class SheepEval {
+  float moyenne;
+  float eval;
+
+  SheepEval(float moy, float beval) {
+    this.moyenne = moy;
+    this.eval = beval;
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -5103,9 +5669,13 @@ class Move {
     // Hacker
     if (useHacker && hackerPret) cheat(this.fromI, this.fromJ, this.i, this.j);
 
+    // Les Moutons !
+    if (joueurs.get((int)pow(tourDeQui-1, 2)).name == "LesMoutons") {
+      if (ta.timers[tourDeQui].currentTime >= 45000 && random(1) <= 0.3f) ta.timers[tourDeQui].removeTime(5000);
+    }
+
     // Efface la table de transposition
-    // On le fait à chaque coup pour éviter des conflits à propos de la table quand deux maires jouent ensemble
-    // if (this.capture != null || (joueurs.get(0).name == "LeMaire" && joueurs.get(1).name == "LeMaire")) {
+    // On le fait à chaque coup pour éviter des conflits à propos de la table quand deux maires jouent ensemble, ou quand les moutons interviennent...
     tt.clear();
   }
 
@@ -6552,6 +7122,7 @@ public void toggleSearchController() {
   if (showSearchController) sa.show();
   else sa.hide();
 
+  delay(3);
   surface.setVisible(true);
 }
 
@@ -6609,7 +7180,7 @@ public void rewindForward() {
 }
 
 public void forceQuit() {
-  resetGame();
+  resetGame(true);
 }
 
 public void clearPosition() {
@@ -6656,7 +7227,7 @@ public void playPause() {
     } else {
       infos = "Pause";
       if (soundControl >= 2 && pachamama.isPlaying()) pachamama.pause();
-      if (timeControl) ta.pauseTimers();
+      if (timeControl) ta.stopTimers();
     }
   }
 }

@@ -60,6 +60,7 @@ void toggleSearchController() {
   if (showSearchController) sa.show();
   else sa.hide();
 
+  delay(3);
   surface.setVisible(true);
 }
 
@@ -117,7 +118,7 @@ void rewindForward() {
 }
 
 void forceQuit() {
-  resetGame();
+  resetGame(true);
 }
 
 void clearPosition() {
@@ -164,7 +165,7 @@ void playPause() {
     } else {
       infos = "Pause";
       if (soundControl >= 2 && pachamama.isPlaying()) pachamama.pause();
-      if (timeControl) ta.pauseTimers();
+      if (timeControl) ta.stopTimers();
     }
   }
 }
