@@ -163,15 +163,15 @@ class Move {
     movesHistory.add(this);
 
     // Divers et variés
-    if (timeControl && !gameEnded) ta.switchTimers(tourDeQui);
+    if (useTime && !gameEnded) ta.switchTimers(tourDeQui);
     if (showGraph) updateGraph();
 
     // Hacker
-    if (useHacker && hackerPret) cheat(this.fromI, this.fromJ, this.i, this.j);
+    if (useHacker && hackerPret) cheat(this.piece.c, this.fromI, this.fromJ, this.i, this.j, this.special);
 
     // Les Moutons !
-    if (joueurs.get((int)pow(tourDeQui-1, 2)).name == "LesMoutons") {
-      if (ta.timers[tourDeQui].currentTime >= 45000 && random(1) <= 0.3) ta.timers[tourDeQui].removeTime(5000);
+    if (joueurs.get(0).name == "LesMoutons" || joueurs.get(1).name == "LesMoutons") {
+      arnaques();
     }
 
     // Efface la table de transposition

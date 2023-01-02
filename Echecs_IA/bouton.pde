@@ -43,6 +43,112 @@ class Bouton {
   }
 }
 
+class TimeButton {
+  float x, y, w, h;
+  int r1, r2, r3, r4;
+  int background, arrowColor, hoveredColor;
+  boolean facingUp;
+  boolean hovered, pressed;
+  int cooldownFastIncrement = 500, pressedAt;
+  int i, j;
+
+  TimeButton(float x, float y, float w, float h, int r1, int r2, int r3, int r4, int background, int arrowColor, int hoveredColor, boolean facing) {
+    this.x = x;
+    this.y = y;
+    this.w = w;
+    this.h = h;
+    this.r1 = r1;
+    this.r2 = r2;
+    this.r3 = r3;
+    this.r4 = r4;
+    this.background = background;
+    this.arrowColor = arrowColor;
+    this.hoveredColor = hoveredColor;
+    this.facingUp = facing;
+  }
+
+  void show() {
+    if (!this.hovered) {
+      fill(this.background);
+      stroke(this.background);
+    } else {
+      fill(this.hoveredColor);
+      stroke(this.hoveredColor);
+    }
+    strokeWeight(1);
+    rect(this.x, this.y, this.w, this.h, this.r1, this.r2, this.r3, this.r4);
+
+    strokeWeight(2);
+    stroke(this.arrowColor);
+    if (this.facingUp) {
+      line(this.x + this.w/2, this.y + this.h/2 - 2, this.x + this.w/2 + 5, this.y + this.h/2 + 2);
+      line(this.x + this.w/2, this.y + this.h/2 - 2, this.x + this.w/2 - 5, this.y + this.h/2 + 2);
+    } else {
+      line(this.x + this.w/2, this.y + this.h/2 + 2, this.x + this.w/2 + 5, this.y + this.h/2 - 2);
+      line(this.x + this.w/2, this.y + this.h/2 + 2, this.x + this.w/2 - 5, this.y + this.h/2 - 2);
+    }
+  }
+
+  void update() {
+    if (this.pressed && millis() - pressedAt >= this.cooldownFastIncrement) {
+      if (frameCount % 2 == 0) this.updateAssignedTimer();
+    }
+  }
+
+  void setIndex(int i, int j) {
+    this.i = i;
+    this.j = j;
+  }
+
+  void updateAssignedTimer() {
+    times[this.i][this.j] += (this.facingUp ? 1 : -1);
+    times[this.i][this.j] = constrain(times[this.i][this.j], 0, 60);
+  }
+
+  void click() {
+    this.pressed = true;
+    this.pressedAt = millis();
+    this.updateAssignedTimer();
+  }
+
+  void release() {
+    this.pressed = false;
+  }
+
+  boolean contains(int x, int y) {
+   return (x >= this.x && x < this.x+this.w && y >= this.y && y < this.y+this.h);
+  }
+}
+
+class PresetButton {
+  float x, y, w, h;
+  int background, r;
+  PImage img;
+
+  PresetButton(float x, float y, float w, float h, int r, int background, PImage img) {
+    this.x = x;
+    this.y = y;
+    this.w = w;
+    this.h = h;
+    this.r = r;
+    this.img = img;
+    this.background = background;
+  }
+
+  void show() {
+    rectMode(CORNER);
+    fill(this.background);
+    stroke(this.background);
+    rect(this.x, this.y, this.w, this.h, this.r, this.r, this.r, this.r);
+    imageMode(CENTER);
+    image(this.img, this.x+this.w/2, this.y+this.h/2, this.w/1.9, this.h/1.9);
+  }
+
+  boolean contains(int x, int y) {
+   return (x >= this.x && x < this.x+this.w && y >= this.y && y < this.y+this.h);
+  }
+}
+
 class CircleToggle {
   float x, y, d;
   boolean state = false;

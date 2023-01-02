@@ -20,6 +20,7 @@ class Shortcut {
       case 14: return "Revenir à l'accueil";
       case 15: return "Afficher / Masquer les FENs sauvegardées";
       case 16: return "Ouvrir / Fermer search controller (D)";
+      case 17: return "Afficher / Masquer les paramètres";
 
       default: return "";
     }
@@ -44,6 +45,7 @@ class Shortcut {
       case 14: forceQuit(); break;
       case 15: toggleSavedPos(); break;
       case 16: toggleSearchController(); break;
+      case 17: toggleParameters(); break;
 
       default: println(">>> Erreur dans shortcut.call()");
       break;
@@ -64,8 +66,14 @@ void toggleSearchController() {
   surface.setVisible(true);
 }
 
+void toggleParameters() {
+  showParameters =! showParameters;
+  showSavedPositions = false;
+}
+
 void toggleSavedPos() {
   showSavedPositions =! showSavedPositions;
+  showParameters = false;
 }
 
 void flipBoard() {
@@ -94,7 +102,18 @@ void makeStartPos() {
 void toggleGraph() {
   showGraph = !showGraph;
 
-  if (showGraph) activateGraph();
+  if (showGraph) {
+    if (joueurs.get(0).name == "LesMoutons" || joueurs.get(1).name == "LesMoutons") {
+      println();
+      println("!! Les Moutons !!");
+      println("Arnaques au temps : " + timeCount);
+      println("Missclicks : " + missclickCount);
+      println("Pièces apparues : " + appearCount);
+      println("Messages envoyés : " + messagesCount);
+      println();
+    }
+    activateGraph();
+  }
   else disableGraph();
 }
 
@@ -140,11 +159,11 @@ void copyFEN() {
 }
 
 void goToSelectScreen() {
-  requestToRestart = millis();
-  println();
-  println("Quitter la partie et revenir à la sélection ? [y/n]");
-  println();
-  //resetGame();
+  // requestToRestart = millis();
+  // println();
+  // println("Quitter la partie et revenir à la sélection ? [y/n]");
+  // println();
+  resetGame(true);
 }
 
 void playPause() {
@@ -161,11 +180,11 @@ void playPause() {
       infos = "Play";
       if (soundControl >= 2 && !pachamama.isPlaying()) pachamama.play();
       if (joueurs.get(tourDeQui).name != "Humain" && !gameEnded && !rewind && (!useHacker || hackerPret)) joueurs.get(tourDeQui).play();
-      if (timeControl) ta.switchTimers(tourDeQui);
+      if (useTime) ta.switchTimers(tourDeQui);
     } else {
       infos = "Pause";
       if (soundControl >= 2 && pachamama.isPlaying()) pachamama.pause();
-      if (timeControl) ta.stopTimers();
+      if (useTime) ta.stopTimers();
     }
   }
 }

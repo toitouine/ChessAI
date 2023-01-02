@@ -6,7 +6,7 @@ String name = "Echecs on java";
 
 String startFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq"; // Position de départ
 // String startFEN = "r3k1nr/p2p1ppp/1p1Rp3/8/5N2/4B3/PPP2PPP/2K2R2 b kq"; // Partie Bete-a-corne - LeMaire
-// String startFEN = "r1bqkbnr/pppp1ppp/2n5/4p2Q/8/4P3/PPPP1PPP/RNB1KBNR w KQkq"; // Partie Lewis - LeMaire
+// String startFEN = "r1b1kbnr/ppppqppp/2n5/4p2Q/2B5/4P3/PPPP1PPP/RNB1K1NR w KQkq"; // Partie Lewis - LeMaire
 // String startFEN = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w"; // Vecteur vitesse
 // String startFEN = "r5k1/6pp/5b2/4N3/8/q7/5PPP/3Q1RK1 w"; // Mat à l'étouffée
 // String startFEN = "8/1RK5/8/3k4/8/8/8/8 w"; // Finale facile : Mat roi-tour
@@ -24,15 +24,15 @@ boolean stats = true;
 boolean details = true;
 boolean timeControl = false;
 int[][] times = {
-  {3, 0, 2}, //blancs : minutes, secondes, incrément
-  {3, 0, 2}  //noirs : minutes, secondes, incrément
+  {0, 0, 0}, //blancs : minutes, secondes, incrément
+  {0, 0, 0}  //noirs : minutes, secondes, incrément
 };
 
 /////////////////////////////////////////////////////////////////
 
 // Fenêtre principale
 
-int w = 70; //100 pour Windows
+int w = 70; //100 pour Windo£ws
 float pieceSize = w;
 boolean pointDeVue = true;
 int offsetX = 100 * w/75; //100 * w/100 pour Windows
@@ -90,6 +90,25 @@ int editorEdgeSpacing = (int)(offsetX - w) / 2 + 10;
 int spacingBetweenEditorIcons = (gameWidth - (editorEdgeSpacing*2 + editorIcons.length*editorIconSize)) / (editorIcons.length-1);
 
 int addPiecesColor = 0;
+
+/////////////////////////////////////////////////////////////////
+
+// Moutons et autres
+
+String[] moutonMessages = {
+  "Moutonn !! YOU LOUSE",
+  "YOU CHEAT",
+  "LOIC LA GROSSE VACHE",
+  "VOLEUR, ARNAQUEUR",
+  "VIENS DANS LE TROUPEAU",
+  "RESERVE D'ÉLO",
+  "YOU LOUSE, YOU CHEAT",
+  "T'ES NUL !!!",
+  "TU VAS TE FAIRE MATER",
+  "Sur prise, prise puis prise"
+};
+
+int missclickCooldown = 6;
 
 /////////////////////////////////////////////////////////////////
 

@@ -100,8 +100,8 @@ void mouseReleased() {
         if (joueurs.get(tourDeQui).name != "Humain") { engineToPlay = true; }
       }
     }
-
-  } else if (gameState == 3) {
+  }
+  else if (gameState == 3) {
 
     if (enAjoutPiece != null) {
       int i = getGridI();
@@ -137,7 +137,15 @@ void mouseReleased() {
         pieceSelectionne = null;
       }
     }
-
+  }
+  else if (gameState == 0) {
+    for (int i = 0; i < timeButtons.length; i++) {
+      for (int j = 0; j < timeButtons[i].size(); j++) {
+        if (timeButtons[i].get(j).pressed) {
+          timeButtons[i].get(j).release();
+        }
+      }
+    }
   }
 }
 
@@ -146,7 +154,7 @@ void mouseDragged() {
     pieceSelectionne.dragging = true;
     cursor(HAND);
 
-    //à fin de l'arraylist
+    // À la fin de l'arraylist
     for (int i = 0; i < piecesToDisplay.size(); i++) {
       Piece p = piecesToDisplay.get(i);
       if (p == pieceSelectionne) {
@@ -155,7 +163,7 @@ void mouseDragged() {
       }
     }
 
-    //curseur (pour gameState 1)
+    // Curseur
     int i = getGridI();
     int j = getGridJ();
 
@@ -165,7 +173,32 @@ void mouseDragged() {
     } else {
       cursor(ARROW);
     }
-  } else if (gameState == 3 && mouseButton == RIGHT) {
+
+    // Missclicks :(
+    if (joueurs.size() != 0 && (joueurs.get((int)pow(tourDeQui-1, 2)).name != "LesMoutons")) return;
+
+    boolean castling = false;
+    if (random(1) <= 0.75) {
+      if (pieceSelectionne.pieceIndex == ROI_INDEX) {
+        ArrayList<Move> moves = pieceSelectionne.generateLegalMoves(true, false);
+        for (int n = 0; n < moves.size(); n++) {
+          if (moves.get(n).special != 0) castling = true;
+        }
+      }
+    }
+
+    if (!castling && !missclickDragNextMove) return;
+    if (i < 0 && i >= cols && j < 0 && j >= rows) return;
+
+    if (grid[i][j].possibleMove != null) {
+      grid[i][j].possibleMove.play();
+      missclickCount++;
+      pieceSelectionne = null;
+      missclickDragNextMove = false;
+    }
+
+  }
+  else if (gameState == 3 && mouseButton == RIGHT) {
     int i = getGridI();
     int j = getGridJ();
 
@@ -191,7 +224,10 @@ void mousePressed() {
 
     // Barre d'outils
     for (Bouton b : iconButtons) {
-      if (b.contains(mouseX, mouseY)) b.callShortcut();
+      if (b.contains(mouseX, mouseY)) {
+        b.callShortcut();
+        return;
+      }
     }
 
     // Échiquier
@@ -263,8 +299,22 @@ void mousePressed() {
         }
       }
     }
-
-  } else if (gameState == 0) {
+  }
+  else if (gameState == 0) {
+    for (int i = 0; i < timeButtons.length; i++) {
+      for (int j = 0; j < timeButtons[i].size(); j++) {
+        if (timeButtons[i].get(j).contains(mouseX, mouseY)) {
+          timeButtons[i].get(j).click();
+        }
+      }
+    }
+    for (int i = 0; i < presetButtons.size(); i++) {
+      if (presetButtons.get(i).contains(mouseX, mouseY)) {
+        if (i == 0) rapidPreset();
+        else if (i == 1) blitzPreset();
+        else if (i == 2) bulletPreset();
+      }
+    }
     for (int i = 0; i < toggles1.size(); i++) {
       if (toggles1.get(i).contains(mouseX, mouseY)) {
         for (Toggle t : toggles1) t.state = false;
@@ -297,8 +347,8 @@ void mousePressed() {
     if (hackerButton.contains(mouseX, mouseY)) {
       useHacker =! useHacker;
     }
-
-  } else if (gameState == 3) {
+  }
+  else if (gameState == 3) {
 
     // barre d'outils
     for (Bouton b : editorIconButtons) {
@@ -313,6 +363,10 @@ void mousePressed() {
           break;
         }
       }
+      return;
+    }
+
+    if (showParameters) {
       return;
     }
 
@@ -359,7 +413,6 @@ void mousePressed() {
         }
       }
     }
-
   }
 }
 
@@ -409,11 +462,30 @@ void mouseMoved() {
         }
       }
     }
-
   }
 
   else if (gameState == 0) {
 
+    for (int i = 0; i < timeButtons.length; i++) {
+      for (int j = 0; j < timeButtons[i].size(); j++) {
+        timeButtons[i].get(j).hovered = false;
+      }
+    }
+    for (int i = 0; i < timeButtons.length; i++) {
+      for (int j = 0; j < timeButtons[i].size(); j++) {
+        if (timeButtons[i].get(j).contains(mouseX, mouseY)) {
+          timeButtons[i].get(j).hovered = true;
+          cursor(HAND);
+          return;
+        }
+      }
+    }
+    for (int i = 0; i < presetButtons.size(); i++) {
+      if (presetButtons.get(i).contains(mouseX, mouseY)) {
+        cursor(HAND);
+        return;
+      }
+    }
     for (Toggle t : toggles1) {
       if (t.contains(mouseX, mouseY)) {
         cursor(HAND);
@@ -436,6 +508,7 @@ void mouseMoved() {
       cursor(HAND);
       return;
     }
+
     cursor(ARROW);
   }
 
@@ -459,13 +532,19 @@ void mouseMoved() {
       return;
     }
 
-    // pièces
+    if (showParameters) {
+      infoBox = "";
+      cursor(ARROW);
+      return;
+    }
+
+    // Pièces
     if (pieceHovered()) {
       cursor(HAND);
       return;
     }
 
-    // drag and drop
+    // Drag and drop
     if (enAjoutPiece == null) {
       if (addPiecesColorSwitch.contains(mouseX, mouseY)) { cursor(HAND);  return; }
       for (int i = 0; i < addPiecesButtons[addPiecesColor].size(); i++) {

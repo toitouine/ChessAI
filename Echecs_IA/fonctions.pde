@@ -3,7 +3,7 @@
 // 1) Fonctions utiles (ou pas)
 // 2) Hacker
 // 3) Affichages
-// 4) Plateau
+// 4) Plateau et presets
 // 5) FEN et historiques
 // 6) Fonctions pour calculs et recherche
 
@@ -15,6 +15,14 @@ void alert(String message, int time) {
   alert = message;
   alertTime = time;
   alertStarted = millis();
+}
+
+void sendMoutonMessage(String message, float x, float y, int time) {
+  messageMouton = message;
+  messageMoutonTime = time;
+  alertPos.x = (int)x;
+  alertPos.y = (int)y;
+  messageMoutonStarted = millis();
 }
 
 boolean isSameColor(Color c1, Color c2) {
@@ -57,7 +65,6 @@ String formatInt(int value) {
   return output;
 }
 
-// Renvoie si l'évaluation est un mat ou non
 boolean isMateValue(float eval, int plyFromRoot) {
  int sign = (eval < 0) ? -1 : 1;
  float value = eval * sign;
@@ -136,7 +143,7 @@ void error(String function, String message) {
 
 // Hacker
 
-void cheat(int fromI, int fromJ, int i, int j) {
+void cheat(int c, int fromI, int fromJ, int i, int j, int special) {
   // Attention 2ème relance : i et j sont inversés !
   deselectAll();
 
@@ -144,6 +151,7 @@ void cheat(int fromI, int fromJ, int i, int j) {
   Point mouse = MouseInfo.getPointerInfo().getLocation();
   int x = mouse.x;
   int y = mouse.y;
+  int promoDir = (c == 0 ? 1 : -1);
 
   // Prend le focus de chess.com
   click(hackerCoords[0][0].x, hackerCoords[0][0].y);
@@ -152,6 +160,15 @@ void cheat(int fromI, int fromJ, int i, int j) {
   click(hackerCoords[fromJ][fromI].x, hackerCoords[fromJ][fromI].y);
   delay(2);
   click(hackerCoords[j][i].x, hackerCoords[j][i].y);
+  delay(2);
+
+  if (special == 5) {
+    println("hey");
+    click(hackerCoords[j][i].x, hackerCoords[j][i].y);
+  }
+  else if (special == 6) click(hackerCoords[j][i].x, hackerCoords[j+2*promoDir][i].y);
+  else if (special == 7) click(hackerCoords[j][i].x, hackerCoords[j+3*promoDir][i].y);
+  else if (special == 8) click(hackerCoords[j][i].x, hackerCoords[j+promoDir][i].y);
   delay(2);
 
   // Revient à la position initiale
@@ -436,6 +453,33 @@ void displayAlert() {
   text(alert, offsetX + 4.5*w, offsetY + 1.25*w);
 }
 
+void displayMoutonAlert() {
+  if (millis() - messageMoutonStarted >= messageMoutonTime) {
+    messageMouton = ""; messageMoutonStarted = 0; messageMoutonTime = 0;
+    return;
+  }
+
+  fill(255);
+  rectMode(CORNER);
+  rect(alertPos.x, alertPos.y, 6*w, 2*w, 5, 5, 5, 5);
+
+  imageMode(CORNER);
+  image(mouton, alertPos.x + 0.125*w, alertPos.y + 0.125*w, 1.75*w, 1.75*w);
+
+  textAlign(CENTER, CENTER);
+  textSize(28 * w/75);
+  fill(color(#b33430));
+  text("Nouveau message :", alertPos.x + 4*w, alertPos.y + 0.5*w);
+  strokeWeight(2);
+  stroke(color(#b33430));
+  line(alertPos.x + 2.25*w, alertPos.y + 0.8*w, alertPos.x + 5.75*w, alertPos.y + 0.8*w);
+
+  textAlign(LEFT, CENTER);
+  textSize(23 * w/75);
+  fill(color(#000000));
+  text(messageMouton, alertPos.x + 2*w, alertPos.y + 1.1*w);
+}
+
 void blur(int alpha) {
   fill(220, 220, 220, alpha);
   rectMode(CORNER);
@@ -483,6 +527,19 @@ void drawSavedPosition() {
   for (ButtonFEN b : savedFENSbuttons) b.show();
 }
 
+void drawParameters() {
+  blur(220);
+  fill(0);
+  stroke(0);
+  textSize(35 * w/75);
+  textAlign(LEFT, CENTER);
+  text("Trait :", offsetX + w/2, offsetY + w/2);
+  line(offsetX + w/2, offsetY + 0.875*w, offsetX + w/2 + textWidth("Trait :"), offsetY + 0.875*w);
+
+  text("Roques :", offsetX + w/2, offsetY + 2.5*w);
+  line(offsetX + w/2, offsetY + 2.875*w, offsetX + w/2 + textWidth("Roques :"), offsetY + 2.875*w);
+}
+
 void drawInfoBox(String i) {
   noStroke();
   fill(pointDeVue ? 255 : color(49, 46, 43));
@@ -521,7 +578,7 @@ void drawPlayersInfos() {
 
     text( (j1.name == "LesMoutons" ? "Mouton" : j1.name) + " (" + j1.elo + ")", space+w/2, (offsetY + ( (offsetY<=10) ? space : 0))+space+w);
     text( (j2.name == "LesMoutons" ? "Mouton" : j2.name) + " (" + j2.elo + ")", space+w/2, height-(space+w)-space-5);
-    
+
     text(roundedString(j1.getScore()) + "/" + j1.getTotalScore(), space+w/2, (offsetY + ( (offsetY<=10) ? space : 0))+space+w+40);
     text(roundedString(j2.getScore()) + "/" + j2.getTotalScore(), space+w/2, height-(space+w)-space-40);
     if (j1.lastEval != "") text("Eval : " + j1.lastEval, space+w/2, (offsetY + ( (offsetY<=10) ? space : 0))+space+w+80);
@@ -597,7 +654,7 @@ void drawEndScreen(float y) {
 
 /////////////////////////////////////////////////////////////////
 
-// Plateau
+// Plateau et presets
 
 void updateBoard() {
   for (int i = 0; i < cols; i++) {
@@ -736,6 +793,40 @@ void addPieceToBoardByDrop(int value, int i, int j) {
   piecesToDisplay.clear();
   piecesToDisplay.addAll(pieces[0]);
   piecesToDisplay.addAll(pieces[1]);
+}
+
+void bulletPreset() {
+  if (timeControl) {
+    times[0][0] = 1; times[0][1] = 0; times[0][2] = 0;
+    times[1][0] = 1; times[1][1] = 0; times[1][2] = 0;
+  }
+  t1.setValue(720);
+  t2.setValue(720);
+}
+
+void blitzPreset() {
+  if (timeControl) {
+    times[0][0] = 3; times[0][1] = 0; times[0][2] = 0;
+    times[1][0] = 3; times[1][1] = 0; times[1][2] = 0;
+  }
+  t1.setValue(1986);
+  t2.setValue(1986);
+}
+
+void rapidPreset() {
+  if (timeControl) {
+    times[0][0] = 10; times[0][1] = 0; times[0][2] = 0;
+    times[1][0] = 10; times[1][1] = 0; times[1][2] = 0;
+  }
+  t1.setValue(7500);
+  t2.setValue(7500);
+}
+
+void noTimePreset() {
+  if (timeControl) {
+    times[0][0] = 0; times[0][1] = 0; times[0][2] = 0;
+    times[1][0] = 0; times[1][1] = 0; times[1][2] = 0;
+  }
 }
 
 /////////////////////////////////////////////////////////////////

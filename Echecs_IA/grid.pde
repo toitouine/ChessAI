@@ -3,6 +3,7 @@ class Cell {
   float x, y;
   int i, j;
   String name;
+  boolean noir = false, blanc = false;
   boolean selected = false; //Pièce sur la case sélectionnée
   boolean moveMark = false; //Dernier déplacement de pièce
   boolean bookFrom = false;
@@ -19,17 +20,20 @@ class Cell {
     this.piece = null;
     this.possibleMove = null;
     this.name = (char)(97+i) + String.valueOf(8 - j);
+
+    if (j % 2 == 0) {
+      if (i % 2 == 0) this.blanc = true;
+      else this.noir = true;
+    } else {
+      if (i % 2 == 0) this.noir = true;
+      else this.blanc = true;
+    }
   }
 
   void show() {
     noStroke();
-    if (j % 2 == 0) {
-      if (i % 2 == 0) fill(#f0d9b5); //blanc (235, 236, 208)
-      else fill(#b58863); //noir (119, 149, 86)
-    } else {
-      if (i % 2 == 0) fill(#b58863); //noir
-      else fill(#f0d9b5); //blanc
-    }
+    if (this.blanc) fill(#f0d9b5);
+    else if (this.noir) fill(#b58863);
 
     if (pointDeVue) {
       this.x = this.xNorm;

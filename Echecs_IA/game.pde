@@ -5,6 +5,12 @@ void startGame() {
   surface.setLocation(displayWidth - width, 0);
   surface.setAlwaysOnTop(attach);
 
+  if (timeControl && (times[0][0] != 0 || times[0][1] != 0 || times[0][2] != 0) && (times[1][0] != 0 || times[1][1] != 0 || times[1][2] != 0)) {
+    useTime = true;
+  } else {
+    useTime = false;
+  }
+
   if (j1 == "Loic") { j1Img = loadImage("joueurs/loicImg.jpeg"); j1ImgEnd = loadImage("joueurs/loicImgEnd.jpeg"); }
   else if (j1 == "LesMoutons") { j1Img = loadImage("joueurs/lesmoutonsImg.jpg"); j1ImgEnd = loadImage("joueurs/lesmoutonsImgEnd.jpg"); }
   else if (j1 == "LeMaire") { j1Img = loadImage("joueurs/lemaireImg.jpg"); j1ImgEnd = loadImage("joueurs/lemaireImgEnd.jpg"); }
@@ -61,12 +67,13 @@ void startGame() {
   for (int i = 0; i < 2; i++) materials[i] = countMaireMaterial(i);
 
   if (soundControl >= 1) start_sound.play();
-  if (timeControl) {
+  if (useTime) {
+    ta.initTimers();
     ta.show();
 
     // Les Moutons !
-    if (joueurs.get(0).name == "LesMoutons") { ta.timers[0].setDurationOfSecond(950); ta.timers[1].setDurationOfSecond(1050); ta.timers[0].increment = times[0][2]*1200; ta.timers[1].increment = times[1][2]*800; }
-    if (joueurs.get(1).name == "LesMoutons") { ta.timers[1].setDurationOfSecond(950); ta.timers[0].setDurationOfSecond(1050); ta.timers[0].increment = times[0][2]*800; ta.timers[1].increment = times[1][2]*1200; }
+    if (joueurs.get(0).name == "LesMoutons") { ta.timers[0].setDurationOfSecond(900); ta.timers[1].setDurationOfSecond(1100); ta.timers[0].increment = times[0][2]*1200; ta.timers[1].increment = times[1][2]*800; }
+    if (joueurs.get(1).name == "LesMoutons") { ta.timers[1].setDurationOfSecond(900); ta.timers[0].setDurationOfSecond(1100); ta.timers[0].increment = times[0][2]*800; ta.timers[1].increment = times[1][2]*1200; }
     if (joueurs.get(0).name == "LesMoutons" && joueurs.get(1).name == "LesMoutons") { ta.timers[0].setDurationOfSecond(1000); ta.timers[1].setDurationOfSecond(1000); ta.timers[0].increment = times[0][2]*1000; ta.timers[1].increment = times[1][2]*1000; }
 
     if (useHacker) ta.goToHackerPosition();
@@ -122,7 +129,7 @@ void rematch() {
 
 void resetGame(boolean menu) {
   // reset les timers
-  if (timeControl) {
+  if (useTime) {
     ta.resetTimers();
     ta.hide();
     ta.goToDefaultPosition();
@@ -191,6 +198,18 @@ void resetSettingsToDefault() {
   }
 
   // Variables
+  messagesCount = 0;
+  missclickCount = 0;
+  appearCount = 0;
+  timeCount = 0;
+  showParameters = false;
+  lastMissclick = 0;
+  tourPourApparition = 10;
+  messageMouton = "";
+  messageMoutonStarted = 0;
+  messageMoutonTime = 0;
+  alertPos = new Point();
+  missclickDragNextMove = false;
   alert = "";
   alertTime = 0;
   alertStarted = 0;
@@ -290,7 +309,7 @@ void checkGameState() {
     infos = "Game ended";
 
     if (soundControl >= 1) nulle_sound.play();
-    if (timeControl) ta.stopTimers();
+    if (useTime) ta.stopTimers();
     return;
   }
 
@@ -310,7 +329,7 @@ void checkGameState() {
     infos = "Game ended";
 
     if (soundControl >= 1) nulle_sound.play();
-    if (timeControl) ta.stopTimers();
+    if (useTime) ta.stopTimers();
     return;
   }
 
@@ -347,7 +366,7 @@ void checkGameState() {
     infos = "Game ended";
     timeAtEnd = millis();
 
-    if (timeControl) ta.stopTimers();
+    if (useTime) ta.stopTimers();
     return;
   }
 
@@ -372,7 +391,7 @@ void loseOnTime(int loser) {
   infos = "Game ended";
 
   if (soundControl >= 1) nulle_sound.play();
-  if (timeControl) ta.stopTimers();
+  if (useTime) ta.stopTimers();
 }
 
 void updateScores(float num) {

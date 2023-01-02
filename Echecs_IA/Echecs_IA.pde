@@ -10,13 +10,7 @@
 // Plus d'ouvertures
 // Système de vérification de fens
 // Analyse de parties
-// Les moutons :
-//   - Menaces OK
-//   - Missclick
-//   - Pièces qui apparaissent (ou pas)
-//   - Arnaques au temps OK
 // Scan automatique d'échiquier
-// Gestion du temps dans le menu
 
 /////////////////////////////////////////////////////////////////
 
@@ -84,7 +78,7 @@ PImage j1ImgEnd;
 PImage j2ImgEnd;
 
 PImage[] icons = new PImage[10];
-PImage[] editorIcons = new PImage[7];
+PImage[] editorIcons = new PImage[8];
 PImage[] saveFENSimage = new PImage[7];
 PImage upArrow;
 PImage downArrow;
@@ -95,6 +89,7 @@ PImage botLarge;
 PImage idIcon;
 PImage idIconOff;
 PImage warning;
+PImage mouton;
 
 Robot hacker;
 
@@ -112,7 +107,7 @@ int[] materials = new int[2];
 
 /////////////////////////////////////////////////////////////////
 
-// Interfaces - Boutons - ArrayList
+// Interfaces, boutons et arraylist
 
 ArrayList<Piece> piecesToDisplay = new ArrayList<Piece>();
 ArrayList<Piece>[] pieces = new ArrayList[2];
@@ -126,6 +121,8 @@ ArrayList<Bouton> editorIconButtons = new ArrayList<Bouton>();
 ArrayList<TextBouton> hubButtons = new ArrayList<TextBouton>();
 ArrayList<ButtonFEN> savedFENSbuttons = new ArrayList<ButtonFEN>();
 ArrayList<DragAndDrop>[] addPiecesButtons = new ArrayList[2];
+ArrayList<TimeButton>[] timeButtons = new ArrayList[2];
+ArrayList<PresetButton> presetButtons = new ArrayList<PresetButton>();
 
 ArrayList<String> book = new ArrayList<String>();
 ArrayList<Arrow> bookArrows = new ArrayList<Arrow>();
@@ -170,7 +167,9 @@ boolean showGraph = false;
 boolean showVariante = false;
 boolean showSavedPositions = false;
 boolean showSearchController = false;
+boolean showParameters = false;
 boolean blockPlaying = false;
+boolean useTime = false;
 int gameState = 0;
 int winner = -1;
 int timeAtEnd = 0;
@@ -183,7 +182,14 @@ int alertTime = 0;
 long alertStarted = 0;
 
 // Les Moutons !
-boolean missClickDragNextMove = false;
+String messageMouton = "";
+int messageMoutonStarted = 0;
+int messageMoutonTime = 0;
+int tourPourApparition = 10;
+int missclickCount = 0, appearCount = 0, timeCount = 0, messagesCount = 0;
+Point alertPos = new Point();
+boolean missclickDragNextMove = false;
+float lastMissclick = 0;
 
 // En mémoire du vecteur vitesse
 int slider;
@@ -372,14 +378,16 @@ void setup() {
   editorIcons[2] = loadImage("icons/copy.png");
   editorIcons[3] = loadImage("icons/info.png");
   editorIcons[4] = loadImage("icons/start.png");
-  editorIcons[5] = loadImage("icons/rotate.png");
-  editorIcons[6] = loadImage("icons/quit.png");
+  editorIcons[5] = loadImage("icons/parameter.png");
+  editorIcons[6] = loadImage("icons/rotate.png");
+  editorIcons[7] = loadImage("icons/quit.png");
 
   pause = loadImage("icons/pause.png");
   chess = loadImage("icons/chess.png");
   bot = loadImage("icons/hacker.png");
   botLarge = loadImage("icons/hacker-large.png");
   warning = loadImage("icons/warning.png");
+  mouton = loadImage("joueurs/lesmoutonsImgEnd.jpg");
 
   loic = loadImage("joueurs/loic.jpeg");
   antoine = loadImage("joueurs/antoine.jpg");
@@ -438,6 +446,31 @@ void setup() {
   newGameButton = new TextBouton(offsetX - offsetX/1.08, offsetY+4*w+5, offsetX-2*(offsetX - offsetX/1.08), 24, "Menu", 15, 3);
   newGameButton.setColors(#1d1c1a, #ffffff);
 
+  timeButtons[0] = new ArrayList<TimeButton>();
+  timeButtons[1] = new ArrayList<TimeButton>();
+  timeButtons[0].add(new TimeButton(37, 472, 48, 11, 5, 0, 0, 0, #f0f0f0, #26211b, #d1cfcf, true));
+  timeButtons[0].add(new TimeButton(86, 472, 49, 11, 0, 5, 0, 0, #f0f0f0, #26211b, #d1cfcf, true));
+  timeButtons[0].add(new TimeButton(142, 472, 49, 11, 5, 5, 0, 0, #f0f0f0, #26211b, #d1cfcf, true));
+  timeButtons[0].add(new TimeButton(37, 533, 48, 10, 0, 0, 0, 5, #f0f0f0, #26211b, #d1cfcf, false));
+  timeButtons[0].add(new TimeButton(86, 533, 49, 10, 0, 0, 5, 0, #f0f0f0, #26211b, #d1cfcf, false));
+  timeButtons[0].add(new TimeButton(142, 533, 49, 10, 0, 0, 5, 5, #f0f0f0, #26211b, #d1cfcf, false));
+  timeButtons[1].add(new TimeButton(227, 472, 48, 10, 5, 0, 0, 0, #26211b, #f0f0f0, #2d2d2a, true));
+  timeButtons[1].add(new TimeButton(276, 472, 49, 10, 0, 5, 0, 0, #26211b, #f0f0f0, #2d2d2a, true));
+  timeButtons[1].add(new TimeButton(332, 472, 49, 10, 5, 5, 0, 0, #26211b, #f0f0f0, #2d2d2a, true));
+  timeButtons[1].add(new TimeButton(227, 533, 48, 10, 0, 0, 0, 5, #26211b, #f0f0f0, #2d2d2a, false));
+  timeButtons[1].add(new TimeButton(276, 533, 49, 10, 0, 0, 5, 0, #26211b, #f0f0f0, #2d2d2a, false));
+  timeButtons[1].add(new TimeButton(332, 533, 49, 10, 0, 0, 5, 5, #26211b, #f0f0f0, #2d2d2a, false));
+
+  presetButtons.add(new PresetButton(width-272, 465, 70, 70, 5, #272522, loadImage("icons/rapid.png")));
+  presetButtons.add(new PresetButton(width-177, 465, 70, 70, 5, #272522, loadImage("icons/blitz.png")));
+  presetButtons.add(new PresetButton(width-82, 465, 70, 70, 5, #272522, loadImage("icons/bullet.png")));
+
+  for (int i = 0; i < timeButtons.length; i++) {
+    for (int j = 0; j < timeButtons[i].size(); j++) {
+      timeButtons[i].get(j).setIndex(i, j % 3);
+    }
+  }
+
   // Drag and drops
   addPiecesButtons[0] = new ArrayList<DragAndDrop>();
   for (int i = 0; i < 6; i++) {
@@ -451,13 +484,12 @@ void setup() {
   // Icones de la partie
   int[] numSc1 = {0, 1, 2, 3, 4, 5, 6, 7, 16, 10};
   for (int i = 0; i < icons.length; i++) {
-    //pour simplifier, tous les boutons ont "pause" comme deuxième état
     iconButtons.add(new Bouton(edgeSpacing + i*iconSize + i*spacingBetweenIcons, distanceFromTop, iconSize, icons[i], pause));
     iconButtons.get(i).setNumShortcut(numSc1[i]);
   }
 
   // Icones de l'éditeur
-  int[] numSc2 = {0, 11, 13, 12, 15, 6, 14};
+  int[] numSc2 = {0, 11, 13, 12, 15, 17, 6, 14};
   for (int i = 0; i < editorIcons.length; i++) {
     editorIconButtons.add(new Bouton(editorEdgeSpacing + i*editorIconSize + i*spacingBetweenEditorIcons, distanceFromTop, editorIconSize, editorIcons[i], editorIcons[i]));
     editorIconButtons.get(i).setNumShortcut(numSc2[i]);
@@ -566,6 +598,7 @@ void draw() {
     // Affichages
     if (alert != "") displayAlert();
     if (infoBox != "") drawInfoBox(infoBox);
+    if (messageMouton != "") displayMoutonAlert();
 
     // Actualise "block playing", qui empêche éventuellement un joueur de jouer
     updateBlockPlaying();
@@ -596,6 +629,36 @@ void draw() {
     positionEditor.show(0);
     if (useHacker) hackerButton.show(0);
 
+    if (timeControl) {
+      fill(#f0f0f0);
+      stroke(#f0f0f0);
+      rect(37, 480, 98, 55);
+      rect(142, 480, 49, 55);
+      fill(#26211b);
+      textSize(30);
+      textAlign(CENTER, CENTER);
+      text(nf(times[0][0], 2) + ":" + nf(times[0][1], 2), 87, 504);
+      text(nf(times[0][2], 2), 167, 504);
+
+      fill(#26211b);
+      stroke(#26211b);
+      rect(227, 480, 98, 55);
+      rect(332, 480, 49, 55);
+      fill(#f0f0f0);
+      text(nf(times[1][0], 2) + ":" + nf(times[1][1], 2), 277, 504);
+      text(nf(times[1][2], 2), 357, 504);
+      for (int i = 0; i < timeButtons.length; i++) {
+        for (int j = 0; j < timeButtons[i].size(); j++) {
+          timeButtons[i].get(j).update();
+          timeButtons[i].get(j).show();
+        }
+      }
+    }
+
+    for (int i = 0; i < presetButtons.size(); i++) {
+      presetButtons.get(i).show();
+    }
+
     for (Toggle t : toggles1) {
       t.show();
     }
@@ -619,6 +682,7 @@ void draw() {
 
     if (infoBox != "") drawInfoBox(infoBox);
     if (showSavedPositions) drawSavedPosition();
+    if (showParameters) drawParameters();
 
     if (infos != "") surface.setTitle(name + " - Editeur de position - " + infos);
     else surface.setTitle(name + " - Editeur de position");

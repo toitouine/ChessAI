@@ -240,7 +240,7 @@ class LeMaire {
         this.depthSearched = d;
         this.time = sa.getTime(this.c);
         sa.endSearch();
-        delay(500);
+        delay(min(500, (int)this.time));
         return -eval;
       }
     }
@@ -924,6 +924,7 @@ class LesMoutons {
     else moyenneOfPosition = -Infinity;
     float bestMoyenneAtRoot = -Infinity;
     boolean isBestMoveCapture = false;
+    Move alphaMateMove = null;
 
     for (int i = 0; i < moves.size(); i++) {
       moves.get(i).make();
@@ -943,11 +944,13 @@ class LesMoutons {
         else return new SheepEval(moyenneOfPosition, beta);
       }
 
-      // Recherche du meilleur coup
+      // Recherche du meilleur coup (à la racine et dans l'arbre)
       if (evaluation > alpha) {
         alpha = evaluation;
         if (moves.get(i).capture != null) isBestMoveCapture = true;
         else isBestMoveCapture = false;
+
+        if (plyFromRoot == 0 && alpha > 49900) alphaMateMove = moves.get(i);
       }
 
       if (plyFromRoot == 0) {
@@ -955,6 +958,7 @@ class LesMoutons {
           bestMoyenneAtRoot = moyenne;
           this.bestMoveFound = moves.get(i);
         }
+        if (alphaMateMove != null) this.bestMoveFound = alphaMateMove;
       }
 
     }
@@ -965,7 +969,6 @@ class LesMoutons {
 
 }
 
-// Classe pour les moutons qui contient la valeur de l'évaluation et la moyenne des évaluations filles
 class SheepEval {
   float moyenne;
   float eval;
@@ -973,6 +976,84 @@ class SheepEval {
   SheepEval(float moy, float beval) {
     this.moyenne = moy;
     this.eval = beval;
+  }
+}
+
+void arnaques() {
+  int opponent = (int)pow(tourDeQui-1, 2);
+
+  // Arnaque au temps
+  if (joueurs.get(opponent).name == "LesMoutons") {
+    if (ta.timers[tourDeQui].currentTime >= 45000 && random(1) <= 0.4) {
+      timeCount++;
+      ta.timers[tourDeQui].removeTime(5000);
+    }
+  }
+
+  // Apparition
+  if (joueurs.get(opponent).name == "LesMoutons" && (int)nbTour == tourPourApparition && endGameWeight <= 0.5) {
+    int knights = 0;
+    int cblanc_bishops = 0;
+    int cnoir_bishops = 0;
+    int rooks = 0;
+
+    for (int i = 0; i < pieces[opponent].size(); i++) {
+      if (pieces[opponent].get(i).pieceIndex == CAVALIER_INDEX) knights++;
+      if (pieces[opponent].get(i).pieceIndex == TOUR_INDEX) rooks++;
+      if (pieces[opponent].get(i).pieceIndex == FOU_INDEX) {
+        if (grid[pieces[opponent].get(i).i][pieces[opponent].get(i).j].blanc) cblanc_bishops++;
+        else cnoir_bishops++;
+      }
+    }
+
+    int j = (int)-7*opponent + 7;
+    float cacheY = (opponent == 0) ? offsetY+6*w : offsetY;
+    int tourAdd = 20;
+
+    appearCount++;
+    messagesCount++;
+
+    if (knights < 2) {
+      if (grid[1][j].piece == null) { sendMoutonMessage(moutonMessages[(int)random(0, moutonMessages.length)], offsetX, cacheY, 1500); pieces[opponent].add(new Piece("cavalier", 1, j, opponent)); materials[opponent] += 320; tourPourApparition += tourAdd; return; }
+      if (grid[6][j].piece == null) { sendMoutonMessage(moutonMessages[(int)random(0, moutonMessages.length)], offsetX+2*w, cacheY, 1500); pieces[opponent].add(new Piece("cavalier", 6, j, opponent)); materials[opponent] += 320; tourPourApparition += tourAdd; return; }
+    }
+    if (cblanc_bishops < 1) {
+      if (opponent == 0) {
+        if (grid[5][j].piece == null) { sendMoutonMessage(moutonMessages[(int)random(0, moutonMessages.length)], offsetX, cacheY, 1500); pieces[opponent].add(new Piece("fou", 5, j, opponent)); materials[opponent] += 330; tourPourApparition += tourAdd; return; }
+      } else {
+        if (grid[2][j].piece == null) { sendMoutonMessage(moutonMessages[(int)random(0, moutonMessages.length)], offsetX, cacheY, 1500); pieces[opponent].add(new Piece("fou", 2, j, opponent)); materials[opponent] += 330; tourPourApparition += tourAdd; return; }
+      }
+    }
+    if (cnoir_bishops < 1) {
+      if (opponent == 0) {
+        if (grid[2][j].piece == null) { sendMoutonMessage(moutonMessages[(int)random(0, moutonMessages.length)], offsetX, cacheY, 1500); pieces[opponent].add(new Piece("fou", 2, j, opponent)); materials[opponent] += 330; tourPourApparition += tourAdd; return; }
+      } else {
+        if (grid[5][j].piece == null) { sendMoutonMessage(moutonMessages[(int)random(0, moutonMessages.length)], offsetX, cacheY, 1500); pieces[opponent].add(new Piece("fou", 5, j, opponent)); materials[opponent] += 330; tourPourApparition += tourAdd; return; }
+      }
+    }
+    if (rois[opponent].roquable == 1 && rooks < 2) {
+      if (grid[0][j].piece == null) { sendMoutonMessage(moutonMessages[(int)random(0, moutonMessages.length)], offsetX, cacheY, 1500); pieces[opponent].add(new Piece("tour", 0, j, opponent)); materials[opponent] += 500; tourPourApparition += tourAdd; return; }
+      if (grid[7][j].piece == null) { sendMoutonMessage(moutonMessages[(int)random(0, moutonMessages.length)], offsetX+2*w, cacheY, 1500); pieces[opponent].add(new Piece("tour", 7, j, opponent)); materials[opponent] += 500; tourPourApparition += tourAdd; return; }
+    }
+
+    messagesCount--;
+    appearCount--;
+
+    tourPourApparition += 2;
+  }
+
+  // Messages
+  if (random(1) <= 0.2) {
+    float msgX = offsetX + random(0, 2)*w;
+    float msgY = offsetX + random(0, 6)*w;
+    sendMoutonMessage(moutonMessages[(int)random(0, moutonMessages.length)], msgX, msgY, 1500);
+    messagesCount++;
+  }
+
+  // Missclick
+  if (nbTour >= lastMissclick + missclickCooldown && random(1) <= 0.1) {
+    lastMissclick = nbTour;
+    missclickDragNextMove = true;
   }
 }
 
