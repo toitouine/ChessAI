@@ -6,7 +6,7 @@ class Zobrist {
   long[] enPassantSquare = new long[16];
   long blackToMove;
 
-  int castleState = 0; // 1101 KQkq
+  int castleState = 0;
   final int whitePetitRoque = 8;
   final int whiteGrandRoque = 4;
   final int blackPetitRoque = 2;
@@ -86,17 +86,17 @@ class Zobrist {
   }
 
   long updateHash(Move m) {
-    // xor out
+    // XOR out
     this.hash ^= this.piecesOnSquare[m.piece.zobristIndex][m.fromI][m.fromJ];
     if (m.capture != null) this.hash ^= this.piecesOnSquare[m.capture.zobristIndex][m.capture.i][m.capture.j];
 
-    // xor in
+    // XOR in
     this.hash ^= this.piecesOnSquare[m.piece.zobristIndex][m.i][m.j];
 
-    // changement de tour
+    // Changement de tour
     this.hash ^= this.blackToMove;
 
-    // déplacements du roque
+    // Déplacements du roque
     if (m.special == 1) {
       int jPos = (m.piece.c == 0) ? 7 : 0;
       this.hash ^= this.piecesOnSquare[m.tourQuiRoque.zobristIndex][7][jPos];
@@ -107,7 +107,7 @@ class Zobrist {
       this.hash ^= this.piecesOnSquare[m.tourQuiRoque.zobristIndex][3][jPos];
     }
 
-    // droits au roque
+    // Droits au roque
     this.hash ^= this.castlingRights[castleState]; // Retire tous les droits au roque du hash
 
     castleState = 0; // Update la variable de droits au roque (4 bits)
@@ -121,12 +121,12 @@ class Zobrist {
     }
     this.hash ^= this.castlingRights[castleState]; // Ajoute les droits au roques au hash
 
-    // promotion
+    // Promotion
     if (m.special >= 5) {
-      // on retire le pion du hash
+      // On retire le pion du hash
       this.hash ^= this.piecesOnSquare[m.piece.zobristIndex][m.i][m.j];
 
-      // on ajoute la pièce de promotion au hash
+      // On ajoute la pièce de promotion au hash
       int index = this.promoZobristIndex[m.piece.c][m.special-5];
       this.hash ^= this.piecesOnSquare[index][m.i][m.j];
     }

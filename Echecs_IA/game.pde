@@ -127,6 +127,13 @@ void rematch() {
   startGame();
 }
 
+void newLeMaireGame(int lemaire) {
+  resetGame(false);
+  j1 = (lemaire == 0 ? "LeMaire" : "Humain");
+  j2 = (lemaire == 0 ? "Humain" : "LeMaire");
+  startGame();
+}
+
 void resetGame(boolean menu) {
   // reset les timers
   if (useTime) {
@@ -198,6 +205,10 @@ void resetSettingsToDefault() {
   }
 
   // Variables
+  hackerWaitingToRestart = false;
+  lastMoveTime = 0;
+  deltaTimeMesured = 0;
+  isNextMoveRestranscrit = false;
   messagesCount = 0;
   missclickCount = 0;
   appearCount = 0;
@@ -216,7 +227,9 @@ void resetSettingsToDefault() {
   showSavedPositions = false;
   upLeftCorner = null;
   downRightCorner = null;
+  newgameLocation = null;
   hackerPret = false;
+  timeAtHackerEnd = 0;
   engineToPlay = false;
   playEngineMoveNextFrame = false;
   showGraph = false;
@@ -293,6 +306,7 @@ boolean manqueDeMateriel() {
 }
 
 void checkGameState() {
+  if (useHacker) return;
 
   //Manque de matériel
   if (manqueDeMateriel()) {
@@ -378,6 +392,8 @@ void checkGameState() {
 }
 
 void loseOnTime(int loser) {
+  if (useHacker && hackerPret) return;
+
   winner = (int)pow(loser-1, 2);
   println();
   println("Victoire des " + ((winner == 0) ? "blancs" : "noirs") + " au temps");
@@ -385,6 +401,24 @@ void loseOnTime(int loser) {
   addPgnWin(winner);
   updateScores(winner);
   endReason = "au temps";
+
+  gameEnded = true;
+  timeAtEnd = millis();
+  infos = "Game ended";
+
+  if (soundControl >= 1) nulle_sound.play();
+  if (useTime) ta.stopTimers();
+}
+
+void endOnHackerDetect() {
+  winner = 2;
+  println();
+  println("Fin de la partie (hacker)");
+  println();
+  addPgnDraw();
+  updateScores(0.5);
+  endReason = "détection du hacker";
+  if (leMaireSansFin) endReason += " sans fin";
 
   gameEnded = true;
   timeAtEnd = millis();

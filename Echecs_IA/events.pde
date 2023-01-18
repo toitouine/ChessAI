@@ -1,19 +1,37 @@
 void test() {
-  // Move move = new Move(grid[1][7].piece, 2, 5, null, 0);
+   //Move move = new Move(grid[1][7].piece, 2, 5, null, 0);
   // Move move2 = new Move(grid[4][6].piece, 4, 4, null, 0);
   // Move move = new Move(grid[4][4].piece, 3, 3, grid[3][3].piece, 0);
   // Move move = new Move(grid[5][5].piece, 5, 2, grid[5][2].piece, 0);
   // LeMaire m = new LeMaire(1, 2, 3, true);
 
-  int before = millis();
+  // 4 329 941 de coups par seconde sur la position de départ
+  // 2 383 172 de coups par seconde sur vecteur vitesse
 
-  int count = 0;
-  for (int i = 0; i < 1000000; i++) {
-    if (i % 100000 == 0) println(i);
-  }
-  println(count);
+  // 4138 ms --> 1 000 000 légaux
+  // 1200 ms --> 1 000 000 pseudo légaux
 
-  println(millis() - before);
+  // long count = 0;
+  // long numTest = 1000000;
+  // long pas = numTest/10;
+  //
+  // int before = millis();
+  //
+  // for (int i = 0; i < numTest; i++) {
+  //   generateAllMoves(0, true, true).size();
+  //   count++;
+  //   if (i % pas == 0) println(i);
+  // }
+  //
+  // int temps = millis() - before;
+  // println("---------------");
+  // println(formatInt((int)count));
+  // long ps = (1000*count)/temps;
+  // println(formatInt((int)(1000*count/temps)) + " par seconde");
+  //
+  // println(temps + " ms");
+
+  endOnHackerDetect();
 }
 
 void keyPressed() {
@@ -63,6 +81,8 @@ void keyPressed() {
     if (key == 'f' || key == 'F') printFEN();
     if (key == 'c' || key == 'C') copyFEN();
     if (key == 'k' || key == 'K') flipBoard();
+    if (key == 'p' || key == 'P') pasteHTMLtoBoard();
+
   } else if (gameState == 0) {
     if (keyCode == ENTER) verifStartGame();
   }
@@ -217,7 +237,7 @@ void mousePressed() {
   if (gameState == 1) {
 
     // Boutons rematch
-    if (gameEnded) {
+    if (gameEnded && !useHacker && !hackerPret) {
       if (rematchButton.contains(mouseX, mouseY)) { rematch(); return; }
       if (newGameButton.contains(mouseX, mouseY)) { resetGame(true); return; }
     }
@@ -420,7 +440,7 @@ void mouseMoved() {
   if (gameState == 1) {
 
     // Bouton rematch
-    if (gameEnded && (rematchButton.contains(mouseX, mouseY) || newGameButton.contains(mouseX, mouseY))) {
+    if (gameEnded && !useHacker && !hackerPret && (rematchButton.contains(mouseX, mouseY) || newGameButton.contains(mouseX, mouseY))) {
       cursor(HAND);
       return;
     }

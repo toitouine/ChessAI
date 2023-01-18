@@ -13,13 +13,13 @@
 
 /////////////////////////////////////////////////////////////////
 
+String[] promoPieces = {"dame", "tour", "fou", "cavalier"};
+int[] promoMaterials = {800, 400, 230, 220};
+
 class Move {
   Piece piece;
   Piece capture;
-  int fromI, fromJ, i, j, special;
-
-  String[] promoPieces = {"dame", "tour", "fou", "cavalier"};
-  int[] promoMaterials = {800, 400, 230, 220};
+  byte fromI, fromJ, i, j, special;
 
   // Meilleur coup après
   Move bestChild = null;
@@ -34,12 +34,12 @@ class Move {
 
   Move(Piece piece, int i, int j, Piece capture, int special) {
     this.piece = piece;
-    this.i = i;
-    this.j = j;
-    this.fromI = piece.i;
-    this.fromJ = piece.j;
+    this.i = byte(i);
+    this.j = byte(j);
+    this.fromI = byte(piece.i);
+    this.fromJ = byte(piece.j);
     this.capture = capture;
-    this.special = special;
+    this.special = byte(special);
 
     if (special == 1) this.tourQuiRoque = grid[this.i+1][this.j].piece;
     else if (special == 2) this.tourQuiRoque = grid[this.i-2][this.j].piece;
@@ -85,9 +85,9 @@ class Move {
     else if (this.special == 2) { tourQuiRoque.setPlace(this.i+1, this.j); }
     else if (this.special >= 5) {
       removePiece(this.piece);
-      this.savePromo = new Piece(this.promoPieces[this.special-5], this.i, this.j, this.piece.c);
+      this.savePromo = new Piece(promoPieces[this.special-5], this.i, this.j, this.piece.c);
       pieces[this.piece.c].add(this.savePromo);
-      materials[this.piece.c] += this.promoMaterials[this.special-5];
+      materials[this.piece.c] += promoMaterials[this.special-5];
     }
 
     // Roques
@@ -117,7 +117,7 @@ class Move {
     else if (this.special >= 5) {
       pieces[this.piece.c].add(this.piece);
       removePiece(this.savePromo);
-      materials[this.piece.c] -= this.promoMaterials[this.special-5];
+      materials[this.piece.c] -= promoMaterials[this.special-5];
     }
 
     // Déplacement de la pièce
@@ -167,7 +167,14 @@ class Move {
     if (showGraph) updateGraph();
 
     // Hacker
-    if (useHacker && hackerPret) cheat(this.piece.c, this.fromI, this.fromJ, this.i, this.j, this.special);
+    if (useHacker && hackerPret && !isNextMoveRestranscrit) {
+      // // ICI
+      // lastMoveTime = millis();
+      // deltaTimeMesured = 0;
+      // // LA
+      cheat(this.piece.c, this.fromI, this.fromJ, this.i, this.j, this.special);
+    }
+    isNextMoveRestranscrit = false;
 
     // Les Moutons !
     if (joueurs.get(0).name == "LesMoutons" || joueurs.get(1).name == "LesMoutons") {

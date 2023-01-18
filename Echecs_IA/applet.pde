@@ -53,11 +53,12 @@ public class SearchApplet extends PApplet {
     fill(255);
     textSize(23);
     textAlign(CENTER, CENTER);
-    if (joueurs.size() != 0 && !joueurs.get(0).name.equals("Humain")) text(joueurs.get(0).name + " (blancs)", width/4, 27);
+    if (joueurs == null || joueurs.size() < 2) return;
+    if (!joueurs.get(0).name.equals("Humain")) text(joueurs.get(0).name + " (blancs)", width/4, 27);
     else text(joueurs.get(0).name + " (blancs)", width/4, height/2);
 
-    if (joueurs == null) return;
-    if (joueurs.get(1) != null && !joueurs.get(1).name.equals("Humain")) text(joueurs.get(1).name + " (noirs)", (3*width)/4, 27);
+    if (joueurs == null || joueurs.size() < 2) return;
+    if (!joueurs.get(1).name.equals("Humain")) text(joueurs.get(1).name + " (noirs)", (3*width)/4, 27);
     else text(joueurs.get(1).name + " (noirs)", (3*width)/4, height/2);
 
     // Stats
@@ -65,7 +66,8 @@ public class SearchApplet extends PApplet {
     textAlign(LEFT, CENTER);
 
     for (int i = 0; i < 2; i++) {
-      if (!gameEnded && joueurs != null && joueurs.get(i) != null && !joueurs.get(i).name.equals("Humain")) {
+      if (joueurs != null && joueurs.size() < 2) break;
+      if (!gameEnded && !joueurs.get(i).name.equals("Humain")) {
         fill(#fbd156); text("Evaluation : " + evals[i], i*width/2 + 8, 65);
         fill(#ef5a2a); text("Profondeur : " + depths[i], i*width/2 + 8, 89);
         fill(#5c8cb1); text("Positions : " + positions[i] + " (" + tris[i] + ")", i*width/2 + 8, 113);

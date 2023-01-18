@@ -10,7 +10,8 @@
 // Plus d'ouvertures
 // Système de vérification de fens
 // Analyse de parties
-// Scan automatique d'échiquier
+// Scan automatique d'échiquier (presque)
+// LeMaire sans fin
 
 /////////////////////////////////////////////////////////////////
 
@@ -78,7 +79,7 @@ PImage j1ImgEnd;
 PImage j2ImgEnd;
 
 PImage[] icons = new PImage[10];
-PImage[] editorIcons = new PImage[8];
+PImage[] editorIcons = new PImage[9];
 PImage[] saveFENSimage = new PImage[7];
 PImage upArrow;
 PImage downArrow;
@@ -206,12 +207,24 @@ int j1Time = 1000;
 int j2Time = 1000;
 
 // Hacker
-Point upLeftCorner, downRightCorner;
-Point saveUpLeftCorner, saveDownRightCorner;
+Point upLeftCorner, downRightCorner, newgameLocation;
+Point saveUpLeftCorner, saveDownRightCorner, saveNewgameLocation;
 Color hackerWhitePieceColor, hackerBlackPieceColor;
 Color saveWhitePieceColor, saveBlackPieceColor;
 long lastHackerScan = 0;
-int hackerScanCooldown = 400;
+boolean hackerWaitingToRestart = false;
+int timeAtLastRestartTry = 0;
+int hackerTestRestartCooldown = 750;
+// ICI
+int hackerScanCooldown = 100;
+// LA
+int currentHackerPOV = 0;
+int timeAtHackerEnd = 0;
+// ICI
+int lastMoveTime = 0;
+int deltaTimeMesured = 0;
+boolean isNextMoveRestranscrit = false;
+// LA
 boolean useHacker = false;
 boolean hackerPret = false;
 Point[][] hackerCoords = new Point[8][8];
@@ -378,9 +391,10 @@ void setup() {
   editorIcons[2] = loadImage("icons/copy.png");
   editorIcons[3] = loadImage("icons/info.png");
   editorIcons[4] = loadImage("icons/start.png");
-  editorIcons[5] = loadImage("icons/parameter.png");
-  editorIcons[6] = loadImage("icons/rotate.png");
-  editorIcons[7] = loadImage("icons/quit.png");
+  editorIcons[5] = loadImage("icons/paste.png");
+  editorIcons[6] = loadImage("icons/parameter.png");
+  editorIcons[7] = loadImage("icons/rotate.png");
+  editorIcons[8] = loadImage("icons/quit.png");
 
   pause = loadImage("icons/pause.png");
   chess = loadImage("icons/chess.png");
@@ -489,7 +503,7 @@ void setup() {
   }
 
   // Icones de l'éditeur
-  int[] numSc2 = {0, 11, 13, 12, 15, 17, 6, 14};
+  int[] numSc2 = {0, 11, 13, 12, 15, 18, 17, 6, 14};
   for (int i = 0; i < editorIcons.length; i++) {
     editorIconButtons.add(new Bouton(editorEdgeSpacing + i*editorIconSize + i*spacingBetweenEditorIcons, distanceFromTop, editorIconSize, editorIcons[i], editorIcons[i]));
     editorIconButtons.get(i).setNumShortcut(numSc2[i]);
@@ -510,13 +524,15 @@ void setup() {
     }
   }
 
-  // Place les pièces
+  // Initialise les pièces
   pieces[0] = new ArrayList<Piece>();
   pieces[1] = new ArrayList<Piece>();
-  setPieces();
 
   // Initialise PreComputedData
   pc.init();
+
+  // Place les pièces
+  setPieces();
 
   for (int i = 0; i < 18; i++) println();
 }
@@ -538,12 +554,20 @@ void draw() {
   if (gameState == 1) {
     background(49, 46, 43);
 
+    // ICI
+    // Actualise "block playing", qui empêche éventuellement un joueur de jouer
+    updateBlockPlaying();
+    // LA
+
     // Titre de la fenêtre
     surface.setTitle(name + " - " + j1 + " (" + ((joueurs.get(0).useIterativeDeepening) ? "ID" : j1depth) +  ") contre " + j2 + " (" + ((joueurs.get(1).useIterativeDeepening) ? "ID" : j2depth) + ")" + ((infos == "") ? "" : " - ") + infos);
 
     updateBoard();
     drawPlayersInfos();
     for (Arrow b : bookArrows) b.show();
+    if (showVariante) {
+      for (Arrow arrow : varianteArrows) arrow.show();
+    }
 
     if (enPromotion != null) {
       fill(220, 220, 220, 200);
@@ -577,31 +601,37 @@ void draw() {
       if (targetEndScreenY - yEndScreen <= 1 && mousePressed && (mouseX < rectX || mouseX >= rectX+rectW || mouseY < yEndScreen || mouseY >= yEndScreen+rectH)) disableEndScreen = true;
       drawEndScreen(yEndScreen);
     }
-    if (gameEnded) {
+    if (gameEnded && !useHacker && !hackerPret) {
       newGameButton.show();
       rematchButton.show();
-    }
-
-    // Variantes
-    if (showVariante) {
-      for (Arrow arrow : varianteArrows) arrow.show();
     }
 
     // Hacker
     if (useHacker) {
       if (!hackerPret) { drawHackerPage(); }
       else {
-        if (play && !gameEnded && enPromotion == null && millis() - lastHackerScan >= hackerScanCooldown) scanMoveOnBoard();
+        if (play && !gameEnded && enPromotion == null && millis() - lastHackerScan >= hackerScanCooldown) {
+          // ICI
+          handleMoveTime();
+          // LA
+          scanMoveOnBoard();
+        }
       }
+
+      if (gameEnded && leMaireSansFin && !hackerWaitingToRestart && millis() - timeAtHackerEnd >= timeBeforeHackerRestart) hackStartGame();
+      if (hackerWaitingToRestart && millis() - timeAtLastRestartTry >= hackerTestRestartCooldown) {
+        handleWaitForRestart();
+      }
+
+      textSize(35);
+      fill(255);
+      text(currentHackerPOV, offsetX/2, height/2);
     }
 
     // Affichages
     if (alert != "") displayAlert();
     if (infoBox != "") drawInfoBox(infoBox);
     if (messageMouton != "") displayMoutonAlert();
-
-    // Actualise "block playing", qui empêche éventuellement un joueur de jouer
-    updateBlockPlaying();
   }
 
   ////////////////////////////////////////////////////////////////

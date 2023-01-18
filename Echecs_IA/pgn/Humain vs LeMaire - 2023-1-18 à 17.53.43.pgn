@@ -1,0 +1,10 @@
+[Event "Chess AI Tournament"]
+[Date "2023.1.18"]
+[White "Humain"]
+[Black "LeMaire"]
+[WhiteTitle ""]
+[BlackTitle "GM"]
+[WhiteElo "???"]
+[BlackElo "3845"]
+
+1.e4 Nc6 2.Bc4 Nf6 3.d3 d5 4.exd5 Nxd5 5.h3 Nb6 6.Bb3 Nd4 7.Nd2 Bf5 8.Ne2 Nxb3 9.Nxb3 e5 10.Rg1 Bd6 11.Kf1 O-O 12.Ng3 Be6 13.Nf5 Bxf5 

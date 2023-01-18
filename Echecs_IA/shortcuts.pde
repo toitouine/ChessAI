@@ -21,6 +21,7 @@ class Shortcut {
       case 15: return "Afficher / Masquer les FENs sauvegardées";
       case 16: return "Ouvrir / Fermer search controller (D)";
       case 17: return "Afficher / Masquer les paramètres";
+      case 18: return "Coller le code HTML du plateau (P)";
 
       default: return "";
     }
@@ -46,6 +47,7 @@ class Shortcut {
       case 15: toggleSavedPos(); break;
       case 16: toggleSearchController(); break;
       case 17: toggleParameters(); break;
+      case 18: pasteHTMLtoBoard(); break;
 
       default: println(">>> Erreur dans shortcut.call()");
       break;
@@ -56,6 +58,11 @@ class Shortcut {
 /////////////////////////////////////////////////////////////////
 
 // Fonctions de shortcuts
+
+void pasteHTMLtoBoard() {
+  String str = GetTextFromClipboard();
+  HTMLtoBoard(str);
+}
 
 void toggleSearchController() {
   showSearchController = !showSearchController;

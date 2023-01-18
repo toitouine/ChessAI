@@ -2,6 +2,7 @@ class PreComputedData {
   boolean[][][][][] distanceTable = new boolean[6][8][8][8][8]; // piece index / grid[from][from] / grid[target][target]
   int[][] distanceFromCenter = new int[8][8]; // i, j
   int[][][][] tropismDistance = new int[8][8][8][8]; // i1, j1, i2, j2
+  HashMap<Integer, ArrayList<Move>[][]> preComputedMovesMap = new HashMap<Integer, ArrayList<Move>[][]>(); // pieceIndex, i, j
 
   PreComputedData() { }
 
@@ -9,10 +10,40 @@ class PreComputedData {
     this.initDistanceTable();
     this.initDistanceFromCenter();
     this.initTropismDistance();
+    this.initMoveMap();
+  }
+
+  boolean getDistanceTable(int p, int fi, int fj, int ti, int tj) {
+    return this.distanceTable[p][fi][fj][ti][tj];
+  }
+
+  int getDistanceFromCenter(int i, int j) {
+    return this.distanceFromCenter[i][j];
+  }
+
+  int getTropismDistance(int i1, int i2, int j1, int j2) {
+    return this.tropismDistance[i1][i2][j1][j2];
+  }
+
+  ArrayList<Move> getMove(int pieceIndex, int i, int j) {
+    return this.preComputedMovesMap.get(pieceIndex)[i][j];
+  }
+
+  void initMoveMap() {
+    preComputedMovesMap.put(ROI_INDEX, new ArrayList[8][8]);
+    preComputedMovesMap.put(TOUR_INDEX, new ArrayList[8][8]);
+    preComputedMovesMap.put(FOU_INDEX, new ArrayList[8][8]);
+    preComputedMovesMap.put(CAVALIER_INDEX, new ArrayList[8][8]);
+    // Pion ?
+
+    // Cavalier : 336
+    // Fou : 560
+    // Tour : 896
+    // Roi : 420
+    // --> 2212
   }
 
   void initDistanceTable() {
-    // Magnifique
     for (int c = 0; c < 6; c++) {
       for (int fromI = 0; fromI < 8; fromI++) {
         for (int fromJ = 0; fromJ < 8; fromJ++) {
@@ -55,17 +86,5 @@ class PreComputedData {
         }
       }
     }
-  }
-
-  boolean getDistanceTable(int p, int fi, int fj, int ti, int tj) {
-    return (this.distanceTable[p][fi][fj][ti][tj]);
-  }
-
-  int getDistanceFromCenter(int i, int j) {
-    return (this.distanceFromCenter[i][j]);
-  }
-
-  int getTropismDistance(int i1, int i2, int j1, int j2) {
-    return (this.tropismDistance[i1][i2][j1][j2]);
   }
 }

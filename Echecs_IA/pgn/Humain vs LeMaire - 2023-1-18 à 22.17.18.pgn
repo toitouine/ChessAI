@@ -1,0 +1,11 @@
+[Event "Chess AI Tournament"]
+[FEN "r1bqkb1r/pppppppp/2n5/4P3/3Pn3/3B4/PPP2PPP/RNBQK1NR b"]
+[Date "2023.1.18"]
+[White "Humain"]
+[Black "LeMaire"]
+[WhiteTitle ""]
+[BlackTitle "GM"]
+[WhiteElo "???"]
+[BlackElo "3845"]
+
+d5 1. Nxd6 2.Nf3 Nf5 3.c3 Qd5 4.Kf1 Be6 5.Rg1 Rd8 6.Qc2 Ra8 

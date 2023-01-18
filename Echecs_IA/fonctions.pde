@@ -4,7 +4,7 @@
 // 2) Hacker
 // 3) Affichages
 // 4) Plateau et presets
-// 5) FEN et historiques
+// 5) FEN, historiques et données
 // 6) Fonctions pour calculs et recherche
 
 /////////////////////////////////////////////////////////////////
@@ -36,6 +36,10 @@ boolean isSimilarColor(Color c1, Color c2) {
 String roundedString(float num) {
   boolean isInteger = num % 1 == 0;
   return (isInteger ? str((int)num) : nf(num, 1, 1));
+}
+
+int stringToInt(String str) {
+  return Integer.parseInt(str);
 }
 
 String roundNumber(float num, int digit) {
@@ -107,7 +111,6 @@ Object GetFromClipboard(DataFlavor flavor) {
     try
     {
       object = contents.getTransferData(flavor);
-      println ("Fen importée");
     }
 
     catch (UnsupportedFlavorException e1)
@@ -142,7 +145,10 @@ void error(String function, String message) {
 /////////////////////////////////////////////////////////////////
 
 // Hacker
-
+// ICI
+// Cheat modifié + parse
+// --> déjà fait ?
+// LA
 void cheat(int c, int fromI, int fromJ, int i, int j, int special) {
   // Attention 2ème relance : i et j sont inversés !
   deselectAll();
@@ -154,22 +160,20 @@ void cheat(int c, int fromI, int fromJ, int i, int j, int special) {
   int promoDir = (c == 0 ? 1 : -1);
 
   // Prend le focus de chess.com
-  click(hackerCoords[0][0].x, hackerCoords[0][0].y);
-
-  // Joue le coup
   click(hackerCoords[fromJ][fromI].x, hackerCoords[fromJ][fromI].y);
-  delay(2);
+
+  // Joue le coup ICI LA
+  click(hackerCoords[fromJ][fromI].x, hackerCoords[fromJ][fromI].y);
+  int delay = (int)random(100, 300);
+  delay(delay);
   click(hackerCoords[j][i].x, hackerCoords[j][i].y);
-  delay(2);
 
   if (special == 5) {
-    println("hey");
     click(hackerCoords[j][i].x, hackerCoords[j][i].y);
   }
   else if (special == 6) click(hackerCoords[j][i].x, hackerCoords[j+2*promoDir][i].y);
   else if (special == 7) click(hackerCoords[j][i].x, hackerCoords[j+3*promoDir][i].y);
   else if (special == 8) click(hackerCoords[j][i].x, hackerCoords[j+promoDir][i].y);
-  delay(2);
 
   // Revient à la position initiale
   click(x, y);
@@ -178,9 +182,8 @@ void cheat(int c, int fromI, int fromJ, int i, int j, int special) {
   deselectAll();
 }
 
-Color[][] scanBoard() {
+Color[][] scanBoard(boolean debugPrint) {
   // int before = millis();
-
   Color[][] scannedBoard = new Color[8][8];
 
   for (int i = 0; i < 8; i++) {
@@ -188,11 +191,14 @@ Color[][] scanBoard() {
       int x = hackerCoords[i][j].x;
       int y = hackerCoords[i][j].y;
       scannedBoard[i][j] = hacker.getPixelColor(x, y);
-      if (isSimilarColor(scannedBoard[i][j], hackerWhitePieceColor)) print("B ");
-      else if (isSimilarColor(scannedBoard[i][j], hackerBlackPieceColor)) print("N ");
-      else print("/ ");
+
+      if (debugPrint) {
+        if (isSimilarColor(scannedBoard[i][j], hackerWhitePieceColor)) print("B ");
+        else if (isSimilarColor(scannedBoard[i][j], hackerBlackPieceColor)) print("N ");
+        else print("/ ");
+      }
     }
-    println();
+    if (debugPrint) { println(); }
   }
 
   // println("Scan completed in " + (millis()-before) + " ms");
@@ -200,20 +206,34 @@ Color[][] scanBoard() {
   return scannedBoard;
 }
 
-Move getMoveOnBoard() {
 
+// TOUTE LA FONCTION
+// ICI
+// LA
+Move getMoveOnBoard() {
+  Color[][] scannedBoard = scanBoard(false);
   Color pieceColor = (tourDeQui == 0) ? hackerWhitePieceColor : hackerBlackPieceColor;
 
-  for (int n = 0; n < pieces[tourDeQui].size(); n++) {
+  // ICI
+  ArrayList<Piece> piecesToCheck = new ArrayList<Piece>();
+  piecesToCheck.add(rois[tourDeQui]);
+  for (int i = 0; i < pieces[tourDeQui].size(); i++) {
+    if (pieces[tourDeQui].get(i) == rois[tourDeQui]) continue;
+    piecesToCheck.add(pieces[tourDeQui].get(i));
+  }
+  // LA
+
+  for (int n = 0; n < piecesToCheck.size(); n++) {
     // On regarde si les pièces sont à la bonne case (i et j sont inversés)
-    Piece p = pieces[tourDeQui].get(n);
-    Color scannedColor = hacker.getPixelColor(hackerCoords[p.j][p.i].x, hackerCoords[p.j][p.i].y);
+    Piece p = piecesToCheck.get(n);
+    Color scannedColor = scannedBoard[p.j][p.i];
     if (isSimilarColor(scannedColor, pieceColor)) continue;
 
-    // C'est cette pièce qui s'est déplacé, on génère ses coups (les spéciaux sont regardés en premier pour régler le problème du roque)
+    // C'est cette pièce qui s'est déplacé, on génère ses coups (les coups spéciaux sont regardés en premier pour régler le problème du roque)
     ArrayList<Move> moves = p.generateLegalMoves(true, false);
     for (int k = 0; k < moves.size(); k++) {
       if (moves.get(k).special != 0) {
+        if (moves.get(k).special == 4) moves.get(k).special = 5; // autopromotion en dame pour le hacker
         Move m = moves.remove(k);
         moves.add(0, m);
       }
@@ -231,8 +251,18 @@ Move getMoveOnBoard() {
 
 void scanMoveOnBoard() {
   lastHackerScan = millis();
+  Color endScreen = hacker.getPixelColor(hackerCoords[3][2].x, hackerCoords[3][2].y);
+  if (isSameColor(endScreen, Color.white)) {
+    endOnHackerDetect();
+    timeAtHackerEnd = millis();
+    return;
+  }
+
   Move sm = getMoveOnBoard();
   if (sm != null) {
+    //ICI
+    isNextMoveRestranscrit = true;
+    //LA
     sm.play();
     if (!blockPlaying) {
       if ((joueurs.get(0).name == "Humain" && joueurs.get(1).name != "Humain") || (joueurs.get(0).name != "Humain" && joueurs.get(1).name == "Humain")) {
@@ -242,7 +272,8 @@ void scanMoveOnBoard() {
   }
 }
 
-boolean verifyCalibration() {
+// Tolerance représente nombre d'erreurs autorisé et really si on confond les deux types de pièce
+boolean verifyCalibration(int tolerance, boolean confondu) {
   Color B = hackerWhitePieceColor;
   Color N = hackerBlackPieceColor;
   Color A = null;
@@ -258,14 +289,33 @@ boolean verifyCalibration() {
                              {B, B, B, B, B, B, B, B},
                              {B, B, B, B, B, B, B, B}};
 
-  Color[][] scannedBoard = scanBoard();
+  boolean debugPrint = (confondu ? false : true);
+  Color[][] scannedBoard = scanBoard(debugPrint);
+  int errorCount = 0;
+
   for (int i = 0; i < 8; i++) {
     for (int j = 0; j < 8; j++) {
+
       if (expectedBoard[i][j] == null) {
-        if (isSimilarColor(scannedBoard[i][j], hackerWhitePieceColor) || isSimilarColor(scannedBoard[i][j], hackerBlackPieceColor)) return false;
+        if (isSimilarColor(scannedBoard[i][j], hackerWhitePieceColor) || isSimilarColor(scannedBoard[i][j], hackerBlackPieceColor)) {
+          if (errorCount >= tolerance) return false;
+          errorCount++;
+        }
         continue;
       }
-      if (!isSimilarColor(scannedBoard[i][j], expectedBoard[i][j])) return false;
+
+      if (!confondu) {
+        if (!isSimilarColor(scannedBoard[i][j], expectedBoard[i][j])) {
+          if (errorCount >= tolerance) return false;
+          errorCount++;
+        }
+      } else {
+        if ((!isSimilarColor(scannedBoard[i][j], hackerWhitePieceColor)) && (!isSimilarColor(scannedBoard[i][j], hackerBlackPieceColor))) {
+          if (errorCount >= tolerance) return false;
+          errorCount++;
+        }
+      }
+
     }
   }
   return true;
@@ -277,8 +327,57 @@ void click(int x, int y) {
   hacker.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
 }
 
+void hackStartGame() {
+  if (newgameLocation == null) {
+    error("hackStartGame", "Nouvelle partie non calibrée");
+    return;
+  }
+
+  deselectAll();
+
+  Point mouse = MouseInfo.getPointerInfo().getLocation();
+  int x = mouse.x;
+  int y = mouse.y;
+
+  click(hackerCoords[0][0].x, hackerCoords[0][0].y);
+  delay(2);
+  click(newgameLocation.x, newgameLocation.y);
+  delay(2);
+  click(x, y);
+
+  deselectAll();
+  hackerWaitingToRestart = true;
+}
+
+void handleWaitForRestart() {
+  timeAtLastRestartTry = millis();
+
+  boolean isGameStarted = verifyCalibration(2, true);
+  scanBoard(false);
+  if (isGameStarted) {
+
+    println("gameStarted");
+    int botColor;
+
+    if (currentHackerPOV == 0) {
+      botColor = isSimilarColor(hacker.getPixelColor(hackerCoords[7][7].x, hackerCoords[7][7].y), hackerWhitePieceColor) ? 0 : 1;
+      println(hacker.getPixelColor(hackerCoords[7][7].x, hackerCoords[7][7].y));
+    } else {
+      botColor = isSimilarColor(hacker.getPixelColor(hackerCoords[0][0].x, hackerCoords[0][0].y), hackerWhitePieceColor) ? 0 : 1;
+      println(hacker.getPixelColor(hackerCoords[0][0].x, hackerCoords[0][0].y));
+    }
+
+    println(botColor);
+
+    delay(500);
+    setHackerPOV(botColor);
+    newLeMaireGame(botColor);
+    forceCalibrationRestore();
+  }
+}
+
 void restoreCalibrationSaves() {
-  if (saveUpLeftCorner == null || saveDownRightCorner == null || saveWhitePieceColor == null || saveBlackPieceColor == null) {
+  if (saveUpLeftCorner == null || saveDownRightCorner == null || saveNewgameLocation == null || saveWhitePieceColor == null || saveBlackPieceColor == null) {
     alert("Aucune sauvegarde", 2500);
     println("Aucune sauvegarde");
     return;
@@ -286,13 +385,16 @@ void restoreCalibrationSaves() {
 
   upLeftCorner = copyPoint(saveUpLeftCorner);
   downRightCorner = copyPoint(saveDownRightCorner);
+  newgameLocation = copyPoint(saveNewgameLocation);
   hackerWhitePieceColor = copyColor(saveWhitePieceColor);
   hackerBlackPieceColor = copyColor(saveBlackPieceColor);
   hackerCoords = copyCoords(saveHackerCoords);
+  currentHackerPOV = 0;
 
-  if (!verifyCalibration()) {
+  if (!verifyCalibration(0, false)) {
     upLeftCorner = null;
     downRightCorner = null;
+    newgameLocation = null;
     hackerWhitePieceColor = null;
     hackerBlackPieceColor = null;
     for (int i = 0; i < 8; i++) {
@@ -305,7 +407,11 @@ void restoreCalibrationSaves() {
   }
 
   if (play && !gameEnded && !rewind) {
-    if ((joueurs.get(0).name == "Humain" && joueurs.get(1).name != "Humain") || (joueurs.get(0).name != "Humain" && joueurs.get(1).name == "Humain")) {
+    if (joueurs.get(0).name == "Humain" && joueurs.get(1).name != "Humain") {
+      setHackerPOV(1);
+      if (joueurs.get(tourDeQui).name != "Humain") engineToPlay = true;
+    }
+    else if (joueurs.get(0).name != "Humain" && joueurs.get(1).name == "Humain") {
       if (joueurs.get(tourDeQui).name != "Humain") { engineToPlay = true; }
     }
   }
@@ -324,12 +430,18 @@ void forceCalibrationRestore() {
 
   upLeftCorner = copyPoint(saveUpLeftCorner);
   downRightCorner = copyPoint(saveDownRightCorner);
+  newgameLocation = copyPoint(saveNewgameLocation);
   hackerWhitePieceColor = copyColor(saveWhitePieceColor);
   hackerBlackPieceColor = copyColor(saveBlackPieceColor);
   hackerCoords = copyCoords(saveHackerCoords);
+  currentHackerPOV = 0;
 
   if (play && !gameEnded && !rewind) {
-    if ((joueurs.get(0).name == "Humain" && joueurs.get(1).name != "Humain") || (joueurs.get(0).name != "Humain" && joueurs.get(1).name == "Humain")) {
+    if (joueurs.get(0).name == "Humain" && joueurs.get(1).name != "Humain") {
+      setHackerPOV(1);
+      if (joueurs.get(tourDeQui).name != "Humain") engineToPlay = true;
+    }
+    else if (joueurs.get(0).name != "Humain" && joueurs.get(1).name == "Humain") {
       if (joueurs.get(tourDeQui).name != "Humain") { engineToPlay = true; }
     }
   }
@@ -348,6 +460,9 @@ void addPointToCalibration() {
   }
   else if (downRightCorner == null) {
     downRightCorner = p;
+  }
+  else if (newgameLocation == null) {
+    newgameLocation = p;
     calibrerHacker();
   }
   else println(">>> Hacker déjà calibré");
@@ -356,6 +471,7 @@ void addPointToCalibration() {
 void calibrerHacker() {
   println("Haut-gauche :", upLeftCorner.x, upLeftCorner.y);
   println("Bas-droite :", downRightCorner.x, downRightCorner.y);
+  println("Nouvelle partie :", newgameLocation.x, newgameLocation.y);
 
   int boardWidth = downRightCorner.x - upLeftCorner.x;
   int boardHeight = downRightCorner.y - upLeftCorner.y;
@@ -366,13 +482,15 @@ void calibrerHacker() {
       hackerCoords[j][i].y = upLeftCorner.y + j*(boardHeight/7);
     }
   }
+  currentHackerPOV = 0;
 
   hackerWhitePieceColor = hacker.getPixelColor(hackerCoords[7][7].x, hackerCoords[7][7].y);
   hackerBlackPieceColor = hacker.getPixelColor(hackerCoords[0][0].x, hackerCoords[0][0].y);
 
-  if (!verifyCalibration()) {
+  if (!verifyCalibration(0, false)) {
     upLeftCorner = null;
     downRightCorner = null;
+    newgameLocation = null;
     hackerWhitePieceColor = null;
     hackerBlackPieceColor = null;
     for (int i = 0; i < 8; i++) {
@@ -389,11 +507,20 @@ void calibrerHacker() {
   saveHackerCoords = copyCoords(hackerCoords);
   saveWhitePieceColor = hackerWhitePieceColor;
   saveBlackPieceColor = hackerBlackPieceColor;
+  saveNewgameLocation = newgameLocation;
   println("Données du hacker sauvegardées");
 
   // ha.sendCoords(hackerCoords);
 
   if (play && !gameEnded && !rewind) {
+    // if (joueurs.get(0).name == "Humain" && joueurs.get(1).name != "Humain") {
+    //   setHackerPOV(1);
+    //   if (joueurs.get(tourDeQui).name != "Humain") engineToPlay = true;
+    // }
+    // else if (joueurs.get(0).name != "Humain" && joueurs.get(1).name == "Humain") {
+    //   setHackerPOV(0);
+    //   if (joueurs.get(tourDeQui).name != "Humain") { engineToPlay = true; }
+    // }
     if ((joueurs.get(0).name == "Humain" && joueurs.get(1).name != "Humain") || (joueurs.get(0).name != "Humain" && joueurs.get(1).name == "Humain")) {
       if (joueurs.get(tourDeQui).name != "Humain") { engineToPlay = true; }
     }
@@ -404,6 +531,33 @@ void calibrerHacker() {
   println();
   println(">>> Hacker calibré avec succès (ou pas)");
   println();
+}
+
+void setHackerPOV(int pov) {
+  if (pov == currentHackerPOV) return;
+  hackerCoords = reverseCoords(hackerCoords);
+  currentHackerPOV = pov;
+}
+
+// ICI
+void handleMoveTime() {
+  if (nbTour > 5) {
+    deltaTimeMesured = millis() - lastMoveTime;
+  }
+}
+// LA
+
+Point[][] reverseCoords(Point[][] arr) {
+  int l1 = arr.length;
+  int l2 = arr[0].length;
+  Point[][] result = new Point[l1][l2];
+
+  for (int i = 0; i < l1; i++) {
+    for (int j = 0; j < l2; j++) {
+      result[i][j] = arr[l1-(i+1)][l2-(j+1)];
+    }
+  }
+  return result;
 }
 
 Color copyColor(Color c) {
@@ -510,7 +664,8 @@ void drawHackerPage() {
   // Texte de configuration
   String hackerText;
   if (upLeftCorner == null) hackerText = "Calibrer le coin haut-gauche";
-  else hackerText = "Calibrer le coin bas-droite";
+  else if (downRightCorner == null) hackerText = "Calibrer le coin bas-droite";
+  else hackerText = "Calibrer la nouvelle partie";
   fill(0);
   noStroke();
   textSize(27 * w/75);
@@ -809,8 +964,8 @@ void blitzPreset() {
     times[0][0] = 3; times[0][1] = 0; times[0][2] = 0;
     times[1][0] = 3; times[1][1] = 0; times[1][2] = 0;
   }
-  t1.setValue(1986);
-  t2.setValue(1986);
+  t1.setValue(2214);
+  t2.setValue(2214);
 }
 
 void rapidPreset() {
@@ -831,11 +986,57 @@ void noTimePreset() {
 
 /////////////////////////////////////////////////////////////////
 
-// FEN et historiques
+// FEN, historiques et données
+
+String[] parseHTMLData(String str) {
+  String[] m = split(str, "<div class=\"piece ");
+  String[] pieceData = new String[m.length-1];
+
+  for (int i = 1; i < m.length; i++) {
+    if (m[i].charAt(0) != 's') pieceData[i-1] = "" + m[i].charAt(0) + m[i].charAt(1) + m[i].charAt(10) + m[i].charAt(11);
+    else pieceData[i-1] = "" + m[i].charAt(10) + m[i].charAt(11) + m[i].charAt(7) + m[i].charAt(8);
+  }
+  printArray(pieceData);
+  return pieceData;
+}
+
+void HTMLtoBoard(String str) {
+  removeAllPieces();
+  String[] parsedData = parseHTMLData(str);
+  HashMap<String, String> pieceCode = new HashMap<String, String>();
+  pieceCode.put("p", "pion");
+  pieceCode.put("q", "dame");
+  pieceCode.put("k", "roi");
+  pieceCode.put("n", "cavalier");
+  pieceCode.put("b", "fou");
+  pieceCode.put("r", "tour");
+
+  for (int n = 0; n < parsedData.length; n++) {
+    String d = parsedData[n];
+    int c = (d.charAt(0) == 'w' ? 0 : 1);
+    String p = pieceCode.get(str(d.charAt(1)));
+    int i = stringToInt(str(d.charAt(2)))-1;
+    int j = abs(stringToInt(str(d.charAt(3)))-8);
+    pieces[c].add(new Piece(p, i, j, c));
+    if (p.equals("Tour")) {
+      pieces[c].get(pieces[c].size()-1).setRoques(0, 0);
+    }
+  }
+
+  println(">>> Plateau importé");
+
+  piecesToDisplay.clear();
+  piecesToDisplay.addAll(pieces[0]);
+  piecesToDisplay.addAll(pieces[1]);
+
+  calcEndGameWeight();
+  zobrist.initHash();
+}
 
 void pasteFEN() {
   startFEN = GetTextFromClipboard();
   setPieces();
+  println (">>> Fen importée");
 }
 
 void addFenToHistory(String f) {

@@ -165,6 +165,12 @@ class LeMaire {
     // Reset les statistiques pour la prochaine recherche
     this.resetStats();
 
+    // Reset les infos du hacker
+    // ICI
+    lastMoveTime = millis();
+    deltaTimeMesured = 0;
+    // LA
+
     stopSearch = false;
     cursor(ARROW);
   }
@@ -179,10 +185,14 @@ class LeMaire {
 
     // démarre la recherche
     if (useHacker && hackerPret) {
-      int time = sa.savedTimes[this.c];
-      float change = time * 0.42;
-      int newTime = time + (int)random(-change, change);
-      sa.setTime(this.c, newTime);
+      // int time = sa.savedTimes[this.c];
+      // float change = time * 0.42;
+      // int newTime = time + (int)random(-change, change);
+      // sa.setTime(this.c, newTime);
+      // ICI
+      int timeToPlay = constrain((deltaTimeMesured/2)-500, 20, sa.savedTimes[this.c]*3);
+      sa.setTime(this.c, timeToPlay);
+      // LA
     }
     sa.startSearch(this.c);
 
@@ -365,7 +375,10 @@ class LeMaire {
       Move m = moves.get(i);
 
       // hash move
-      if (m.equals(hashMove)) m.scoreGuess += 10000;
+      if (m.equals(hashMove)) {
+        m.scoreGuess += 10000;
+        continue;
+      }
 
       // captures
       if (m.capture != null) {
@@ -550,7 +563,6 @@ class LeMaire {
   }
 
   float searchAllCaptures(float alpha, float beta, int plyFromRoot) {
-
     this.higherPlyFromRoot = max(this.higherPlyFromRoot, plyFromRoot);
 
     if (gameEnded) return 0;

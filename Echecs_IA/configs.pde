@@ -5,14 +5,6 @@
 String name = "Echecs on java";
 
 String startFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq"; // Position de départ
-// String startFEN = "r3k1nr/p2p1ppp/1p1Rp3/8/5N2/4B3/PPP2PPP/2K2R2 b kq"; // Partie Bete-a-corne - LeMaire
-// String startFEN = "r1b1kbnr/ppppqppp/2n5/4p2Q/2B5/4P3/PPPP1PPP/RNB1K1NR w KQkq"; // Partie Lewis - LeMaire
-// String startFEN = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w"; // Vecteur vitesse
-// String startFEN = "r5k1/6pp/5b2/4N3/8/q7/5PPP/3Q1RK1 w"; // Mat à l'étouffée
-// String startFEN = "8/1RK5/8/3k4/8/8/8/8 w"; // Finale facile : Mat roi-tour
-// String startFEN = "8/6p1/8/3k4/8/3K4/8/8 w"; // Finale facile : Opposition
-// String startFEN = "8/3K4/4P3/8/8/8/6k1/7q w"; // Finale difficile: Check-check-check
-// String startFEN = "8/k7/3p4/p2P1p2/P2P1P2/8/8/K7 w"; // Finale difficile : table de transposition
 
 /////////////////////////////////////////////////////////////////
 
@@ -93,7 +85,7 @@ int addPiecesColor = 0;
 
 /////////////////////////////////////////////////////////////////
 
-// Moutons et autres
+// Moutons, hacker et autres...
 
 String[] moutonMessages = {
   "Moutonn !! YOU LOUSE",
@@ -109,6 +101,8 @@ String[] moutonMessages = {
 };
 
 int missclickCooldown = 6;
+int timeBeforeHackerRestart = 3500;
+boolean leMaireSansFin = true;
 
 /////////////////////////////////////////////////////////////////
 
@@ -124,11 +118,13 @@ int FOU_INDEX = 3;
 int CAVALIER_INDEX = 4;
 int PION_INDEX = 5;
 
+int INITIAL_TOTAL_MAIRE_MATERIAL = 0;
+
 /////////////////////////////////////////////////////////////////
 
 // Valeurs pour l'évaluation
 
-int[] kingSafety = {
+int[] kingSafetyPenalty = {
     0,   0,   1,   2,   3,   5,   7,   9,  12,  15,
    18,  22,  26,  30,  35,  39,  44,  50,  56,  62,
    68,  75,  82,  85,  89,  97, 105, 113, 122, 131,
@@ -196,14 +192,14 @@ float[][] mairePawnGridEnd = {
 };
 
 float[][] maireKingGrid = {
-  {-30, -30, -30, -30, -20, -10, 20, 20},
-  {-40, -40, -40, -40, -30, -20, 20, 35},
-  {-40, -40, -40, -40, -30, -20,  0, 0},
-  {-50, -50, -50, -50, -40, -20,  0,  0},
-  {-50, -50, -50, -50, -40, -20,  0,  0},
-  {-40, -40, -40, -40, -30, -20,  0, 0},
-  {-40, -40, -40, -40, -30, -20, 20, 35},
-  {-30, -30, -30, -30, -20, -10, 20, 20},
+  {-30, -30, -30, -30, -20, -10, 20,  20},
+  {-40, -40, -40, -40, -30, -20, 20,  35},
+  {-40, -40, -40, -40, -30, -20,  0, -10}, // 0 à la fin avant
+  {-50, -50, -50, -50, -40, -20,  0, -10}, // 0 à la fin avant
+  {-50, -50, -50, -50, -40, -20,  0, -10}, // 0 à la fin avant
+  {-40, -40, -40, -40, -30, -20,  0, -10}, // 0 à la fin avant
+  {-40, -40, -40, -40, -30, -20, 20,  35},
+  {-30, -30, -30, -30, -20, -10, 20,  20},
 };
 
 // float[][] maireKingGridEnd = {
