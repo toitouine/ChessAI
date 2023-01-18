@@ -3,7 +3,7 @@ This is a chess AI, still in progress, using Processing 3. It's based on the neg
 
 You need to install the library ControlP5 and Processing Sound in order to use it.
 
-There are 4 bots :
+There are 5 bots :
  - LeMaire : my most advanced bot so far : it has positionnal, material, endgame and opening knowledge (using an opening book). It has basic understanding of king safety, but it needs to be improved and it misses the pawn structure knowledge. It is pretty good in endgame thanks to the transposition table.
  - Loic : a bot intentionally pretty bad and dumb, he will try to stalemate you and will blunder really often
  - Antoine : just a random player
