@@ -182,8 +182,10 @@ class Move {
     }
 
     // Efface la table de transposition
-    // On le fait à chaque coup pour éviter des conflits à propos de la table quand deux maires jouent ensemble, ou quand les moutons interviennent...
+    // On le fait à chaque coup (ou presque) pour éviter des conflits à propos de la table quand deux maires jouent ensemble, ou quand les moutons interviennent...
+    //if (!((joueurs.get(0).name == "LeMaire" && joueurs.get(1).name == "Humain") || (joueurs.get(0).name == "Humain" && joueurs.get(1).name == "LeMaire"))) {
     tt.clear();
+    //}
   }
 
   void replay() {

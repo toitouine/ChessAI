@@ -10,8 +10,6 @@
 // Plus d'ouvertures
 // Système de vérification de fens
 // Analyse de parties
-// Scan automatique d'échiquier (presque)
-// LeMaire sans fin
 
 /////////////////////////////////////////////////////////////////
 

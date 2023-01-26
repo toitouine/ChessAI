@@ -147,9 +147,9 @@ class LeMaire {
     cursor(WAIT);
 
     // Recherche dans le livre d'ouvertures
-    if (nbTour < 11) {
-      if (this.tryPlayingBookMove()) return;
-    }
+    //if (nbTour < 11) {
+    //  if (this.tryPlayingBookMove()) return;
+    //}
 
     // Recherche du meilleur coup
     float posEval;
@@ -370,25 +370,32 @@ class LeMaire {
 
     // Place le meilleur coup de la table de transposition en premier
     Move hashMove = tt.getBestMove(zobrist.hash);
-
+    
     for (int i = 0; i < moves.size(); i++) {
       Move m = moves.get(i);
+      //oppColor = (moves.get(i).piece.c == 0) ? 1 : 0;
 
       // hash move
       if (m.equals(hashMove)) {
         m.scoreGuess += 10000;
         continue;
       }
+      
+      m.make();
+      m.scoreGuess += -this.EvaluationRelative();
+      m.unmake();
 
       // captures
-      if (m.capture != null) {
-        int scoreGuess = (m.capture.maireEval - m.piece.maireEval);
-        m.scoreGuess += scoreGuess;
-      }
+      //if (m.capture != null) {
+      //  int scoreGuess = (m.capture.maireEval - m.piece.maireEval);
+      //  m.scoreGuess += scoreGuess;
+      //}
 
-      // pièce vers le centre
-      Piece p = m.piece;
-      m.scoreGuess -= pc.getDistanceFromCenter(p.i, p.j);
+      // pièce vers le centre et le roi
+      //Piece p = m.piece;
+      //m.scoreGuess -= pc.getDistanceFromCenter(p.i, p.j);
+      //m.scoreGuess += pc.getTropismDistance(p.i, p.j, rois[oppColor].i, rois[oppColor].j)*3;
+      
     }
 
     return selectionSortMoves(moves);
@@ -476,6 +483,9 @@ class LeMaire {
 
     // On arrête la recherche si la partie est terminée (au temps notamment)
     if (stopSearch || gameEnded) return 0;
+    
+    if (plyFromRoot == 0) println("DEPTH :", depth-1);
+    if (plyFromRoot == 1) println(">>> PFR 1 :", depth-2);
 
     // Regarde la position dans la table de transposition et récupère la valeur (ou pas)
     Entry entry = tt.Probe(zobrist.hash, plyFromRoot);

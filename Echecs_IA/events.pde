@@ -11,27 +11,28 @@ void test() {
   // 4138 ms --> 1 000 000 légaux
   // 1200 ms --> 1 000 000 pseudo légaux
 
-  // long count = 0;
-  // long numTest = 1000000;
-  // long pas = numTest/10;
-  //
-  // int before = millis();
-  //
-  // for (int i = 0; i < numTest; i++) {
-  //   generateAllMoves(0, true, true).size();
-  //   count++;
-  //   if (i % pas == 0) println(i);
-  // }
-  //
-  // int temps = millis() - before;
-  // println("---------------");
-  // println(formatInt((int)count));
-  // long ps = (1000*count)/temps;
-  // println(formatInt((int)(1000*count/temps)) + " par seconde");
-  //
-  // println(temps + " ms");
-
-  endOnHackerDetect();
+   long count = 0;
+   long numTest = 1000000;
+   long pas = numTest/10;
+  
+   int before = millis();
+  
+   for (int i = 0; i < numTest; i++) {
+     generateAllMoves(0, true, true).size();
+     count++;
+     if (i % pas == 0) println(i);
+   }
+  
+   int temps = millis() - before;
+   println("---------------");
+   println(formatInt((int)count));
+   long ps = (1000*count)/temps;
+   println(formatInt((int)(1000*count/temps)) + " par seconde");
+  
+   println(temps + " ms");
+  
+  // 4865904
+  // 4865904
 }
 
 void keyPressed() {

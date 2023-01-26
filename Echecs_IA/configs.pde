@@ -5,6 +5,7 @@
 String name = "Echecs on java";
 
 String startFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq"; // Position de départ
+// String startFEN = "7k/1pp3qp/3p3r/pQb1pr2/PP6/2P3B1/5PPP/3R1R1K b" // Problème difficiles 
 
 /////////////////////////////////////////////////////////////////
 
@@ -14,7 +15,7 @@ int soundControl = 0; //0 = aucun, 1 = partie, 2 = musique
 boolean attach = true;
 boolean stats = true;
 boolean details = true;
-boolean timeControl = false;
+boolean timeControl = true;
 int[][] times = {
   {0, 0, 0}, //blancs : minutes, secondes, incrément
   {0, 0, 0}  //noirs : minutes, secondes, incrément
@@ -24,7 +25,7 @@ int[][] times = {
 
 // Fenêtre principale
 
-int w = 70; //100 pour Windo£ws
+int w = 70; //100 pour Windows
 float pieceSize = w;
 boolean pointDeVue = true;
 int offsetX = 100 * w/75; //100 * w/100 pour Windows
