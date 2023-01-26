@@ -22,7 +22,6 @@ import java.awt.Point;
 import java.awt.datatransfer.*;
 import java.awt.event.InputEvent;
 import java.awt.Robot;
-import com.sun.awt.AWTUtilities;
 import processing.awt.PSurfaceAWT;
 import processing.awt.PSurfaceAWT.SmoothCanvas;
 import processing.sound.*;
@@ -48,7 +47,6 @@ SoundFile prise_sound;
 TimerApplet ta;
 GraphApplet ga;
 SearchApplet sa;
-HackerApplet ha;
 
 PImage cavalier_b;
 PImage cavalier_n;
@@ -258,11 +256,6 @@ void setup() {
   sa = new SearchApplet();
   PApplet.runSketch(argsS, sa);
   sa.hide();
-
-  String[] argsH = {"Hacker"};
-  ha = new HackerApplet();
-  PApplet.runSketch(argsH, ha);
-  ha.hide();
 
   surface.setVisible(true);
   surface.setTitle(name + " - Selection des joueurs");

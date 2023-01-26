@@ -143,7 +143,6 @@ void resetGame(boolean menu) {
   }
   ga.hide();
   sa.hide();
-  ha.reset();
 
   // réinitialise les variables
   resetSettingsToDefault();
