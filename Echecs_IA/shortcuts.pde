@@ -247,22 +247,33 @@ void savePGN() {
 }
 
 void printHelpMenu() {
-  println("------------");
-  println("!! Attention à ne pas utiliser de raccourcies !!");
-  //OK quitter
-  println("H        Raccourcis clavier");
-  println("T        Fonction de tests");
-  println("P        Afficher la PGN");
-  println("C        Sauvegarder la PGN");
-  println("K        FlipBoard");
-  println("F        EndGameWeight + FEN");
-  println("S        Perft 5");
-  println("J        Evaluation statique du maire");
-  println("L        Épingler/Désépingler");
-  println("UP       Augmenter délai par coups");
-  println("DOWN     Diminuer délai par coups");
-  println("ESPACE   Pause/Play");
-  println("------------");
+  println("---------------------");
+  println("Menu d'aide et raccourcis clavier");
+  println();
+  println("  Touche  |       Endroit       |     Description     ");
+  println("----------+---------------------+---------------------");
+  println(" B        | En partie           | Afficher les coups du livre d'ouverture");
+  println(" C        | En partie           | Sauvegarder la PGN");
+  println(" C        | Éditeur             | Copier la FEN");
+  println(" D        | En partie           | Ouvrir Search Controller");
+  println(" F        | En partie / Editeur | Informations sur la position");
+  println(" G        | En partie           | Afficher l'analyse");
+  println(" H        | Partout             | Raccourcis clavier");
+  println(" J        | En partie           | Evaluation statique du maire");
+  println(" K        | En partie / Editeur | Retourner l'échiquier");
+  println(" L        | En partie / Editeur | Épingler/Désépingler");
+  println(" P        | En partie           | Afficher la PGN");
+  println(" P        | Éditeur             | Coller le HTML (chess.com) pour récupérer la position");
+  println(" S        | En partie           | Lancer perft 5");
+  println(" T        | En partie           | Fonction de tests");
+  println(" V        | En partie           | Afficher les variantes");
+  println(" UP       | En partie           | Augmenter délai par coups");
+  println(" DOWN     | En partie           | Diminuer délai par coups");
+  println(" GAUCHE   | En partie           | Reculer d'un coup (uniquement en pause)");
+  println(" DROITE   | En partie           | Avancer d'un coup (uniquement en pause)");
+  println(" ESPACE   | En partie           | Pause/Play");
+  println(" ENTRER   | Menu                | Démarrer la partie");
+  println(" SUPPR    | Éditeur             | Effacer la position");
 }
 
 void runPerft() {

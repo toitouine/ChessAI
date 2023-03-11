@@ -13,7 +13,6 @@
 
 /////////////////////////////////////////////////////////////////
 
-String[] promoPieces = {"dame", "tour", "fou", "cavalier"};
 int[] promoMaterials = {800, 400, 230, 220};
 
 class Move {
@@ -85,7 +84,10 @@ class Move {
     else if (this.special == 2) { tourQuiRoque.setPlace(this.i+1, this.j); }
     else if (this.special >= 5) {
       removePiece(this.piece);
-      this.savePromo = new Piece(promoPieces[this.special-5], this.i, this.j, this.piece.c);
+      if (this.special == 5) this.savePromo = new Dame(this.i, this.j, this.piece.c);
+      if (this.special == 6) this.savePromo = new Tour(this.i, this.j, this.piece.c);
+      if (this.special == 7) this.savePromo = new Fou(this.i, this.j, this.piece.c);
+      if (this.special == 8) this.savePromo = new Cavalier(this.i, this.j, this.piece.c);
       pieces[this.piece.c].add(this.savePromo);
       materials[this.piece.c] += promoMaterials[this.special-5];
     }
@@ -167,17 +169,13 @@ class Move {
     if (showGraph) updateGraph();
 
     // Hacker
-    if (useHacker && hackerPret && !isNextMoveRestranscrit) {
-      // // ICI
-      // lastMoveTime = millis();
-      // deltaTimeMesured = 0;
-      // // LA
+    if (useHacker && hackerPret && !hackerAPImode && !isNextMoveRestranscrit) {
       cheat(this.piece.c, this.fromI, this.fromJ, this.i, this.j, this.special);
     }
     isNextMoveRestranscrit = false;
 
     // Les Moutons !
-    if (joueurs.get(0).name == "LesMoutons" || joueurs.get(1).name == "LesMoutons") {
+    if (ENABLE_ARNAQUES && !useHacker && (joueurs.get(0).name == "LesMoutons" || joueurs.get(1).name == "LesMoutons")) {
       arnaques();
     }
 

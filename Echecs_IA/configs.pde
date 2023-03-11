@@ -5,7 +5,8 @@
 String name = "Echecs on java";
 
 String startFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq"; // Position de départ
-// String startFEN = "7k/1pp3qp/3p3r/pQb1pr2/PP6/2P3B1/5PPP/3R1R1K b" // Problème difficiles 
+// String startFEN = "7k/1pp3qp/3p3r/pQb1pr2/PP6/2P3B1/5PPP/3R1R1K b"; // Problème difficile
+// String startFEN = "7K/P1p1p1p1/2P1P1Pk/6pP/3p2P1/1P6/3P4/8 w"; // Underpromotion
 
 /////////////////////////////////////////////////////////////////
 
@@ -103,7 +104,8 @@ String[] moutonMessages = {
 
 int missclickCooldown = 6;
 int timeBeforeHackerRestart = 3500;
-boolean leMaireSansFin = true;
+boolean hackerSansFin = false;
+boolean ENABLE_ARNAQUES = true;
 
 /////////////////////////////////////////////////////////////////
 

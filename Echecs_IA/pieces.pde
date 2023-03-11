@@ -1,10 +1,14 @@
+/////////////////////////////////////////////////////////////////
+
+// Pièces
+
 class Piece {
   int i, j, c; //0 = blanc; 1 = noir
   int pieceIndex, zobristIndex = 0;
   String code, type;
   boolean dragging;
 
-  int roquable = -1, petitRoquable = -1, grandRoquable = -1; //-1 pour undefined, 0 et 1 pour true et false
+  int roquable = -1, petitRoquable = -1, grandRoquable = -1;
   int enPassantable = -1;
   float saveTour;
 
@@ -13,56 +17,8 @@ class Piece {
   float mairePosEval; //Positionnel
   float loicPosEval;
 
-  Piece(String type, int i, int j, int c) {
-    this.i = i;
-    this.j = j;
-    this.c = c;
-    this.type = type;
-    this.zobristIndex = (c == 0) ? 0 : 6;
-
-    switch(this.type) {
-      case "roi":
-        this.pieceIndex = ROI_INDEX;
-        this.zobristIndex += pieceIndex;
-        this.roquable = 1;
-      break;
-      case "dame":
-        this.pieceIndex = DAME_INDEX;
-        this.zobristIndex += pieceIndex;
-      break;
-      case "tour":
-        this.pieceIndex = TOUR_INDEX;
-        this.zobristIndex += pieceIndex;
-      break;
-      case "fou":
-        this.pieceIndex = FOU_INDEX;
-        this.zobristIndex += pieceIndex;
-      break;
-      case "cavalier":
-        this.pieceIndex = CAVALIER_INDEX;
-        this.zobristIndex += pieceIndex;
-      break;
-      case "pion":
-        this.pieceIndex = PION_INDEX;
-        this.zobristIndex += pieceIndex;
-        this.enPassantable = 0;
-      break;
-    }
-
-    //Données pièce
-    this.maireEval = maireEvalArray[pieceIndex];
-    this.loicEval = loicEvalArray[pieceIndex];
-    if (this.c == 0) this.code = codeArrayB[pieceIndex];
-    else this.code = codeArrayN[pieceIndex];
-
-    grid[this.i][this.j].piece = this;
-
-    this.updatePosEval();
-  }
-
-  void setRoques(int petit, int grand) { // Setup roques pour les tours
-    this.petitRoquable = petit;
-    this.grandRoquable = grand;
+  void setRoques(int r1, int r2) {
+    error("Piece.setRoques", "Impossible de gérer les roques pour une autre pièce qu'une tour");
   }
 
   void show() {
@@ -92,12 +48,6 @@ class Piece {
     else image(imageArrayN[pieceIndex], posX, posY, pieceSize, pieceSize);
   }
 
-  void setRoques(int roque, int proque, int groque) {
-    this.roquable = roque;
-    this.petitRoquable = proque;
-    this.grandRoquable = groque;
-  }
-
   void updatePosEval() {
     if (this.c == 0) {
       this.mairePosEval = mairePosArray[pieceIndex][this.i][this.j] * (1 - endGameWeight);
@@ -122,25 +72,7 @@ class Piece {
   }
 
   void quickMove(int i, int j) {
-    grid[this.i][this.j].piece = null;
-    this.i = i;
-    this.j = j;
-    grid[i][j].piece = this;
-
-    if (this.type == "roi") {
-      if ((i == 4 && j == 0 && this.c == 1) || (i == 4 && j == 7 && this.c == 0)) this.roquable = 1;
-      else this.roquable = 0;
-    } else if (this.type == "tour") {
-      if (this.c == 0) {
-        if ((i == 0 && j == 7) || (i == 7 && j == 7)) this.roquable = 1;
-        else this.roquable = 0;
-      } else {
-        if ((i == 0 && j == 0) || (i == 7 && j == 0)) this.roquable = 1;
-        else this.roquable = 0;
-      }
-    }
-
-    this.updatePosEval();
+    this.setPlace(i, j);
   }
 
   void move(Move m) {
@@ -156,67 +88,11 @@ class Piece {
   }
 
   ArrayList generateMoves(boolean withCastle, boolean engine) {
-    ArrayList<Move> moves = new ArrayList<Move>();
-
-    switch (this.type) {
-      case "pion":
-        moves = getPawnMoves(this, engine);
-      break;
-      case "cavalier":
-        moves = getKnightMoves(this);
-      break;
-
-      case "fou":
-        moves = getBishopMoves(this);
-      break;
-
-      case "tour":
-        moves = getRookMoves(this);
-      break;
-
-      case "dame":
-        moves = getRookMoves(this);
-        moves.addAll(getBishopMoves(this));
-      break;
-
-      case "roi":
-        moves = getKingMoves(this, withCastle);
-      break;
-    }
-
-    return moves;
+    return new ArrayList<Move>();
   }
 
   ArrayList generateQuietMoves(boolean engine) {
-    ArrayList<Move> moves = new ArrayList<Move>();
-
-    switch (this.type) {
-      case "pion":
-        moves = getQuietPawnMoves(this, this.c, engine);
-      break;
-      case "cavalier":
-        moves = getQuietKnightMoves(this, this.c);
-      break;
-
-      case "fou":
-        moves = getQuietBishopMoves(this, this.c);
-      break;
-
-      case "tour":
-        moves = getQuietRookMoves(this, this.c);
-      break;
-
-      case "dame":
-        moves = getQuietRookMoves(this, this.c);
-        moves.addAll(getQuietBishopMoves(this, this.c));
-      break;
-
-      case "roi":
-        moves = getQuietKingMoves(this, this.c);
-      break;
-    }
-
-    return moves;
+    return new ArrayList<Move>();
   }
 
   ArrayList generateLegalMoves(boolean withCastle, boolean engine) {
@@ -251,6 +127,231 @@ class Piece {
         if (grid[i][j].piece == null) grid[i][j].freeMove = true;
       }
     }
+  }
+}
+
+class Roi extends Piece {
+  Roi(int i_, int j_, int c_) {
+    this.i = i_;
+    this.j = j_;
+    this.c = c_;
+    this.type = "roi";
+    this.pieceIndex = ROI_INDEX;
+    this.roquable = 1;
+
+    // Index unique pour chaque type de pièce
+    this.zobristIndex = (c == 0) ? 0 : 6;
+    this.zobristIndex += pieceIndex;
+
+    //Données pièce
+    this.maireEval = maireEvalArray[pieceIndex];
+    this.loicEval = loicEvalArray[pieceIndex];
+    if (this.c == 0) this.code = codeArrayB[pieceIndex];
+    else this.code = codeArrayN[pieceIndex];
+
+    grid[this.i][this.j].piece = this;
+    this.updatePosEval();
+  }
+
+  @Override
+  void quickMove(int i, int j) {
+    super.quickMove(i, j);
+    if ((i == 4 && j == 0 && this.c == 1) || (i == 4 && j == 7 && this.c == 0)) this.roquable = 1;
+    else this.roquable = 0;
+  }
+
+  @Override
+  ArrayList generateMoves(boolean withCastle, boolean engine) {
+    return getKingMoves(this, withCastle);
+  }
+
+  @Override
+  ArrayList generateQuietMoves(boolean engine) {
+    return getQuietKingMoves(this, this.c);
+  }
+}
+
+class Dame extends Piece {
+  Dame(int i_, int j_, int c_) {
+    this.i = i_;
+    this.j = j_;
+    this.c = c_;
+    this.type = "dame";
+    this.pieceIndex = DAME_INDEX;
+
+    // Index unique pour chaque type de pièce
+    this.zobristIndex = (c == 0) ? 0 : 6;
+    this.zobristIndex += pieceIndex;
+
+    //Données pièce
+    this.maireEval = maireEvalArray[pieceIndex];
+    this.loicEval = loicEvalArray[pieceIndex];
+    if (this.c == 0) this.code = codeArrayB[pieceIndex];
+    else this.code = codeArrayN[pieceIndex];
+
+    grid[this.i][this.j].piece = this;
+    this.updatePosEval();
+  }
+
+  @Override
+  ArrayList generateMoves(boolean withCastle, boolean engine) {
+    return getQueenMoves(this);
+  }
+
+  @Override
+  ArrayList generateQuietMoves(boolean engine) {
+    return getQuietQueenMoves(this, this.c);
+  }
+}
+
+class Tour extends Piece {
+  Tour(int i_, int j_, int c_) {
+    this.i = i_;
+    this.j = j_;
+    this.c = c_;
+    this.type = "tour";
+    this.pieceIndex = TOUR_INDEX;
+
+    // Index unique pour chaque type de pièce
+    this.zobristIndex = (c == 0) ? 0 : 6;
+    this.zobristIndex += pieceIndex;
+
+    //Données pièce
+    this.maireEval = maireEvalArray[pieceIndex];
+    this.loicEval = loicEvalArray[pieceIndex];
+    if (this.c == 0) this.code = codeArrayB[pieceIndex];
+    else this.code = codeArrayN[pieceIndex];
+
+    grid[this.i][this.j].piece = this;
+    this.updatePosEval();
+  }
+
+  @Override
+  void setRoques(int petit, int grand) {
+    this.petitRoquable = petit;
+    this.grandRoquable = grand;
+  }
+
+  @Override
+  void quickMove(int i, int j) {
+    super.quickMove(i, j);
+     if (this.c == 0) {
+       if ((i == 0 && j == 7) || (i == 7 && j == 7)) this.roquable = 1;
+       else this.roquable = 0;
+     } else {
+       if ((i == 0 && j == 0) || (i == 7 && j == 0)) this.roquable = 1;
+       else this.roquable = 0;
+     }
+  }
+
+  @Override
+  ArrayList generateMoves(boolean withCastle, boolean engine) {
+    return getRookMoves(this);
+  }
+
+  @Override
+  ArrayList generateQuietMoves(boolean engine) {
+    return getQuietRookMoves(this, this.c);
+  }
+}
+
+class Fou extends Piece {
+  Fou(int i_, int j_, int c_) {
+    this.i = i_;
+    this.j = j_;
+    this.c = c_;
+    this.type = "fou";
+    this.pieceIndex = FOU_INDEX;
+
+    // Index unique pour chaque type de pièce
+    this.zobristIndex = (c == 0) ? 0 : 6;
+    this.zobristIndex += pieceIndex;
+
+    //Données pièce
+    this.maireEval = maireEvalArray[pieceIndex];
+    this.loicEval = loicEvalArray[pieceIndex];
+    if (this.c == 0) this.code = codeArrayB[pieceIndex];
+    else this.code = codeArrayN[pieceIndex];
+
+    grid[this.i][this.j].piece = this;
+    this.updatePosEval();
+  }
+
+  @Override
+  ArrayList generateMoves(boolean withCastle, boolean engine) {
+    return getBishopMoves(this);
+  }
+
+  @Override
+  ArrayList generateQuietMoves(boolean engine) {
+    return getQuietBishopMoves(this, this.c);
+  }
+}
+
+class Cavalier extends Piece {
+  Cavalier(int i_, int j_, int c_) {
+    this.i = i_;
+    this.j = j_;
+    this.c = c_;
+    this.type = "cavalier";
+    this.pieceIndex = CAVALIER_INDEX;
+
+    // Index unique pour chaque type de pièce
+    this.zobristIndex = (c == 0) ? 0 : 6;
+    this.zobristIndex += pieceIndex;
+
+    //Données pièce
+    this.maireEval = maireEvalArray[pieceIndex];
+    this.loicEval = loicEvalArray[pieceIndex];
+    if (this.c == 0) this.code = codeArrayB[pieceIndex];
+    else this.code = codeArrayN[pieceIndex];
+
+    grid[this.i][this.j].piece = this;
+    this.updatePosEval();
+  }
+
+  @Override
+  ArrayList generateMoves(boolean withCastle, boolean engine) {
+    return getKnightMoves(this);
+  }
+
+  @Override
+  ArrayList generateQuietMoves(boolean engine) {
+    return getQuietKnightMoves(this, this.c);
+  }
+}
+
+class Pion extends Piece {
+  Pion(int i_, int j_, int c_) {
+    this.i = i_;
+    this.j = j_;
+    this.c = c_;
+    this.type = "pion";
+    this.pieceIndex = PION_INDEX;
+    this.enPassantable = 0;
+
+    // Index unique pour chaque type de pièce
+    this.zobristIndex = (c == 0) ? 0 : 6;
+    this.zobristIndex += pieceIndex;
+
+    //Données pièce
+    this.maireEval = maireEvalArray[pieceIndex];
+    this.loicEval = loicEvalArray[pieceIndex];
+    if (this.c == 0) this.code = codeArrayB[pieceIndex];
+    else this.code = codeArrayN[pieceIndex];
+
+    grid[this.i][this.j].piece = this;
+    this.updatePosEval();
+  }
+
+  @Override
+  ArrayList generateMoves(boolean withCastle, boolean engine) {
+    return getPawnMoves(this, engine);
+  }
+
+  @Override
+  ArrayList generateQuietMoves(boolean engine) {
+    return getQuietPawnMoves(this, this.c, engine);
   }
 }
 
@@ -382,6 +483,108 @@ ArrayList getRookMoves(Piece p) {
       break;
     }
     moves.add(new Move(p, p.i, j, null, 0));
+  }
+
+  return moves;
+}
+
+ArrayList getQueenMoves(Piece p) {
+  ArrayList<Move> moves = new ArrayList<Move>();
+
+  for (int i = p.i+1; i < cols; i++) { //Droite
+    if (grid[i][p.j].piece != null) {
+      if (grid[i][p.j].piece.c != p.c) {
+        moves.add(new Move(p, i, p.j, grid[i][p.j].piece, 0));
+      }
+      break;
+    }
+    moves.add(new Move(p, i, p.j, null, 0));
+  }
+
+  for (int j = p.j+1; j < rows; j++) { //Bas
+    if (grid[p.i][j].piece != null) {
+      if (grid[p.i][j].piece.c != p.c) {
+        moves.add(new Move(p, p.i, j, grid[p.i][j].piece, 0));
+      }
+      break;
+    }
+    moves.add(new Move(p, p.i, j, null, 0));
+  }
+
+  for (int i = p.i-1; i >= 0; i--) { //Gauche
+    if (grid[i][p.j].piece != null) {
+      if (grid[i][p.j].piece.c != p.c) {
+        moves.add(new Move(p, i, p.j, grid[i][p.j].piece, 0));
+      }
+      break;
+    }
+    moves.add(new Move(p, i, p.j, null, 0));
+  }
+
+  for (int j = p.j-1; j >= 0; j--) { //Haut
+    if (grid[p.i][j].piece != null) {
+      if (grid[p.i][j].piece.c != p.c) {
+        moves.add(new Move(p, p.i, j, grid[p.i][j].piece, 0));
+      }
+      break;
+    }
+    moves.add(new Move(p, p.i, j, null, 0));
+  }
+
+  //Bas-droite
+  for (int i = 1; i < cols; i++) {
+    int gi = p.i+i;
+    int gj = p.j+i;
+    if (gi < 0 || gi >= rows || gj  < 0 || gj >= cols) break;
+    if (grid[gi][gj].piece != null) {
+      if (grid[gi][gj].piece.c != p.c) {
+        moves.add(new Move(p, gi, gj, grid[gi][gj].piece, 0));
+      }
+      break;
+    }
+    moves.add(new Move(p, gi, gj, null, 0));
+  }
+
+  //Haut-gauche
+  for (int i = 1; i < cols; i++) {
+    int gi = p.i-i;
+    int gj = p.j-i;
+    if (gi < 0 || gi >= rows || gj  < 0 || gj >= cols) break;
+    if (grid[gi][gj].piece != null) {
+      if (grid[gi][gj].piece.c != p.c) {
+        moves.add(new Move(p, gi, gj, grid[gi][gj].piece, 0));
+      }
+      break;
+    }
+    moves.add(new Move(p, gi, gj, null, 0));
+  }
+
+  //Haut-droite
+  for (int i = 1; i < cols; i++) {
+    int gi = p.i+i;
+    int gj = p.j-i;
+    if (gi < 0 || gi >= rows || gj  < 0 || gj >= cols) break;
+    if (grid[gi][gj].piece != null) {
+      if (grid[gi][gj].piece.c != p.c) {
+        moves.add(new Move(p, gi, gj, grid[gi][gj].piece, 0));
+      }
+      break;
+    }
+    moves.add(new Move(p, gi, gj, null, 0));
+  }
+
+  //Bas-gauche
+  for (int i = 1; i < cols; i++) {
+    int gi = p.i-i;
+    int gj = p.j+i;
+    if (gi < 0 || gi >= rows || gj  < 0 || gj >= cols) break;
+    if (grid[gi][gj].piece != null) {
+      if (grid[gi][gj].piece.c != p.c) {
+        moves.add(new Move(p, gi, gj, grid[gi][gj].piece, 0));
+      }
+      break;
+    }
+    moves.add(new Move(p, gi, gj, null, 0));
   }
 
   return moves;
@@ -741,6 +944,100 @@ ArrayList getQuietRookMoves(Piece p, int colorToNotDetect) {
     if (grid[p.i][j].piece != null) {
       if (grid[p.i][j].piece.c != colorToNotDetect) {
         moves.add(new Move(p, p.i, j, grid[p.i][j].piece, 0));
+      }
+      break;
+    }
+  }
+
+  return moves;
+}
+
+ArrayList getQuietQueenMoves(Piece p, int colorToNotDetect) {
+  ArrayList<Move> moves = new ArrayList<Move>();
+
+  for (int i = p.i+1; i < cols; i++) { //Droite
+    if (grid[i][p.j].piece != null) {
+      if (grid[i][p.j].piece.c != colorToNotDetect) {
+        moves.add(new Move(p, i, p.j, grid[i][p.j].piece, 0));
+      }
+      break;
+    }
+  }
+
+  for (int j = p.j+1; j < rows; j++) { //Bas
+    if (grid[p.i][j].piece != null) {
+      if (grid[p.i][j].piece.c != colorToNotDetect) {
+        moves.add(new Move(p, p.i, j, grid[p.i][j].piece, 0));
+      }
+      break;
+    }
+  }
+
+  for (int i = p.i-1; i >= 0; i--) { //Gauche
+    if (grid[i][p.j].piece != null) {
+      if (grid[i][p.j].piece.c != colorToNotDetect) {
+        moves.add(new Move(p, i, p.j, grid[i][p.j].piece, 0));
+      }
+      break;
+    }
+  }
+
+  for (int j = p.j-1; j >= 0; j--) { //Haut
+    if (grid[p.i][j].piece != null) {
+      if (grid[p.i][j].piece.c != colorToNotDetect) {
+        moves.add(new Move(p, p.i, j, grid[p.i][j].piece, 0));
+      }
+      break;
+    }
+  }
+
+  //Bas-droite
+  for (int i = 1; i < cols; i++) {
+    int gi = p.i+i;
+    int gj = p.j+i;
+    if (gi < 0 || gi >= rows || gj  < 0 || gj >= cols) break;
+    if (grid[gi][gj].piece != null) {
+      if (grid[gi][gj].piece.c != colorToNotDetect) {
+        moves.add(new Move(p, gi, gj, grid[gi][gj].piece, 0));
+      }
+      break;
+    }
+  }
+
+  //Haut-gauche
+  for (int i = 1; i < cols; i++) {
+    int gi = p.i-i;
+    int gj = p.j-i;
+    if (gi < 0 || gi >= rows || gj  < 0 || gj >= cols) break;
+    if (grid[gi][gj].piece != null) {
+      if (grid[gi][gj].piece.c != colorToNotDetect) {
+        moves.add(new Move(p, gi, gj, grid[gi][gj].piece, 0));
+      }
+      break;
+    }
+  }
+
+  //Haut-droite
+  for (int i = 1; i < cols; i++) {
+    int gi = p.i+i;
+    int gj = p.j-i;
+    if (gi < 0 || gi >= rows || gj  < 0 || gj >= cols) break;
+    if (grid[gi][gj].piece != null) {
+      if (grid[gi][gj].piece.c != colorToNotDetect) {
+        moves.add(new Move(p, gi, gj, grid[gi][gj].piece, 0));
+      }
+      break;
+    }
+  }
+
+  //Bas-gauche
+  for (int i = 1; i < cols; i++) {
+    int gi = p.i-i;
+    int gj = p.j+i;
+    if (gi < 0 || gi >= rows || gj  < 0 || gj >= cols) break;
+    if (grid[gi][gj].piece != null) {
+      if (grid[gi][gj].piece.c != colorToNotDetect) {
+        moves.add(new Move(p, gi, gj, grid[gi][gj].piece, 0));
       }
       break;
     }

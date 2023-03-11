@@ -1,9 +1,9 @@
-class Bouton {
+class Button {
   float x, y, w;
   PImage i1, i2;
   int numShortcut = -1;
 
-  Bouton(float x, float y, float w, PImage i1, PImage i2) {
+  Button(float x, float y, float w, PImage i1, PImage i2) {
     this.x = x;
     this.y = y;
     this.w = w;
@@ -120,12 +120,12 @@ class TimeButton {
   }
 }
 
-class PresetButton {
+class ImageButton {
   float x, y, w, h;
   int background, r;
   PImage img;
 
-  PresetButton(float x, float y, float w, float h, int r, int background, PImage img) {
+  ImageButton(float x, float y, float w, float h, int r, int background, PImage img) {
     this.x = x;
     this.y = y;
     this.w = w;
@@ -149,11 +149,11 @@ class PresetButton {
   }
 }
 
-class CircleToggle {
+class CircleToggleButton {
   float x, y, d;
   boolean state = false;
 
-  CircleToggle(float x, float y, float d) {
+  CircleToggleButton(float x, float y, float d) {
     this.x = x;
     this.y = y;
     this.d = d;
@@ -216,7 +216,7 @@ class DragAndDrop {
   }
 }
 
-class TextBouton {
+class TextButton {
   float x, y, w, h;
   int backColor = color(#8da75a);
   int textColor = color(#ffffff);
@@ -224,7 +224,7 @@ class TextBouton {
   int textSize;
   int arrondi;
 
-  TextBouton(float x, float y, float w, float h, String t, int textSize, int arrondi) {
+  TextButton(float x, float y, float w, float h, String t, int textSize, int arrondi) {
     this.x = x;
     this.y = y;
     this.w = w;
@@ -256,13 +256,13 @@ class TextBouton {
   }
 }
 
-class Toggle {
+class ToggleButton {
   float x, y, imgWidth;
   PImage img;
   boolean state = false;
   String name;
 
-  Toggle(float x, float y, float imgWidth, PImage img, String n) {
+  ToggleButton(float x, float y, float imgWidth, PImage img, String n) {
     this.x = x;
     this.y = y;
     this.imgWidth = imgWidth;

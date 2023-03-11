@@ -3,13 +3,12 @@
 // Bon en finale, très bon en finale de pion et de roi
 // Correct en ouverture, très mauvais en milieu de jeu (sécurité du roi)
 
-// Sécurité du roi
+// Sécurité du roi + Structures de pion
 // Editeur de position : Trait et roques
-// Structures de pion
 // Bouton d'abandon
-// Plus d'ouvertures
-// Système de vérification de fens
-// Analyse de parties
+// Bouton d'aide
+// GUI class et héritage
+// Profondeurs dans le graphique
 
 /////////////////////////////////////////////////////////////////
 
@@ -109,17 +108,17 @@ int[] materials = new int[2];
 ArrayList<Piece> piecesToDisplay = new ArrayList<Piece>();
 ArrayList<Piece>[] pieces = new ArrayList[2];
 ArrayList<Joueur> joueurs = new ArrayList<Joueur>();
-ArrayList<Bouton> promoButtons = new ArrayList<Bouton>();
+ArrayList<Button> promoButtons = new ArrayList<Button>();
 
-ArrayList<Toggle> toggles1 = new ArrayList<Toggle>();
-ArrayList<Toggle> toggles2 = new ArrayList<Toggle>();
-ArrayList<Bouton> iconButtons = new ArrayList<Bouton>();
-ArrayList<Bouton> editorIconButtons = new ArrayList<Bouton>();
-ArrayList<TextBouton> hubButtons = new ArrayList<TextBouton>();
+ArrayList<ToggleButton> toggles1 = new ArrayList<ToggleButton>();
+ArrayList<ToggleButton> toggles2 = new ArrayList<ToggleButton>();
+ArrayList<Button> iconButtons = new ArrayList<Button>();
+ArrayList<Button> editorIconButtons = new ArrayList<Button>();
+ArrayList<TextButton> hubButtons = new ArrayList<TextButton>();
 ArrayList<ButtonFEN> savedFENSbuttons = new ArrayList<ButtonFEN>();
 ArrayList<DragAndDrop>[] addPiecesButtons = new ArrayList[2];
 ArrayList<TimeButton>[] timeButtons = new ArrayList[2];
-ArrayList<PresetButton> presetButtons = new ArrayList<PresetButton>();
+ArrayList<ImageButton> presetButtons = new ArrayList<ImageButton>();
 
 ArrayList<String> book = new ArrayList<String>();
 ArrayList<Arrow> bookArrows = new ArrayList<Arrow>();
@@ -129,13 +128,13 @@ ArrayList<String> positionHistory = new ArrayList<String>();
 ArrayList<Move> movesHistory = new ArrayList<Move>();
 ArrayList<Long> zobristHistory = new ArrayList<Long>();
 
-CircleToggle addPiecesColorSwitch;
-Bouton positionEditor;
-Bouton hackerButton;
+CircleToggleButton addPiecesColorSwitch;
+Button positionEditor;
+Button hackerButton;
 Piece pieceSelectionne = null;
 Piece enPromotion = null;
-TextBouton rematchButton;
-TextBouton newGameButton;
+TextButton rematchButton;
+TextButton newGameButton;
 DragAndDrop enAjoutPiece = null;
 Slider s1, s2, q1, q2, t1, t2;
 
@@ -211,18 +210,15 @@ long lastHackerScan = 0;
 boolean hackerWaitingToRestart = false;
 int timeAtLastRestartTry = 0;
 int hackerTestRestartCooldown = 750;
-// ICI
 int hackerScanCooldown = 100;
-// LA
 int currentHackerPOV = 0;
 int timeAtHackerEnd = 0;
-// ICI
 int lastMoveTime = 0;
 int deltaTimeMesured = 0;
 boolean isNextMoveRestranscrit = false;
-// LA
 boolean useHacker = false;
 boolean hackerPret = false;
+boolean hackerAPImode = false;
 Point[][] hackerCoords = new Point[8][8];
 Point[][] saveHackerCoords = new Point[8][8];
 
@@ -352,6 +348,25 @@ void setup() {
       .setColorActive(#d6d46f)
       .setColorBackground(#827e40);
 
+  // Texte de départ
+  println("---------------------");
+  println(name + ", Antoine Mechulam");
+  println("(https://github.com/toitouine/ChessAI)");
+  println(" ");
+  println("IAs disponibles :");
+  println(" - LeMaire : Bon en ouverture et en finale, problème de sécurité du roi en milieu de jeu");
+  println(" - Loic : Plutôt mauvais, préfère pater que mater");
+  println(" - Stockfish : Extrêmement difficile de perdre contre lui");
+  println(" - Antoine : Un jeu aléatoire de qualité");
+  println(" - LesMoutons : Voleur, arnaqueur, tricheur, menaces en un !");
+  println(" ");
+  println("Profondeur (recherche classique et quiet) et temps (Iterative Deepening) ajustables avec les sliders du menu.");
+  println("Voir fichier configs.pde pour les options, et notamment activer le jeu au temps ou non.");
+  println("Appuyer sur H pour afficher l'aide (raccourcis claviers)");
+  println(" ");
+  println("/!\\ La direction rejette toute responsabilité en cas de CPU détruit par ce programme ou d'ordinateur brulé.");
+  println("---------------------");
+
   // Importe les images
   imageArrayB[4] = loadImage("pieces/cavalier_b.png");
   imageArrayN[4] = loadImage("pieces/cavalier_n.png");
@@ -420,35 +435,35 @@ void setup() {
   }
 
   // Initialise les boutons et interfaces
-  hubButtons.add(new TextBouton(width/2 - 190, 480, 380, 75, "Nouvelle partie", 30, 10));
-  hubButtons.add(new TextBouton(width-110, height-40, 100, 30, "Coller FEN", 18, 8)); hubButtons.get(1).setColors(#1d1c1a, #ffffff);
-  hubButtons.add(new TextBouton(width-220, height-40, 100, 30, "Copier FEN", 18, 8)); hubButtons.get(2).setColors(#1d1c1a, #ffffff);
+  hubButtons.add(new TextButton(width/2 - 190, 480, 380, 75, "Nouvelle partie", 30, 10));
+  hubButtons.add(new TextButton(width-110, height-40, 100, 30, "Coller FEN", 18, 8)); hubButtons.get(1).setColors(#1d1c1a, #ffffff);
+  hubButtons.add(new TextButton(width-220, height-40, 100, 30, "Copier FEN", 18, 8)); hubButtons.get(2).setColors(#1d1c1a, #ffffff);
 
-  promoButtons.add(new Bouton(0.25*w + offsetX, 3.25*w + offsetY, 1.5*w, imageArrayB[1], imageArrayN[1]));
-  promoButtons.add(new Bouton(2.25*w + offsetX, 3.25*w + offsetY, 1.5*w, imageArrayB[2], imageArrayN[2]));
-  promoButtons.add(new Bouton(4.25*w + offsetX, 3.25*w + offsetY, 1.5*w, imageArrayB[3], imageArrayN[3]));
-  promoButtons.add(new Bouton(6.25*w + offsetX, 3.25*w + offsetY, 1.5*w, imageArrayB[4], imageArrayN[4]));
+  promoButtons.add(new Button(0.25*w + offsetX, 3.25*w + offsetY, 1.5*w, imageArrayB[1], imageArrayN[1]));
+  promoButtons.add(new Button(2.25*w + offsetX, 3.25*w + offsetY, 1.5*w, imageArrayB[2], imageArrayN[2]));
+  promoButtons.add(new Button(4.25*w + offsetX, 3.25*w + offsetY, 1.5*w, imageArrayB[3], imageArrayN[3]));
+  promoButtons.add(new Button(6.25*w + offsetX, 3.25*w + offsetY, 1.5*w, imageArrayB[4], imageArrayN[4]));
 
-  toggles1.add(new Toggle(40, 80, 150, stockfish, "Stockfish"));
-  toggles1.add(new Toggle(230, 80, 150, antoine, "Antoine"));
-  toggles1.add(new Toggle(420, 80, 150, loic, "Loic"));
-  toggles1.add(new Toggle(610, 80, 150, lesmoutons, "LesMoutons"));
-  toggles1.add(new Toggle(800, 80, 150, lemaire, "LeMaire"));
-  toggles1.add(new Toggle(990, 80, 150, human, "Humain"));
+  toggles1.add(new ToggleButton(40, 80, 150, stockfish, "Stockfish"));
+  toggles1.add(new ToggleButton(230, 80, 150, antoine, "Antoine"));
+  toggles1.add(new ToggleButton(420, 80, 150, loic, "Loic"));
+  toggles1.add(new ToggleButton(610, 80, 150, lesmoutons, "LesMoutons"));
+  toggles1.add(new ToggleButton(800, 80, 150, lemaire, "LeMaire"));
+  toggles1.add(new ToggleButton(990, 80, 150, human, "Humain"));
 
-  toggles2.add(new Toggle(40, 290, 150, stockfish, "Stockfish"));
-  toggles2.add(new Toggle(230, 290, 150, antoine, "Antoine"));
-  toggles2.add(new Toggle(420, 290, 150, loic, "Loic"));
-  toggles2.add(new Toggle(610, 290, 150, lesmoutons, "LesMoutons"));
-  toggles2.add(new Toggle(800, 290, 150, lemaire, "LeMaire"));
-  toggles2.add(new Toggle(990, 290, 150, human, "Humain"));
+  toggles2.add(new ToggleButton(40, 290, 150, stockfish, "Stockfish"));
+  toggles2.add(new ToggleButton(230, 290, 150, antoine, "Antoine"));
+  toggles2.add(new ToggleButton(420, 290, 150, loic, "Loic"));
+  toggles2.add(new ToggleButton(610, 290, 150, lesmoutons, "LesMoutons"));
+  toggles2.add(new ToggleButton(800, 290, 150, lemaire, "LeMaire"));
+  toggles2.add(new ToggleButton(990, 290, 150, human, "Humain"));
 
-  addPiecesColorSwitch = new CircleToggle(offsetX/2, (offsetY+w/2 + w*6) + 70, w/1.3);
-  positionEditor = new Bouton(width-55, 10, 50, chess, chess);
-  hackerButton = new Bouton(width-100, 11, 40, bot, bot);
-  rematchButton = new TextBouton(offsetX - offsetX/1.08, offsetY+4*w-29, offsetX-2*(offsetX - offsetX/1.08), 24, "Revanche", 15, 3);
+  addPiecesColorSwitch = new CircleToggleButton(offsetX/2, (offsetY+w/2 + w*6) + 70, w/1.3);
+  positionEditor = new Button(width-55, 10, 50, chess, chess);
+  hackerButton = new Button(width-100, 11, 40, bot, bot);
+  rematchButton = new TextButton(offsetX - offsetX/1.08, offsetY+4*w-29, offsetX-2*(offsetX - offsetX/1.08), 24, "Revanche", 15, 3);
   rematchButton.setColors(#1d1c1a, #ffffff);
-  newGameButton = new TextBouton(offsetX - offsetX/1.08, offsetY+4*w+5, offsetX-2*(offsetX - offsetX/1.08), 24, "Menu", 15, 3);
+  newGameButton = new TextButton(offsetX - offsetX/1.08, offsetY+4*w+5, offsetX-2*(offsetX - offsetX/1.08), 24, "Menu", 15, 3);
   newGameButton.setColors(#1d1c1a, #ffffff);
 
   timeButtons[0] = new ArrayList<TimeButton>();
@@ -466,9 +481,9 @@ void setup() {
   timeButtons[1].add(new TimeButton(276, 533, 49, 10, 0, 0, 5, 0, #26211b, #f0f0f0, #2d2d2a, false));
   timeButtons[1].add(new TimeButton(332, 533, 49, 10, 0, 0, 5, 5, #26211b, #f0f0f0, #2d2d2a, false));
 
-  presetButtons.add(new PresetButton(width-272, 465, 70, 70, 5, #272522, loadImage("icons/rapid.png")));
-  presetButtons.add(new PresetButton(width-177, 465, 70, 70, 5, #272522, loadImage("icons/blitz.png")));
-  presetButtons.add(new PresetButton(width-82, 465, 70, 70, 5, #272522, loadImage("icons/bullet.png")));
+  presetButtons.add(new ImageButton(width-272, 465, 70, 70, 5, #272522, loadImage("icons/rapid.png")));
+  presetButtons.add(new ImageButton(width-177, 465, 70, 70, 5, #272522, loadImage("icons/blitz.png")));
+  presetButtons.add(new ImageButton(width-82, 465, 70, 70, 5, #272522, loadImage("icons/bullet.png")));
 
   for (int i = 0; i < timeButtons.length; i++) {
     for (int j = 0; j < timeButtons[i].size(); j++) {
@@ -489,14 +504,14 @@ void setup() {
   // Icones de la partie
   int[] numSc1 = {0, 1, 2, 3, 4, 5, 6, 7, 16, 10};
   for (int i = 0; i < icons.length; i++) {
-    iconButtons.add(new Bouton(edgeSpacing + i*iconSize + i*spacingBetweenIcons, distanceFromTop, iconSize, icons[i], pause));
+    iconButtons.add(new Button(edgeSpacing + i*iconSize + i*spacingBetweenIcons, distanceFromTop, iconSize, icons[i], pause));
     iconButtons.get(i).setNumShortcut(numSc1[i]);
   }
 
   // Icones de l'éditeur
   int[] numSc2 = {0, 11, 13, 12, 15, 18, 17, 6, 14};
   for (int i = 0; i < editorIcons.length; i++) {
-    editorIconButtons.add(new Bouton(editorEdgeSpacing + i*editorIconSize + i*spacingBetweenEditorIcons, distanceFromTop, editorIconSize, editorIcons[i], editorIcons[i]));
+    editorIconButtons.add(new Button(editorEdgeSpacing + i*editorIconSize + i*spacingBetweenEditorIcons, distanceFromTop, editorIconSize, editorIcons[i], editorIcons[i]));
     editorIconButtons.get(i).setNumShortcut(numSc2[i]);
   }
 
@@ -524,8 +539,6 @@ void setup() {
 
   // Place les pièces
   setPieces();
-
-  for (int i = 0; i < 18; i++) println();
 }
 
 void draw() {
@@ -545,10 +558,8 @@ void draw() {
   if (gameState == 1) {
     background(49, 46, 43);
 
-    // ICI
     // Actualise "block playing", qui empêche éventuellement un joueur de jouer
     updateBlockPlaying();
-    // LA
 
     // Titre de la fenêtre
     surface.setTitle(name + " - " + j1 + " (" + ((joueurs.get(0).useIterativeDeepening) ? "ID" : j1depth) +  ") contre " + j2 + " (" + ((joueurs.get(1).useIterativeDeepening) ? "ID" : j2depth) + ")" + ((infos == "") ? "" : " - ") + infos);
@@ -578,7 +589,7 @@ void draw() {
     }
 
     for (int i = 0; i < iconButtons.size(); i++) {
-      Bouton b = iconButtons.get(i);
+      Button b = iconButtons.get(i);
       if (i == 7) b.show(play ? 0 : 1); // Play / Pause
       else b.show(0);
     }
@@ -600,23 +611,17 @@ void draw() {
     // Hacker
     if (useHacker) {
       if (!hackerPret) { drawHackerPage(); }
-      else {
+      else if (!hackerAPImode) {
         if (play && !gameEnded && enPromotion == null && millis() - lastHackerScan >= hackerScanCooldown) {
-          // ICI
-          handleMoveTime();
-          // LA
+          deltaTimeMesured = millis() - lastMoveTime;
           scanMoveOnBoard();
         }
-      }
 
-      if (gameEnded && leMaireSansFin && !hackerWaitingToRestart && millis() - timeAtHackerEnd >= timeBeforeHackerRestart) hackStartGame();
-      if (hackerWaitingToRestart && millis() - timeAtLastRestartTry >= hackerTestRestartCooldown) {
-        handleWaitForRestart();
+        if (gameEnded && hackerSansFin && !hackerWaitingToRestart && millis() - timeAtHackerEnd >= timeBeforeHackerRestart) hackStartGame();
+        if (hackerWaitingToRestart && millis() - timeAtLastRestartTry >= hackerTestRestartCooldown) {
+          handleWaitForRestart();
+        }
       }
-
-      textSize(35);
-      fill(255);
-      text(currentHackerPOV, offsetX/2, height/2);
     }
 
     // Affichages
@@ -632,7 +637,7 @@ void draw() {
   else if (gameState == 0) {
     background(49, 46, 43);
 
-    for (TextBouton b : hubButtons) b.show();
+    for (TextButton b : hubButtons) b.show();
 
     fill(255);
     textSize(30);
@@ -680,10 +685,10 @@ void draw() {
       presetButtons.get(i).show();
     }
 
-    for (Toggle t : toggles1) {
+    for (ToggleButton t : toggles1) {
       t.show();
     }
-    for (Toggle t : toggles2) {
+    for (ToggleButton t : toggles2) {
       t.show();
     }
   }

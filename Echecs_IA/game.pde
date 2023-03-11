@@ -35,15 +35,12 @@ void startGame() {
   }
   gameState = 1;
 
-  println("________________________________________________________");
-  println();
+  println(" ");
   if (stats) {
     println("Nouvelle fenêtre (" + name + ") : " + width + " x " + height);
   }
   println("Nouvelle partie : " + j1 + " (aux blancs) contre " + j2 + " (aux noirs)");
-  println();
-  println("________________________________________________________");
-  println();
+  println(" ");
 
   pgn =       "[Event \"Chess AI Tournament\"]\n";
   if (!startFEN.equals("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq")) pgn = pgn + "[FEN \"" + startFEN + "\"]\n";
@@ -58,7 +55,8 @@ void startGame() {
   String fen = generateFEN();
   if (!fen.equals(startFEN)) {
     println("ERREUR INITIALISATION FEN, generateFEN() != startFEN");
-    println(">>> " + generateFEN() + " / " + startFEN);
+    println("--> EXPECTED : " + generateFEN() + " / GOT : " + startFEN);
+    println(" ");
   }
 
   addFenToHistory(fen);
@@ -127,10 +125,11 @@ void rematch() {
   startGame();
 }
 
+// ATTENTION ICI
 void newLeMaireGame(int lemaire) {
   resetGame(false);
-  j1 = (lemaire == 0 ? "LeMaire" : "Humain");
-  j2 = (lemaire == 0 ? "Humain" : "LeMaire");
+  j1 = (lemaire == 0 ? "LesMoutons" : "Humain");
+  j2 = (lemaire == 0 ? "Humain" : "LesMoutons");
   startGame();
 }
 
@@ -196,10 +195,10 @@ void resetSettingsToDefault() {
   }
 
   // Reset les toggles
-  for (Toggle t : toggles1) {
+  for (ToggleButton t : toggles1) {
     t.state = false;
   }
-  for (Toggle t : toggles2) {
+  for (ToggleButton t : toggles2) {
     t.state = false;
   }
 
@@ -417,7 +416,7 @@ void endOnHackerDetect() {
   addPgnDraw();
   updateScores(0.5);
   endReason = "détection du hacker";
-  if (leMaireSansFin) endReason += " sans fin";
+  if (hackerSansFin) endReason += " sans fin";
 
   gameEnded = true;
   timeAtEnd = millis();

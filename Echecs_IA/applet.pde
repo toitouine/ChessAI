@@ -17,6 +17,7 @@ public class SearchApplet extends PApplet {
   String[] positions = {"0", "0"};
   String[] tris = {"0", "0"};
   String[] transpositions = {"0", "0"};
+  String[] timesDisplay = {"0", "0"};
 
   public void settings() {
     size(sizeW, sizeH);
@@ -72,6 +73,7 @@ public class SearchApplet extends PApplet {
         fill(#ef5a2a); text("Profondeur : " + depths[i], i*width/2 + 8, 89);
         fill(#5c8cb1); text("Positions : " + positions[i] + " (" + tris[i] + ")", i*width/2 + 8, 113);
         fill(#93b46b); text("Transpositions : " + transpositions[i], i*width/2 + 8, 137);
+        fill(#abb88a); text("Temps : " + timesDisplay[i], i*width/2 + 8, 161);
       }
     }
   }
@@ -119,6 +121,10 @@ public class SearchApplet extends PApplet {
 
   public void setTranspositions(String transpo, int c) {
     transpositions[c] = transpo;
+  }
+
+  public void setTimeDisplays(String timeDisplay, int c) {
+    timesDisplay[c] = timeDisplay;
   }
 
   public void reset() {

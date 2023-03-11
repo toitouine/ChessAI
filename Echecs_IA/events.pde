@@ -3,36 +3,27 @@ void test() {
   // Move move2 = new Move(grid[4][6].piece, 4, 4, null, 0);
   // Move move = new Move(grid[4][4].piece, 3, 3, grid[3][3].piece, 0);
   // Move move = new Move(grid[5][5].piece, 5, 2, grid[5][2].piece, 0);
-  // LeMaire m = new LeMaire(1, 2, 3, true);
-
-  // 4 329 941 de coups par seconde sur la position de départ
-  // 2 383 172 de coups par seconde sur vecteur vitesse
-
-  // 4138 ms --> 1 000 000 légaux
-  // 1200 ms --> 1 000 000 pseudo légaux
+   //LeMaire m = new LeMaire(1, 2, 3, true);
 
    long count = 0;
    long numTest = 1000000;
    long pas = numTest/10;
-  
+
    int before = millis();
-  
+
    for (int i = 0; i < numTest; i++) {
-     generateAllMoves(0, true, true).size();
+     for (int n = 0; n < pieces[tourDeQui].size(); n++) {
+       pieces[tourDeQui].get(n).generateLegalMoves(true, true);
+     }
      count++;
      if (i % pas == 0) println(i);
    }
-  
+
    int temps = millis() - before;
    println("---------------");
-   println(formatInt((int)count));
-   long ps = (1000*count)/temps;
-   println(formatInt((int)(1000*count/temps)) + " par seconde");
-  
+   println(formatInt((int)count) + " itérations");
    println(temps + " ms");
-  
-  // 4865904
-  // 4865904
+   println(formatInt((int)(1000*count/temps)) + " par seconde");
 }
 
 void keyPressed() {
@@ -51,9 +42,11 @@ void keyPressed() {
     }
   }
 
+  if (key == 'h' || key == 'H') printHelpMenu();
+
   if (gameState == 1) {
 
-    if (useHacker && !hackerPret) {
+    if (useHacker && !hackerPret && !hackerAPImode) {
       if (keyCode == ENTER) addPointToCalibration();
       if (keyCode == BACKSPACE) restoreCalibrationSaves();
       if (keyCode == SHIFT) forceCalibrationRestore();
@@ -67,6 +60,7 @@ void keyPressed() {
     else if (key == 'g' || key == 'G') toggleGraph();
     else if (key == 's' || key == 'S') runPerft();
     else if (key == 'd' || key == 'D') toggleSearchController();
+    else if (key == 'b' || key == 'B') highlightBook();
     else if (keyCode == 'v' || keyCode == 'V') toggleVariantes();
     else if (keyCode == 'c' || keyCode == 'C') savePGN();
     else if (keyCode == UP) delayUp();
@@ -115,7 +109,6 @@ void mouseReleased() {
       }
     }
 
-    // if (play && !gameEnded && !rewind && (!useHacker || hackerPret)) {
     if (!blockPlaying) {
       if ((joueurs.get(0).name == "Humain" && joueurs.get(1).name != "Humain") || (joueurs.get(0).name != "Humain" && joueurs.get(1).name == "Humain")) {
         if (joueurs.get(tourDeQui).name != "Humain") { engineToPlay = true; }
@@ -237,14 +230,14 @@ void mouseDragged() {
 void mousePressed() {
   if (gameState == 1) {
 
-    // Boutons rematch
+    // Boutons de revanche
     if (gameEnded && !useHacker && !hackerPret) {
       if (rematchButton.contains(mouseX, mouseY)) { rematch(); return; }
       if (newGameButton.contains(mouseX, mouseY)) { resetGame(true); return; }
     }
 
     // Barre d'outils
-    for (Bouton b : iconButtons) {
+    for (Button b : iconButtons) {
       if (b.contains(mouseX, mouseY)) {
         b.callShortcut();
         return;
@@ -254,71 +247,22 @@ void mousePressed() {
     // Échiquier
     if (joueurs.get(tourDeQui).name == "Humain" && !blockPlaying) {
 
-      if (enPromotion == null) {
-        //Select pièces et grid
-        int i = getGridI();
-        int j = getGridJ();
-
-        if (i >= 0 && i < cols && j >= 0 && j < rows) {
-          Piece p = grid[i][j].piece;
-          if (stats && details) println("Case : [" + i + "][" + j + "] (" + grid[i][j].name + ")");
-
-          if (grid[i][j].possibleMove != null) {
-              grid[i][j].possibleMove.play();
-              pieceSelectionne = null;
-          } else if (p == null || p.c != tourDeQui) {
-            pieceSelectionne = null;
-            deselectAll();
-          } else if (p.c == tourDeQui) {
-            deselectAll();
-            p.select(true);
-            grid[p.i][p.j].selected = true;
-            pieceSelectionne = p;
-          }
-        }
-
-      } else {
+      if (enPromotion != null) {
         for (int i = 0; i < promoButtons.size(); i++) {
           if (promoButtons.get(i).contains(mouseX, mouseY)) {
-
-            removePiece(enPromotion);
-
-            if (i == 0) { //promotion en dame
-              pieces[enPromotion.c].add(new Piece("dame", enPromotion.i, enPromotion.c*7, enPromotion.c));
-              materials[enPromotion.c] += 800;
-              addPgnChar("Q");
-            } else if (i == 1) { //en tour
-              pieces[enPromotion.c].add(new Piece("tour", enPromotion.i, enPromotion.c*7, enPromotion.c));
-              materials[enPromotion.c] += 400;
-              addPgnChar("R");
-            } else if (i == 2) { //en fou
-              pieces[enPromotion.c].add(new Piece("fou", enPromotion.i, enPromotion.c*7, enPromotion.c));
-              materials[enPromotion.c] += 230;
-              addPgnChar("B");
-            } else if (i == 3) { //en cavalier
-              pieces[enPromotion.c].add(new Piece("cavalier", enPromotion.i, enPromotion.c*7, enPromotion.c));
-              materials[enPromotion.c] += 220;
-              addPgnChar("N");
-            }
-
-            enPromotion = null;
-
-            // On retire le hash précédent qui est faux à cause de la promotion humain et on ajoute le hash calculé à partir de 0
-            removeLastFromHashHistory();
-            zobrist.initHash();
-            zobristHistory.add(zobrist.hash);
-
-            piecesToDisplay.clear();
-            piecesToDisplay.addAll(pieces[0]);
-            piecesToDisplay.addAll(pieces[1]);
-
-            if (tourDeQui == 0) tourDeQui = 1;
-            else tourDeQui = 0;
-
-            break;
+            playerPromote(i);
           }
         }
+        return;
       }
+
+      int i = getGridI();
+      int j = getGridJ();
+
+      if (i >= 0 && i < cols && j >= 0 && j < rows) {
+        clickedOnBoard(i, j);
+      }
+
     }
   }
   else if (gameState == 0) {
@@ -338,7 +282,7 @@ void mousePressed() {
     }
     for (int i = 0; i < toggles1.size(); i++) {
       if (toggles1.get(i).contains(mouseX, mouseY)) {
-        for (Toggle t : toggles1) t.state = false;
+        for (ToggleButton t : toggles1) t.state = false;
         toggles1.get(i).state = !toggles1.get(i).state;
         j1 = toggles1.get(i).name;
       }
@@ -346,14 +290,14 @@ void mousePressed() {
 
     for (int i = 0; i < toggles2.size(); i++) {
       if (toggles2.get(i).contains(mouseX, mouseY)) {
-        for (Toggle t : toggles2) t.state = false;
+        for (ToggleButton t : toggles2) t.state = false;
         toggles2.get(i).state = !toggles2.get(i).state;
         j2 = toggles2.get(i).name;
       }
     }
 
     for (int i = 0; i < hubButtons.size(); i++) {
-      TextBouton b = hubButtons.get(i);
+      TextButton b = hubButtons.get(i);
       if (b.contains(mouseX, mouseY)) {
         if (i == 0) verifStartGame();
         else if (i == 1) pasteFEN();
@@ -372,7 +316,7 @@ void mousePressed() {
   else if (gameState == 3) {
 
     // barre d'outils
-    for (Bouton b : editorIconButtons) {
+    for (Button b : editorIconButtons) {
       if (b.contains(mouseX, mouseY)) { b.callShortcut(); return; }
     }
 
@@ -440,7 +384,7 @@ void mousePressed() {
 void mouseMoved() {
   if (gameState == 1) {
 
-    // Bouton rematch
+    // Button rematch
     if (gameEnded && !useHacker && !hackerPret && (rematchButton.contains(mouseX, mouseY) || newGameButton.contains(mouseX, mouseY))) {
       cursor(HAND);
       return;
@@ -507,19 +451,19 @@ void mouseMoved() {
         return;
       }
     }
-    for (Toggle t : toggles1) {
+    for (ToggleButton t : toggles1) {
       if (t.contains(mouseX, mouseY)) {
         cursor(HAND);
         return;
       }
     }
-    for (Toggle t2 : toggles2) {
+    for (ToggleButton t2 : toggles2) {
       if (t2.contains(mouseX, mouseY)) {
         cursor(HAND);
         return;
       }
     }
-    for (TextBouton b : hubButtons) {
+    for (TextButton b : hubButtons) {
       if (b.contains(mouseX, mouseY)) {
         cursor(HAND);
         return;

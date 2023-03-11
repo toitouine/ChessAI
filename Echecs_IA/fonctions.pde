@@ -145,10 +145,7 @@ void error(String function, String message) {
 /////////////////////////////////////////////////////////////////
 
 // Hacker
-// ICI
-// Cheat modifié + parse
-// --> déjà fait ?
-// LA
+
 void cheat(int c, int fromI, int fromJ, int i, int j, int special) {
   // Attention 2ème relance : i et j sont inversés !
   deselectAll();
@@ -162,7 +159,7 @@ void cheat(int c, int fromI, int fromJ, int i, int j, int special) {
   // Prend le focus de chess.com
   click(hackerCoords[fromJ][fromI].x, hackerCoords[fromJ][fromI].y);
 
-  // Joue le coup ICI LA
+  // Joue le coup
   click(hackerCoords[fromJ][fromI].x, hackerCoords[fromJ][fromI].y);
   int delay = (int)random(100, 300);
   delay(delay);
@@ -207,21 +204,16 @@ Color[][] scanBoard(boolean debugPrint) {
 }
 
 
-// TOUTE LA FONCTION
-// ICI
-// LA
 Move getMoveOnBoard() {
   Color[][] scannedBoard = scanBoard(false);
   Color pieceColor = (tourDeQui == 0) ? hackerWhitePieceColor : hackerBlackPieceColor;
 
-  // ICI
   ArrayList<Piece> piecesToCheck = new ArrayList<Piece>();
   piecesToCheck.add(rois[tourDeQui]);
   for (int i = 0; i < pieces[tourDeQui].size(); i++) {
     if (pieces[tourDeQui].get(i) == rois[tourDeQui]) continue;
     piecesToCheck.add(pieces[tourDeQui].get(i));
   }
-  // LA
 
   for (int n = 0; n < piecesToCheck.size(); n++) {
     // On regarde si les pièces sont à la bonne case (i et j sont inversés)
@@ -251,8 +243,10 @@ Move getMoveOnBoard() {
 
 void scanMoveOnBoard() {
   lastHackerScan = millis();
+
+  // Détection de la fenêtre de fin sur chess.com
   Color endScreen = hacker.getPixelColor(hackerCoords[3][2].x, hackerCoords[3][2].y);
-  if (isSameColor(endScreen, Color.white)) {
+  if (hackerSansFin && isSameColor(endScreen, Color.white)) {
     endOnHackerDetect();
     timeAtHackerEnd = millis();
     return;
@@ -260,9 +254,7 @@ void scanMoveOnBoard() {
 
   Move sm = getMoveOnBoard();
   if (sm != null) {
-    //ICI
     isNextMoveRestranscrit = true;
-    //LA
     sm.play();
     if (!blockPlaying) {
       if ((joueurs.get(0).name == "Humain" && joueurs.get(1).name != "Humain") || (joueurs.get(0).name != "Humain" && joueurs.get(1).name == "Humain")) {
@@ -510,17 +502,7 @@ void calibrerHacker() {
   saveNewgameLocation = newgameLocation;
   println("Données du hacker sauvegardées");
 
-  // ha.sendCoords(hackerCoords);
-
   if (play && !gameEnded && !rewind) {
-    // if (joueurs.get(0).name == "Humain" && joueurs.get(1).name != "Humain") {
-    //   setHackerPOV(1);
-    //   if (joueurs.get(tourDeQui).name != "Humain") engineToPlay = true;
-    // }
-    // else if (joueurs.get(0).name != "Humain" && joueurs.get(1).name == "Humain") {
-    //   setHackerPOV(0);
-    //   if (joueurs.get(tourDeQui).name != "Humain") { engineToPlay = true; }
-    // }
     if ((joueurs.get(0).name == "Humain" && joueurs.get(1).name != "Humain") || (joueurs.get(0).name != "Humain" && joueurs.get(1).name == "Humain")) {
       if (joueurs.get(tourDeQui).name != "Humain") { engineToPlay = true; }
     }
@@ -538,14 +520,6 @@ void setHackerPOV(int pov) {
   hackerCoords = reverseCoords(hackerCoords);
   currentHackerPOV = pov;
 }
-
-// ICI
-void handleMoveTime() {
-  if (nbTour > 5) {
-    deltaTimeMesured = millis() - lastMoveTime;
-  }
-}
-// LA
 
 Point[][] reverseCoords(Point[][] arr) {
   int l1 = arr.length;
@@ -659,22 +633,29 @@ void drawHackerPage() {
   fill(color(#b33430));
   textAlign(CENTER, CENTER);
   textSize(35 * w/75);
-  text("Hacker mode activé", rectX + (100*w/75)/2, rectY - rectH/2 + 55*w/75);
+  text("Hacker " + (hackerAPImode ? "API " : "") + "mode activé", rectX + (100*w/75)/2, rectY - rectH/2 + 55*w/75);
 
   // Texte de configuration
-  String hackerText;
-  if (upLeftCorner == null) hackerText = "Calibrer le coin haut-gauche";
-  else if (downRightCorner == null) hackerText = "Calibrer le coin bas-droite";
-  else hackerText = "Calibrer la nouvelle partie";
-  fill(0);
-  noStroke();
-  textSize(27 * w/75);
-  text(hackerText, (width-offsetX)/2 + offsetX, rectY + (100*w/75)/3);
+  if (!hackerAPImode) {
+    String hackerText;
+    if (upLeftCorner == null) hackerText = "Calibrer le coin haut-gauche";
+    else if (downRightCorner == null) hackerText = "Calibrer le coin bas-droite";
+    else hackerText = "Calibrer la nouvelle partie";
+    fill(0);
+    noStroke();
+    textSize(27 * w/75);
+    text(hackerText, (width-offsetX)/2 + offsetX, rectY + (100*w/75)/3);
 
-  String hg = (upLeftCorner == null) ? "___" : str(upLeftCorner.x) + " ; " + str(upLeftCorner.y);
-  String bd = (downRightCorner == null) ? "___" : str(downRightCorner.x) + " ; " + str(downRightCorner.y);
-  textSize(20 * w/75);
-  text("HG : " + hg + "     " + "BD : " + bd, (width-offsetX)/2 + offsetX, rectY + (100*w/75)/1.15);
+    String hg = (upLeftCorner == null) ? "___" : str(upLeftCorner.x) + " ; " + str(upLeftCorner.y);
+    String bd = (downRightCorner == null) ? "___" : str(downRightCorner.x) + " ; " + str(downRightCorner.y);
+    textSize(20 * w/75);
+    text("HG : " + hg + "     " + "BD : " + bd, (width-offsetX)/2 + offsetX, rectY + (100*w/75)/1.15);
+  } else {
+    fill(0);
+    noStroke();
+    textSize(27 * w/75);
+    text("En attente de l'API...", (width-offsetX)/2 + offsetX, rectY + (100*w/75)/2);
+  }
 }
 
 void drawSavedPosition() {
@@ -839,6 +820,65 @@ void deselectAll() {
   }
 }
 
+void playerPromote(int numButton) {
+  removePiece(enPromotion);
+
+  if (numButton == 0) { //promotion en dame
+    pieces[enPromotion.c].add(new Dame(enPromotion.i, enPromotion.c*7, enPromotion.c));
+    materials[enPromotion.c] += 800;
+    addPgnChar("Q");
+  } else if (numButton == 1) { //en tour
+    pieces[enPromotion.c].add(new Tour(enPromotion.i, enPromotion.c*7, enPromotion.c));
+    materials[enPromotion.c] += 400;
+    addPgnChar("R");
+  } else if (numButton == 2) { //en fou
+    pieces[enPromotion.c].add(new Fou(enPromotion.i, enPromotion.c*7, enPromotion.c));
+    materials[enPromotion.c] += 230;
+    addPgnChar("B");
+  } else if (numButton == 3) { //en cavalier
+    pieces[enPromotion.c].add(new Cavalier(enPromotion.i, enPromotion.c*7, enPromotion.c));
+    materials[enPromotion.c] += 220;
+    addPgnChar("N");
+  }
+
+  enPromotion = null;
+
+  // On retire le hash précédent qui est faux à cause de la promotion humain et on ajoute le hash calculé à partir de 0
+  removeLastFromHashHistory();
+  zobrist.initHash();
+  zobristHistory.add(zobrist.hash);
+
+  piecesToDisplay.clear();
+  piecesToDisplay.addAll(pieces[0]);
+  piecesToDisplay.addAll(pieces[1]);
+
+  if (tourDeQui == 0) tourDeQui = 1;
+  else tourDeQui = 0;
+}
+
+void clickedOnBoard(int i, int j) {
+  Piece p = grid[i][j].piece;
+  if (stats && details) println("Case : [" + i + "][" + j + "] (" + grid[i][j].name + ")");
+
+  if (grid[i][j].possibleMove != null) {
+      grid[i][j].possibleMove.play();
+      pieceSelectionne = null;
+      return;
+  }
+  if (p == null || p.c != tourDeQui) {
+    pieceSelectionne = null;
+    deselectAll();
+    return;
+  }
+  if (p.c == tourDeQui) {
+    deselectAll();
+    p.select(true);
+    grid[p.i][p.j].selected = true;
+    pieceSelectionne = p;
+    return;
+  }
+}
+
 void setPieces() {
   importFEN(startFEN);
 
@@ -930,19 +970,19 @@ boolean pieceHovered() {
 void addPieceToBoardByDrop(int value, int i, int j) {
 
   switch (value) {
-    case 0: pieces[0].add(new Piece("roi", i, j, 0)); break;
-    case 1: pieces[0].add(new Piece("dame", i, j, 0)); break;
-    case 2: pieces[0].add(new Piece("tour", i, j, 0)); break;
-    case 3: pieces[0].add(new Piece("fou", i, j, 0)); break;
-    case 4: pieces[0].add(new Piece("cavalier", i, j, 0)); break;
-    case 5: pieces[0].add(new Piece("pion", i, j, 0)); break;
+    case 0: pieces[0].add(new Roi(i, j, 0)); break;
+    case 1: pieces[0].add(new Dame(i, j, 0)); break;
+    case 2: pieces[0].add(new Tour( i, j, 0)); break;
+    case 3: pieces[0].add(new Fou(i, j, 0)); break;
+    case 4: pieces[0].add(new Cavalier(i, j, 0)); break;
+    case 5: pieces[0].add(new Pion(i, j, 0)); break;
 
-    case 6: pieces[1].add(new Piece("roi", i, j, 1)); break;
-    case 7: pieces[1].add(new Piece("dame", i, j, 1)); break;
-    case 8: pieces[1].add(new Piece("tour", i, j, 1)); break;
-    case 9: pieces[1].add(new Piece("fou", i, j, 1)); break;
-    case 10: pieces[1].add(new Piece("cavalier", i, j, 1)); break;
-    case 11: pieces[1].add(new Piece("pion", i, j, 1)); break;
+    case 6: pieces[1].add(new Roi(i, j, 1)); break;
+    case 7: pieces[1].add(new Dame(i, j, 1)); break;
+    case 8: pieces[1].add(new Tour( i, j, 1)); break;
+    case 9: pieces[1].add(new Fou(i, j, 1)); break;
+    case 10: pieces[1].add(new Cavalier(i, j, 1)); break;
+    case 11: pieces[1].add(new Pion(i, j, 1)); break;
   }
 
   piecesToDisplay.clear();
@@ -1003,22 +1043,22 @@ String[] parseHTMLData(String str) {
 void HTMLtoBoard(String str) {
   removeAllPieces();
   String[] parsedData = parseHTMLData(str);
-  HashMap<String, String> pieceCode = new HashMap<String, String>();
-  pieceCode.put("p", "pion");
-  pieceCode.put("q", "dame");
-  pieceCode.put("k", "roi");
-  pieceCode.put("n", "cavalier");
-  pieceCode.put("b", "fou");
-  pieceCode.put("r", "tour");
 
   for (int n = 0; n < parsedData.length; n++) {
     String d = parsedData[n];
     int c = (d.charAt(0) == 'w' ? 0 : 1);
-    String p = pieceCode.get(str(d.charAt(1)));
     int i = stringToInt(str(d.charAt(2)))-1;
     int j = abs(stringToInt(str(d.charAt(3)))-8);
-    pieces[c].add(new Piece(p, i, j, c));
-    if (p.equals("Tour")) {
+    switch (str(d.charAt(1))) {
+      case "k": pieces[c].add(new Roi(i, j, c)); break;
+      case "q": pieces[c].add(new Dame(i, j, c)); break;
+      case "r": pieces[c].add(new Tour( i, j, c)); break;
+      case "b": pieces[c].add(new Fou(i, j, c)); break;
+      case "n": pieces[c].add(new Cavalier(i, j, c)); break;
+      case "p": pieces[c].add(new Pion(i, j, c)); break;
+    }
+
+    if (d.charAt(1) == 'r') {
       pieces[c].get(pieces[c].size()-1).setRoques(0, 0);
     }
   }
@@ -1170,23 +1210,23 @@ void importFEN(String f) { //fen simplifiée, sans en passant et règle des 50 c
 
       //pièces
       case 'k':
-        rois[pieceColor] = new Piece("roi", cursorI, cursorJ, pieceColor); pieces[pieceColor].add(rois[pieceColor]); cursorI++;
+        rois[pieceColor] = new Roi(cursorI, cursorJ, pieceColor); pieces[pieceColor].add(rois[pieceColor]); cursorI++;
         rois[pieceColor].roquable = (pieceColor == 0 ? roiRoqueB : roiRoqueN);
       break;
       case 'q':
-        pieces[pieceColor].add(new Piece("dame", cursorI, cursorJ, pieceColor)); cursorI++;
+        pieces[pieceColor].add(new Dame(cursorI, cursorJ, pieceColor)); cursorI++;
       break;
       case 'r':
-        pieces[pieceColor].add(new Piece("tour", cursorI, cursorJ, pieceColor)); cursorI++;
+        pieces[pieceColor].add(new Tour(cursorI, cursorJ, pieceColor)); cursorI++;
       break;
       case 'b':
-        pieces[pieceColor].add(new Piece("fou", cursorI, cursorJ, pieceColor)); cursorI++;
+        pieces[pieceColor].add(new Fou(cursorI, cursorJ, pieceColor)); cursorI++;
       break;
       case 'n':
-        pieces[pieceColor].add(new Piece("cavalier", cursorI, cursorJ, pieceColor)); cursorI++;
+        pieces[pieceColor].add(new Cavalier(cursorI, cursorJ, pieceColor)); cursorI++;
       break;
       case 'p':
-        pieces[pieceColor].add(new Piece("pion", cursorI, cursorJ, pieceColor)); cursorI++;
+        pieces[pieceColor].add(new Pion(cursorI, cursorJ, pieceColor)); cursorI++;
       break;
 
       default:
@@ -1370,6 +1410,18 @@ ArrayList<Move> findIllegalMoves(Piece piece, ArrayList<Move> pseudoMoves) {
   }
 
   return illegalMoves;
+}
+
+boolean isMoveLegal(Piece p, Move move) {
+  boolean isLegal = true;
+
+  move.make();
+  if (playerInCheck(p.c) == p.c) {
+    isLegal = false;
+  }
+  move.unmake();
+
+  return isLegal;
 }
 
 ArrayList<Move> removeIllegalMoves(Piece piece, ArrayList<Move> pseudoMoves) {
