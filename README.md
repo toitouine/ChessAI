@@ -13,7 +13,7 @@ There are 5 bots :
  You can adjust the settings using the sliders in the menu : one is for the depth, one for the max depth of the second search (quiet search only looking for captures) and the last is for the time limit of the search (iterative deepening). If no time limit is set, then the AI will just directly search at the depth entered.
  Also, there is a position editor accessible from the home page (top right icon), from which you can... well... edit a position, copy the FEN and play a game from it.
 
-Pretty much everything is in french so good luck understanding everything ;)
+Pretty much everything is in french so good luck understanding everything :)
  
  
 Home page :
