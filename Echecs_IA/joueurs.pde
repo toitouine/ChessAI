@@ -216,6 +216,7 @@ class IA {
       sa.setDepths(str(d), this.c);
       if (this instanceof Loic) sa.setEvals(evalToStringLoic(evalToDisplay), this.c);
       else sa.setEvals(evalToStringMaire(evalToDisplay), this.c);
+      sa.setBestMoves(getPGNString(this.bestMoveFound), this.c);
       sa.setPositions(formatInt(this.numPos), this.c);
       sa.setTris("...", this.c);
       sa.setTranspositions(formatInt(this.numTranspositions), this.c);
@@ -244,11 +245,12 @@ class IA {
 
     if (moves.size() > 0 && !gameEnded) {
       delay(250);
-      playMoveFromBook(moves);
+      this.bestMoveFound = playMoveFromBook(moves);
       if (stats) {
         println(joueurs.get(this.c).name + " : " + "Book");
       }
       sa.setEvals("Book", this.c);
+      sa.setBestMoves(getPGNString(this.bestMoveFound), this.c);
       sa.setDepths("0", this.c);
       sa.setPositions("0", this.c);
       sa.setTris("0", this.c);
@@ -379,6 +381,7 @@ class IA {
     if (this instanceof Loic) sa.setEvals(evalToStringLoic(posEval), this.c);
     else sa.setEvals(evalToStringMaire(posEval), this.c);
 
+    sa.setBestMoves(getPGNString(this.bestMoveFound), this.c);
     sa.setDepths(str(this.depthSearched), this.c);
     sa.setPositions(formatInt(this.numPos), this.c);
     sa.setTris(roundNumber(tri, 2), this.c);

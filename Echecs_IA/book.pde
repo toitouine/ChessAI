@@ -240,7 +240,7 @@ String[] getMoveStringFromIndex(int index) {
 }
 
 // Choisi aléatoirement un coup parmi ceux du livre qui sont passés en argument et le joue
-void playMoveFromBook(ArrayList<String> moves) {
+Move playMoveFromBook(ArrayList<String> moves) {
   String moveString = moves.get(floor(random(0, moves.size())));
   int fromI = Integer.valueOf(String.valueOf(moveString.charAt(0)));
   int fromJ = Integer.valueOf(String.valueOf(moveString.charAt(1)));
@@ -259,6 +259,8 @@ void playMoveFromBook(ArrayList<String> moves) {
     m = new Move(grid[fromI][fromJ].piece, i, j, grid[i][j].piece, 0);
   }
   m.play();
+
+  return m;
 }
 
 // Ajoute un coup au livre d'ouverture correspondant à la position dans laquelle il doit être joué

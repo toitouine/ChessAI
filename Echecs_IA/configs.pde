@@ -1,5 +1,14 @@
 /////////////////////////////////////////////////////////////////
 
+// Configurations importantes
+
+boolean timeControl = false; // Activer le temps (ou pas)
+boolean hackerSansFin = false; // Activer le hacker sans fin (ou pas)
+boolean ENABLE_ARNAQUES = true; // Activer les arnaques des moutons (ou pas)
+boolean MODE_PROBLEME = false; // Activer le mode résolution de problèmes (ou pas)
+
+/////////////////////////////////////////////////////////////////
+
 // Configurations diverses et variées
 
 String name = "Echecs on java";
@@ -16,7 +25,6 @@ int soundControl = 0; //0 = aucun, 1 = partie, 2 = musique
 boolean attach = true;
 boolean stats = true;
 boolean details = true;
-boolean timeControl = false;
 int[][] times = {
   {0, 0, 0}, //blancs : minutes, secondes, incrément
   {0, 0, 0}  //noirs : minutes, secondes, incrément
@@ -104,9 +112,6 @@ String[] moutonMessages = {
 
 int missclickCooldown = 6;
 int timeBeforeHackerRestart = 3500;
-boolean hackerSansFin = false;
-boolean ENABLE_ARNAQUES = true;
-boolean MODE_PROBLEME = true;
 
 /////////////////////////////////////////////////////////////////
 

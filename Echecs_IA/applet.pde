@@ -15,7 +15,7 @@ public class SearchApplet extends PApplet {
   int[] times = {0, 0};
 
   String[] evals = {"0", "0"};
-  String[] bestMoves = {"?", "?"};
+  String[] bestMoves = {"", ""};
   String[] depths = {"0", "0"};
   float[]  depthTrackers = {0, 0};
   String[] positions = {"0", "0"};
@@ -44,7 +44,7 @@ public class SearchApplet extends PApplet {
         stopSearch = true;
       }
 
-      if (joueurs.get(inSearch).player != null) {
+      if (inSearch >= 0 && joueurs.get(inSearch).player != null) {
         positions[inSearch] = formatInt(joueurs.get(inSearch).player.numPos);
         transpositions[inSearch] = formatInt(joueurs.get(inSearch).player.numTranspositions);
       }
@@ -83,10 +83,12 @@ public class SearchApplet extends PApplet {
     for (int i = 0; i < 2; i++) {
       if (joueurs != null && joueurs.size() < 2) break;
       if (!gameEnded && !joueurs.get(i).name.equals("Humain")) {
-        fill(#fbd156); text("Evaluation : " + evals[i] + " (Nb3)", i*width/2 + 8, 65);
+        fill(#fbd156);
+        if (bestMoves[i] != "") text("Evaluation : " + evals[i] + " (" + bestMoves[i] + ")", i*width/2 + 8, 65);
+        else text("Evaluation : " + evals[i], i*width/2 + 8, 65);
         fill(#ef5a2a);
-        if (!showDepthTracker) text("Profondeur : " + depths[i], i*width/2 + 8, 89);
-        else text("Profondeur : " + depths[i] + " (" + roundNumber(depthTrackers[i], 0) + "%)", i*width/2 + 8, 89);
+        if (showDepthTracker && depthTrackers[i] != 0) text("Profondeur : " + depths[i] + " (" + roundNumber(depthTrackers[i], 0) + "%)", i*width/2 + 8, 89);
+        else text("Profondeur : " + depths[i], i*width/2 + 8, 89);
         fill(#5c8cb1); text("Positions : " + positions[i] + " (" + tris[i] + ")", i*width/2 + 8, 113);
         fill(#93b46b); text("Transpositions : " + transpositions[i], i*width/2 + 8, 137);
         fill(#abb88a); text("Temps : " + timesDisplay[i], i*width/2 + 8, 161);
@@ -164,6 +166,9 @@ public class SearchApplet extends PApplet {
       positions[i] = "0";
       tris[i] = "0";
       transpositions[i] = "0";
+      bestMoves[i] = "";
+      depthTrackers[i] = 0;
+      timesDisplay[i] = "0";
     }
   }
 
