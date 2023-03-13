@@ -10,7 +10,7 @@ There are 5 bots :
  - LesMoutons : this bot is very special. It is a sheep, that will try to beat you by threatening your pieces. It also cheats sometimes, so watch his pieces because some might appear... Be careful, he will steal your time and make you mouse slip too!
  - Stockfish : a bot that will try to lose the game. It is extremely hard to lose against him, that's the most challenging.
  
- You can adjust the settings using the sliders in the menu (one for the depth, one for the max depth of the second search (quiet search, only looking for captures) and one for the time limit (only for LeMaire). If no time limit is set, then the AI will just directly search at the depth entered).
+ You can adjust the settings using the sliders in the menu : one is for the depth, one for the max depth of the second search (quiet search, only looking for captures) and the last is for the time limit of the search (iterative deepening). If no time limit is set, then the AI will just directly search at the depth entered.
  Also, there is a position editor accessible from the home page (top right icon), from which you can... well... edit a position, copy the FEN and play a game from it.
 
 Pretty much everything is in french so good luck understanding everything ;)
