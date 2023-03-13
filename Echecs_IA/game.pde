@@ -250,13 +250,8 @@ void resetSettingsToDefault() {
   yEndScreen = 0;
   infos = "";
   pgn = "";
-  speed = 30;
   j1 = null;
   j2 = null;
-  //j1depth = 3;
-  //j2depth = 3;
-  //s1.setValue(j1depth);
-  //s2.setValue(j2depth);
 
   //controlP5
   s1.show();

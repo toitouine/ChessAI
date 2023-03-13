@@ -1,3 +1,10 @@
+// Test OrderMoves vecteur vitesse :
+
+// Recherche sur position départ avec OrderMoves, sans ID, profondeur 5 avec alpha beta : 8 394 (0,99), 113 ms
+// Recherche sur position départ avec OrderMoves, sans ID, profondeur 4 sans alpha beta : 128 856 (0,00) 10131 ms
+// Recherche sur position départ sans OrderMoves, sans ID, profondeur 5 avec alpha beta : 106 108 (0,23) 514 ms
+// Recherche sur position départ sans OrderMoves, sans ID, profondeur 4 sans alpha beta : 138 928 (0,00) 9494 ms
+
 void test() {
    //Move move = new Move(grid[1][7].piece, 2, 5, null, 0);
   // Move move2 = new Move(grid[4][6].piece, 4, 4, null, 0);
@@ -12,9 +19,7 @@ void test() {
    int before = millis();
 
    for (int i = 0; i < numTest; i++) {
-     for (int n = 0; n < pieces[tourDeQui].size(); n++) {
-       pieces[tourDeQui].get(n).generateLegalMoves(true, true);
-     }
+     formatInt((int)numTest);
      count++;
      if (i % pas == 0) println(i);
    }

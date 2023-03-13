@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////
 
-// Configurations générales
+// Configurations diverses et variées
 
 String name = "Echecs on java";
 
@@ -16,7 +16,7 @@ int soundControl = 0; //0 = aucun, 1 = partie, 2 = musique
 boolean attach = true;
 boolean stats = true;
 boolean details = true;
-boolean timeControl = true;
+boolean timeControl = false;
 int[][] times = {
   {0, 0, 0}, //blancs : minutes, secondes, incrément
   {0, 0, 0}  //noirs : minutes, secondes, incrément
@@ -106,6 +106,7 @@ int missclickCooldown = 6;
 int timeBeforeHackerRestart = 3500;
 boolean hackerSansFin = false;
 boolean ENABLE_ARNAQUES = true;
+boolean MODE_PROBLEME = true;
 
 /////////////////////////////////////////////////////////////////
 

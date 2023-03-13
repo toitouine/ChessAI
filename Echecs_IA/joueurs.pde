@@ -126,8 +126,11 @@ class IA {
   float findBestMove() {
     this.depthSearched = floor(this.depth + CONSTANTE_DE_STOCKFISH * pow(endGameWeight, 5));
     this.cuts = new int[depthSearched];
+
     float timeBefore = millis();
     float posEval;
+    sa.inNormalSearch = this.c;
+    sa.setDepths(str(this.depthSearched), this.c);
 
     if (this instanceof LesMoutons) {
       SheepEval sheep = this.moyennemax(this.depthSearched, 0, -Infinity, Infinity, null);
@@ -137,6 +140,7 @@ class IA {
     }
 
     this.time = millis() - timeBefore;
+    sa.inNormalSearch = -1;
 
     return posEval;
   }
@@ -149,13 +153,14 @@ class IA {
     int lastFirstPlyMoves = 0, lastHigherPlyFromRoot = 0;
     int[] lastCuts = {0};  int lastCutsFirst = 0;
 
-    // démarre la recherche
+    // démarre la recherche sur search controller
     if (useHacker && hackerPret) {
       if (nbTour > 1) {
         int timeToPlay = constrain((deltaTimeMesured/2)-500, 20, sa.savedTimes[this.c]*3);
         sa.setTime(this.c, timeToPlay);
       } else sa.setTime(this.c, sa.savedTimes[this.c]);
     }
+    if (MODE_PROBLEME) sa.setTime(this.c, 10000000);
     sa.startSearch(this.c);
 
     for (int d = 1; d < 1000; d++) {
@@ -215,6 +220,7 @@ class IA {
       sa.setTris("...", this.c);
       sa.setTranspositions(formatInt(this.numTranspositions), this.c);
       sa.setTimeDisplays(str((int)sa.getTime(this.c)) + " ms", this.c);
+      sa.resetDepthTracker(this.c);
 
       // si la valeur est un mat, arrête la recherche
       if (abs(eval) > 20000) {
@@ -240,8 +246,7 @@ class IA {
       delay(250);
       playMoveFromBook(moves);
       if (stats) {
-        print("Le Maire : ");
-        println("Book");
+        println(joueurs.get(this.c).name + " : " + "Book");
       }
       sa.setEvals("Book", this.c);
       sa.setDepths("0", this.c);
@@ -343,13 +348,9 @@ class IA {
 
     // Affichage des statistiques de la console
     if (stats) {
-      if (this instanceof LeMaire) print("Le Maire : ");
-      else if (this instanceof Loic) print("Loic : ");
-      else if (this instanceof Stockfish) print("Stockfish : ");
-      else if (this instanceof LesMoutons) print("Les Moutons : ");
-      else return;
-
-      print(posEval/100 + ", ");
+      print(joueurs.get(this.c).name + " : "
+            + getPGNString(this.bestMoveFound) + ", "
+            + posEval/100 + ", ");
 
       String timeText;
       if (this.time >= 1000) timeText = this.time/1000 + " s";
@@ -383,6 +384,7 @@ class IA {
     sa.setTris(roundNumber(tri, 2), this.c);
     sa.setTranspositions(formatInt(this.numTranspositions), this.c);
     sa.setTimeDisplays(str((int)this.time) + " ms", this.c);
+    sa.resetDepthTracker(this.c);
   }
 
   void resetStats() {
@@ -553,7 +555,8 @@ class LeMaire extends IA {
     ArrayList<Move> moves = generateAllLegalMoves(tourDeQui, true, true);
     moves = this.OrderMoves(moves);
     this.numMoves += moves.size();
-    if (plyFromRoot == 0) firstPlyMoves += moves.size();
+    if (plyFromRoot == 0) this.firstPlyMoves += moves.size();
+    if (plyFromRoot == 1) sa.incrementSearchTracker(this.c);
 
     // Détection des mats et pats
     if (moves.size() == 0) {
@@ -723,7 +726,8 @@ class LesMoutons extends IA {
     ArrayList<Move> moves = generateAllLegalMoves(tourDeQui, true, true);
     moves = this.OrderMoves(moves);
     this.numMoves += moves.size();
-    if (plyFromRoot == 0) firstPlyMoves += moves.size();
+    if (plyFromRoot == 0) this.firstPlyMoves += moves.size();
+    if (plyFromRoot == 1) sa.incrementSearchTracker(this.c);
 
     if (moves.size() == 0) {
       if (playerInCheck(tourDeQui) == tourDeQui) {
@@ -930,6 +934,8 @@ class Loic extends IA {
 
     ArrayList<Move> moves = generateAllLegalMoves(tourDeQui, true, true);
     moves = this.OrderMoves(moves);
+    if (plyFromRoot == 0) this.firstPlyMoves += moves.size();
+    if (plyFromRoot == 1) sa.incrementSearchTracker(this.c);
 
     if (moves.size() == 0) {
       if (playerInCheck(tourDeQui) == tourDeQui) {
@@ -1011,6 +1017,8 @@ class Stockfish extends IA {
 
     ArrayList<Move> moves = generateAllLegalMoves(tourDeQui, true, true);
     moves = this.OrderMoves(moves);
+    if (plyFromRoot == 0) this.firstPlyMoves += moves.size();
+    if (plyFromRoot == 1) sa.incrementSearchTracker(this.c);
 
     if (moves.size() == 0) {
       if (playerInCheck(tourDeQui) == tourDeQui) {

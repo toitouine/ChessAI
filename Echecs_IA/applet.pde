@@ -5,15 +5,19 @@
 public class SearchApplet extends PApplet {
   int sizeW = 503, sizeH = 198;
   boolean show = true;
+  boolean showDepthTracker = false;
 
   // -1 : aucun, 0 : blanc, 1 : noir
-  int inSearch = -1;
+  int inSearch = -1; // avec iterative deepening
+  int inNormalSearch = -1; // sans iterative deepening
   int searchStartTime;
   int[] savedTimes = {0, 0};
   int[] times = {0, 0};
 
   String[] evals = {"0", "0"};
+  String[] bestMoves = {"?", "?"};
   String[] depths = {"0", "0"};
+  float[]  depthTrackers = {0, 0};
   String[] positions = {"0", "0"};
   String[] tris = {"0", "0"};
   String[] transpositions = {"0", "0"};
@@ -39,6 +43,16 @@ public class SearchApplet extends PApplet {
         this.inSearch = -1;
         stopSearch = true;
       }
+
+      if (joueurs.get(inSearch).player != null) {
+        positions[inSearch] = formatInt(joueurs.get(inSearch).player.numPos);
+        transpositions[inSearch] = formatInt(joueurs.get(inSearch).player.numTranspositions);
+      }
+    }
+
+    if (this.inNormalSearch != -1 && joueurs.get(inNormalSearch).player != null) {
+      positions[inNormalSearch] = formatInt(joueurs.get(inNormalSearch).player.numPos);
+      transpositions[inNormalSearch] = formatInt(joueurs.get(inNormalSearch).player.numTranspositions);
     }
 
     if (!show) return;
@@ -69,8 +83,10 @@ public class SearchApplet extends PApplet {
     for (int i = 0; i < 2; i++) {
       if (joueurs != null && joueurs.size() < 2) break;
       if (!gameEnded && !joueurs.get(i).name.equals("Humain")) {
-        fill(#fbd156); text("Evaluation : " + evals[i], i*width/2 + 8, 65);
-        fill(#ef5a2a); text("Profondeur : " + depths[i], i*width/2 + 8, 89);
+        fill(#fbd156); text("Evaluation : " + evals[i] + " (Nb3)", i*width/2 + 8, 65);
+        fill(#ef5a2a);
+        if (!showDepthTracker) text("Profondeur : " + depths[i], i*width/2 + 8, 89);
+        else text("Profondeur : " + depths[i] + " (" + roundNumber(depthTrackers[i], 0) + "%)", i*width/2 + 8, 89);
         fill(#5c8cb1); text("Positions : " + positions[i] + " (" + tris[i] + ")", i*width/2 + 8, 113);
         fill(#93b46b); text("Transpositions : " + transpositions[i], i*width/2 + 8, 137);
         fill(#abb88a); text("Temps : " + timesDisplay[i], i*width/2 + 8, 161);
@@ -125,6 +141,20 @@ public class SearchApplet extends PApplet {
 
   public void setTimeDisplays(String timeDisplay, int c) {
     timesDisplay[c] = timeDisplay;
+  }
+
+  public void setBestMoves(String move, int c) {
+    bestMoves[c] = move;
+  }
+
+  public void resetDepthTracker(int c) {
+    showDepthTracker = false;
+    depthTrackers[c] = 0;
+  }
+
+  public void incrementSearchTracker(int c) {
+    showDepthTracker = true;
+    depthTrackers[c] = depthTrackers[c] + (100 / joueurs.get(c).player.firstPlyMoves);
   }
 
   public void reset() {
