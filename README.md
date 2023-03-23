@@ -18,12 +18,12 @@ Pretty much everything is in french so good luck understanding everything :)
  
 Home page :
 
-<img width="1193" alt="Capture d’écran 2022-11-27 à 12 53 16" src="https://user-images.githubusercontent.com/107322964/204137021-a3bcbc62-46c4-49ed-82e8-27b38cbaa9f2.png">
+<img width="1379" alt="ChessAI1" src="https://user-images.githubusercontent.com/107322964/227307760-9b2082ef-6401-4f87-8c6c-b2cc9d7ef7b1.png">
 
 Game between two AIs :
 
-<img width="652" alt="Capture d’écran 2022-11-27 à 12 56 22" src="https://user-images.githubusercontent.com/107322964/204137014-6cff8840-31c6-4f46-afa4-d2563cadb84e.png">
+<img width="653" alt="ChessAI2" src="https://user-images.githubusercontent.com/107322964/227307818-79daa69f-0130-478e-8d3a-0cdf67ab0d50.png">
 
 Graph of the advantage : 
 
-<img width="548" alt="197406027-825e2e3f-f612-4fe7-88db-754986557901" src="https://user-images.githubusercontent.com/107322964/204137008-bf4686e1-7f9f-4b4d-991d-6ec15dfbd851.png">
+<img width="550" alt="ChessAI3" src="https://user-images.githubusercontent.com/107322964/227307901-2e622d7e-1070-4f52-8fdc-b9f39ca50a3b.png">
