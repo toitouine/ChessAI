@@ -125,11 +125,11 @@ void rematch() {
   startGame();
 }
 
-// ATTENTION ICI
-void newLeMaireGame(int lemaire) {
+void newAIGame(int ia, String type) {
   resetGame(false);
-  j1 = (lemaire == 0 ? "LesMoutons" : "Humain");
-  j2 = (lemaire == 0 ? "Humain" : "LesMoutons");
+  println(ia, type);
+  j1 = (ia == 0 ? type : "Humain");
+  j2 = (ia == 0 ? "Humain" : type);
   startGame();
 }
 

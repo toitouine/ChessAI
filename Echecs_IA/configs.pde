@@ -2,8 +2,9 @@
 
 // Configurations importantes
 
-boolean timeControl = false; // Activer le temps (ou pas)
+boolean timeControl = true; // Activer le temps (ou pas)
 boolean hackerSansFin = false; // Activer le hacker sans fin (ou pas)
+int hackerSite = LICHESS; // Hacker sur chess.com ou lichess
 boolean ENABLE_ARNAQUES = true; // Activer les arnaques des moutons (ou pas)
 boolean MODE_PROBLEME = false; // Activer le mode résolution de problèmes (ou pas)
 
@@ -112,22 +113,6 @@ String[] moutonMessages = {
 
 int missclickCooldown = 6;
 int timeBeforeHackerRestart = 3500;
-
-/////////////////////////////////////////////////////////////////
-
-// Constantes
-
-int CONSTANTE_DE_STOCKFISH = 3; //ou 5
-float TOTAL_DEPART = 3200.0; //moyenne de la somme du matériel des blancs et des noirs (sur la position de départ)
-
-int ROI_INDEX = 0;
-int DAME_INDEX = 1;
-int TOUR_INDEX = 2;
-int FOU_INDEX = 3;
-int CAVALIER_INDEX = 4;
-int PION_INDEX = 5;
-
-int INITIAL_TOTAL_MAIRE_MATERIAL = 0;
 
 /////////////////////////////////////////////////////////////////
 

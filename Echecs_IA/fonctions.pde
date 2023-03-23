@@ -347,23 +347,15 @@ void handleWaitForRestart() {
   boolean isGameStarted = verifyCalibration(2, true);
   scanBoard(false);
   if (isGameStarted) {
-
-    println("gameStarted");
     int botColor;
 
-    if (currentHackerPOV == 0) {
-      botColor = isSimilarColor(hacker.getPixelColor(hackerCoords[7][7].x, hackerCoords[7][7].y), hackerWhitePieceColor) ? 0 : 1;
-      println(hacker.getPixelColor(hackerCoords[7][7].x, hackerCoords[7][7].y));
-    } else {
-      botColor = isSimilarColor(hacker.getPixelColor(hackerCoords[0][0].x, hackerCoords[0][0].y), hackerWhitePieceColor) ? 0 : 1;
-      println(hacker.getPixelColor(hackerCoords[0][0].x, hackerCoords[0][0].y));
-    }
-
-    println(botColor);
+    if (currentHackerPOV == 0) botColor = isSimilarColor(hacker.getPixelColor(hackerCoords[7][7].x, hackerCoords[7][7].y), hackerWhitePieceColor) ? 0 : 1;
+    else botColor = isSimilarColor(hacker.getPixelColor(hackerCoords[0][0].x, hackerCoords[0][0].y), hackerWhitePieceColor) ? 0 : 1;
 
     delay(500);
+    String iaType = ((joueurs.get(0).name == "Humain") ? joueurs.get(1).name : joueurs.get(0).name);
     setHackerPOV(botColor);
-    newLeMaireGame(botColor);
+    newAIGame(botColor, iaType);
     forceCalibrationRestore();
   }
 }
@@ -1269,21 +1261,6 @@ float calcEndGameWeight() {
 
   endGameWeight = constrain(val, 0, 1); //Si val > totalDepart
   return endGameWeight;
-}
-
-float calcTotalDepart() {
-  float sums[] = {0, 0};
-
-  for (int c = 0; c < 2; c++) {
-    for (int i = 0; i < pieces[c].size(); i++) {
-      Piece p = pieces[c].get(i);
-      if (p != rois[c] && p.pieceIndex != PION_INDEX) sums[c] += p.maireEval;
-    }
-  }
-
-  TOTAL_DEPART = (sums[0] + sums[1]) / 2;
-
-  return TOTAL_DEPART;
 }
 
 Piece removePiece(Piece piece) {

@@ -1,7 +1,6 @@
-// TODO :
+/////////////////////////////////////////////////////////////////
 
-// Bon en finale, très bon en finale de pion et de roi
-// Correct en ouverture, très mauvais en milieu de jeu (sécurité du roi)
+// TODO :
 
 // Sécurité du roi + Structures de pion
 // Editeur de position : Trait et roques
@@ -221,6 +220,25 @@ boolean hackerPret = false;
 boolean hackerAPImode = false;
 Point[][] hackerCoords = new Point[8][8];
 Point[][] saveHackerCoords = new Point[8][8];
+
+/////////////////////////////////////////////////////////////////
+
+// Constantes
+
+int CONSTANTE_DE_STOCKFISH = 3;
+float TOTAL_DEPART = 3200.0;
+
+int ROI_INDEX = 0;
+int DAME_INDEX = 1;
+int TOUR_INDEX = 2;
+int FOU_INDEX = 3;
+int CAVALIER_INDEX = 4;
+int PION_INDEX = 5;
+
+int CHESSCOM = 0;
+int LICHESS = 1;
+
+int INITIAL_TOTAL_MAIRE_MATERIAL = 0;
 
 /////////////////////////////////////////////////////////////////
 
@@ -617,7 +635,7 @@ void draw() {
           scanMoveOnBoard();
         }
 
-        if (gameEnded && hackerSansFin && !hackerWaitingToRestart && millis() - timeAtHackerEnd >= timeBeforeHackerRestart) hackStartGame();
+        if (gameEnded && !hackerWaitingToRestart && millis() - timeAtHackerEnd >= timeBeforeHackerRestart) hackStartGame();
         if (hackerWaitingToRestart && millis() - timeAtLastRestartTry >= hackerTestRestartCooldown) {
           handleWaitForRestart();
         }

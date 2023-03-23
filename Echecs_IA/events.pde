@@ -73,6 +73,10 @@ void keyPressed() {
     else if (keyCode == LEFT) rewindBack();
     else if (keyCode == RIGHT) rewindForward();
     else if (key == 'T') test();
+    else if (key == 'r' || key == 'R' && useHacker) {
+      endOnHackerDetect();
+      timeAtHackerEnd = millis();
+    }
 
   } else if (gameState == 3) {
 

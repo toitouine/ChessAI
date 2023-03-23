@@ -652,10 +652,10 @@ class LesMoutons extends IA {
 
   @Override
   void play() {
-    cursor(WAIT);
-    if (nbTour < 5) {
-     if (this.tryPlayingBookMove()) return;
-    }
+    // cursor(WAIT);
+    // if (nbTour < 5) {
+    //  if (this.tryPlayingBookMove()) return;
+    // }
     super.play();
   }
 
