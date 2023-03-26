@@ -24,6 +24,6 @@ Game between two AIs :
 
 <img width="653" alt="ChessAI2" src="https://user-images.githubusercontent.com/107322964/227307818-79daa69f-0130-478e-8d3a-0cdf67ab0d50.png">
 
-Graph of the advantage : 
+Graph of the evaluations : 
 
 <img width="550" alt="ChessAI3" src="https://user-images.githubusercontent.com/107322964/227307901-2e622d7e-1070-4f52-8fdc-b9f39ca50a3b.png">
