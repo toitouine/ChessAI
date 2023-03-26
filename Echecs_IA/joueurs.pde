@@ -99,7 +99,7 @@ class IA {
 
   void play() {
     if (gameEnded || stopSearch) return;
-    cursor(WAIT);
+    if (!MODE_SANS_AFFICHAGE) cursor(WAIT);
 
     // Recherche du meilleur coup
     float posEval;
@@ -454,7 +454,8 @@ class LeMaire extends IA {
 
   @Override
   void play() {
-    cursor(WAIT);
+    if (!MODE_SANS_AFFICHAGE) cursor(WAIT);
+
     if (nbTour < 9) {
      if (this.tryPlayingBookMove()) return;
     }
@@ -652,10 +653,10 @@ class LesMoutons extends IA {
 
   @Override
   void play() {
-    // cursor(WAIT);
-    // if (nbTour < 5) {
-    //  if (this.tryPlayingBookMove()) return;
-    // }
+    if (!MODE_SANS_AFFICHAGE) cursor(WAIT);
+    if (nbTour < 5) {
+     if (this.tryPlayingBookMove()) return;
+    }
     super.play();
   }
 

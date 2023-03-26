@@ -8,7 +8,7 @@
 // Make et Unmake : Jouer (prévisualiser) le coup
 // Handle et Unhandle : Commun aux deux
 
-// 1 = petit roque; 2 = grand roque;  3 = passant; 4 = promotion
+// 1 = petit roque; 2 = grand roque;  3 = en passant; 4 = promotion
 // 5 = dame; 6 = tour; 7 = fou; 8 = cavalier
 
 /////////////////////////////////////////////////////////////////
@@ -27,7 +27,8 @@ class Move {
   float scoreGuess = 0;
 
   // Sauvegardes pour make et unmake
-  int saveRoque, savePRoque, saveGRoque, saveEnPassant;
+  int saveRoque, savePRoque, saveGRoque;
+  Piece[] saveEnPassantArray = new Piece[2];
   Piece savePromo = null;
   Piece tourQuiRoque = null;
 
@@ -61,7 +62,8 @@ class Move {
     this.saveRoque = this.piece.roquable;
     this.savePRoque = this.piece.petitRoquable;
     this.saveGRoque = this.piece.grandRoquable;
-    this.saveEnPassant = this.piece.enPassantable;
+    saveEnPassantArray[0] = currentEnPassantable[0];
+    saveEnPassantArray[1] = currentEnPassantable[1];
     this.savePromo = null;
   }
 
@@ -70,9 +72,8 @@ class Move {
     this.savePieceData();
 
     // En passant
-    if (this.piece.enPassantable == 0 && this.piece.j + ( (this.piece.c == 0) ? -2 : 2 ) == this.j) {
-     this.piece.enPassantable = 1;
-     this.piece.saveTour = nbTour;
+    if (this.piece.pieceIndex == PION_INDEX && this.piece.j + ( (this.piece.c == 0) ? -2 : 2 ) == this.j) {
+     currentEnPassantable[this.piece.c] = this.piece;
     }
 
     // Déplacement et capture
@@ -96,6 +97,12 @@ class Move {
     if (this.piece.roquable != -1) this.piece.roquable = 0;
     else if (this.piece.petitRoquable != -1) this.piece.petitRoquable = this.piece.grandRoquable = 0;
 
+    // Enlève le pion en passant de l'adversaire
+    int opp = (this.piece.c == 0) ? 1 : 0;
+    if (currentEnPassantable[opp] != null) {
+      currentEnPassantable[opp] = null;
+    }
+
     // Variables
     if (really) { if (enPromotion == null) tourDeQui = (tourDeQui == 0) ? 1 : 0; }
     else { tourDeQui = (tourDeQui == 0) ? 1 : 0; }
@@ -111,7 +118,8 @@ class Move {
     if (this.saveRoque != -1) this.piece.roquable = this.saveRoque;
     if (this.savePRoque != -1) this.piece.petitRoquable = this.savePRoque;
     if (this.saveGRoque != -1) this.piece.grandRoquable = this.saveGRoque;
-    if (this.saveEnPassant != -1) this.piece.enPassantable = this.saveEnPassant;
+    currentEnPassantable[0] = saveEnPassantArray[0];
+    currentEnPassantable[1] = saveEnPassantArray[1];
 
     // Coups spéciaux
     if (this.special == 1) { Piece p = grid[this.i-1][this.j].piece; p.setPlace(this.i+1, this.j); }

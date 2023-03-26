@@ -173,6 +173,8 @@ void resetSettingsToDefault() {
   pieces[1].clear();
   rois[0] = null;
   rois[1] = null;
+  currentEnPassantable[0] = null;
+  currentEnPassantable[1] = null;
   piecesToDisplay.clear();
   positionHistory.clear();
   zobristHistory.clear();
@@ -203,6 +205,7 @@ void resetSettingsToDefault() {
   }
 
   // Variables
+  numberOfScan = 0;
   hackerWaitingToRestart = false;
   lastMoveTime = 0;
   deltaTimeMesured = 0;

@@ -147,8 +147,16 @@ void error(String function, String message) {
 // Hacker
 
 void cheat(int c, int fromI, int fromJ, int i, int j, int special) {
-  // Attention 2ème relance : i et j sont inversés !
   deselectAll();
+
+  // Détection du hacker sans fin sur chess.com
+  if (hackerSansFin && hackerSite == CHESSCOM) {
+    if (hackerEndDetected()) {
+      endOnHackerDetect();
+      timeAtHackerEnd = millis();
+      return;
+    }
+  }
 
   // Sauvegarde les coordonnées du curseur
   Point mouse = MouseInfo.getPointerInfo().getLocation();
@@ -165,9 +173,8 @@ void cheat(int c, int fromI, int fromJ, int i, int j, int special) {
   delay(delay);
   click(hackerCoords[j][i].x, hackerCoords[j][i].y);
 
-  if (special == 5) {
-    click(hackerCoords[j][i].x, hackerCoords[j][i].y);
-  }
+  if (special >= 5) delay(20);
+  if (special == 5) click(hackerCoords[j][i].x, hackerCoords[j][i].y);
   else if (special == 6) click(hackerCoords[j][i].x, hackerCoords[j+2*promoDir][i].y);
   else if (special == 7) click(hackerCoords[j][i].x, hackerCoords[j+3*promoDir][i].y);
   else if (special == 8) click(hackerCoords[j][i].x, hackerCoords[j+promoDir][i].y);
@@ -177,6 +184,31 @@ void cheat(int c, int fromI, int fromJ, int i, int j, int special) {
 
   // Déselectionne les pièces au cas où
   deselectAll();
+}
+
+boolean chessComEndDetected() {
+  Color endScreen = hacker.getPixelColor(hackerCoords[3][2].x, hackerCoords[3][2].y);
+  return isSameColor(endScreen, Color.white);
+}
+
+boolean lichessEndDetected() {
+  Point mouse = MouseInfo.getPointerInfo().getLocation();
+  click(hackerCoords[0][0].x, hackerCoords[0][0].y);
+
+  hacker.mouseMove(newgameLocation.x, newgameLocation.y);
+  delay(200);
+
+  if (isSimilarColor(hacker.getPixelColor(newgameLocation.x, newgameLocation.y), endColorLichess)) {
+    click(mouse.x, mouse.y);
+    return true;
+  }
+
+  click(mouse.x, mouse.y);
+  return false;
+}
+
+boolean hackerEndDetected() {
+  return ( (hackerSite == CHESSCOM && chessComEndDetected()) || (hackerSite == LICHESS && lichessEndDetected()) );
 }
 
 Color[][] scanBoard(boolean debugPrint) {
@@ -243,13 +275,16 @@ Move getMoveOnBoard() {
 
 void scanMoveOnBoard() {
   lastHackerScan = millis();
+  numberOfScan++;
 
-  // Détection de la fenêtre de fin sur chess.com
-  Color endScreen = hacker.getPixelColor(hackerCoords[3][2].x, hackerCoords[3][2].y);
-  if (hackerSansFin && isSameColor(endScreen, Color.white)) {
-    endOnHackerDetect();
-    timeAtHackerEnd = millis();
-    return;
+  // Détection du hacker sans fin
+  if (hackerSansFin && numberOfScan >= scansBetweenEndDetect) {
+    numberOfScan = 0;
+    if (hackerEndDetected()) {
+      endOnHackerDetect();
+      timeAtHackerEnd = millis();
+      return;
+    }
   }
 
   Move sm = getMoveOnBoard();
@@ -264,7 +299,7 @@ void scanMoveOnBoard() {
   }
 }
 
-// Tolerance représente nombre d'erreurs autorisé et really si on confond les deux types de pièce
+// Tolerance représente nombre d'erreurs autorisé et confondu si on confond les deux types de pièce
 boolean verifyCalibration(int tolerance, boolean confondu) {
   Color B = hackerWhitePieceColor;
   Color N = hackerBlackPieceColor;
@@ -401,6 +436,14 @@ void restoreCalibrationSaves() {
   }
 
   hackerPret = true;
+  if (MODE_SANS_AFFICHAGE) {
+    surface.setSize(150, 150);
+    surface.setLocation(displayWidth-150, 0);
+    hacker.mouseMove(displayWidth-75, 120);
+    sa.hide();
+    ta.hide();
+    ga.hide();
+  }
 
   println("Sauvegardes restaurées");
 }
@@ -431,6 +474,14 @@ void forceCalibrationRestore() {
   }
 
   hackerPret = true;
+  if (MODE_SANS_AFFICHAGE) {
+    surface.setSize(150, 150);
+    surface.setLocation(displayWidth-150, 0);
+    hacker.mouseMove(displayWidth-75, 120);
+    sa.hide();
+    ta.hide();
+    ga.hide();
+  }
 
   alert("Sauvegarde forcée", 1500);
   println("Restauration forcée des sauvegardes");
@@ -501,6 +552,14 @@ void calibrerHacker() {
   }
 
   hackerPret = true;
+  if (MODE_SANS_AFFICHAGE) {
+    surface.setSize(150, 150);
+    surface.setLocation(displayWidth-150, 0);
+    hacker.mouseMove(displayWidth-75, 120);
+    sa.hide();
+    ta.hide();
+    ga.hide();
+  }
 
   println();
   println(">>> Hacker calibré avec succès (ou pas)");

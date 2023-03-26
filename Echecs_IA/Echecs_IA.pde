@@ -2,12 +2,11 @@
 
 // TODO :
 
-// Sécurité du roi + Structures de pion
 // Editeur de position : Trait et roques
 // Bouton d'abandon
 // Bouton d'aide
-// GUI class et héritage
-// Profondeurs dans le graphique
+// Anti annulation de partie
+// Mode sans affichage
 
 /////////////////////////////////////////////////////////////////
 
@@ -106,6 +105,7 @@ int[] materials = new int[2];
 
 ArrayList<Piece> piecesToDisplay = new ArrayList<Piece>();
 ArrayList<Piece>[] pieces = new ArrayList[2];
+Piece[] currentEnPassantable = {null, null};
 ArrayList<Joueur> joueurs = new ArrayList<Joueur>();
 ArrayList<Button> promoButtons = new ArrayList<Button>();
 
@@ -208,12 +208,11 @@ Color saveWhitePieceColor, saveBlackPieceColor;
 long lastHackerScan = 0;
 boolean hackerWaitingToRestart = false;
 int timeAtLastRestartTry = 0;
-int hackerTestRestartCooldown = 750;
-int hackerScanCooldown = 100;
 int currentHackerPOV = 0;
 int timeAtHackerEnd = 0;
 int lastMoveTime = 0;
 int deltaTimeMesured = 0;
+int numberOfScan = 0;
 boolean isNextMoveRestranscrit = false;
 boolean useHacker = false;
 boolean hackerPret = false;
@@ -579,23 +578,7 @@ void draw() {
     // Actualise "block playing", qui empêche éventuellement un joueur de jouer
     updateBlockPlaying();
 
-    // Titre de la fenêtre
-    surface.setTitle(name + " - " + j1 + " (" + ((joueurs.get(0).useIterativeDeepening) ? "ID" : j1depth) +  ") contre " + j2 + " (" + ((joueurs.get(1).useIterativeDeepening) ? "ID" : j2depth) + ")" + ((infos == "") ? "" : " - ") + infos);
-
-    updateBoard();
-    drawPlayersInfos();
-    for (Arrow b : bookArrows) b.show();
-    if (showVariante) {
-      for (Arrow arrow : varianteArrows) arrow.show();
-    }
-
-    if (enPromotion != null) {
-      fill(220, 220, 220, 200);
-      rectMode(CORNER);
-      rect(offsetX, offsetY, cols*w, rows*w);
-      showPromoButtons();
-    }
-
+    // Gestion du joueur
     if (playEngineMoveNextFrame) { joueurs.get(tourDeQui).play(); playEngineMoveNextFrame = false; engineToPlay = false; }
     if (engineToPlay) { playEngineMoveNextFrame = true; }
 
@@ -606,13 +589,48 @@ void draw() {
       }
     }
 
+    // Hacker
+    if (useHacker && hackerPret  && !hackerAPImode) {
+      if (play && !gameEnded && enPromotion == null && millis() - lastHackerScan >= hackerScanCooldown) {
+        deltaTimeMesured = millis() - lastMoveTime;
+        scanMoveOnBoard();
+      }
+
+      if (gameEnded && !hackerWaitingToRestart && millis() - timeAtHackerEnd >= timeBeforeHackerRestart) hackStartGame();
+      if (hackerWaitingToRestart && millis() - timeAtLastRestartTry >= hackerTestRestartCooldown) {
+        handleWaitForRestart();
+      }
+    }
+
+    if (MODE_SANS_AFFICHAGE && useHacker && hackerPret) return;
+
+    // Affichages
+    surface.setTitle(name + " - " + j1 + " (" + ((joueurs.get(0).useIterativeDeepening) ? "ID" : j1depth) +  ") contre " + j2 + " (" + ((joueurs.get(1).useIterativeDeepening) ? "ID" : j2depth) + ")" + ((infos == "") ? "" : " - ") + infos);
+
+    // Plateau
+    updateBoard();
+    drawPlayersInfos();
+    for (Arrow b : bookArrows) b.show();
+    if (showVariante) {
+      for (Arrow arrow : varianteArrows) arrow.show();
+    }
+
+    // Promotion
+    if (enPromotion != null) {
+      fill(220, 220, 220, 200);
+      rectMode(CORNER);
+      rect(offsetX, offsetY, cols*w, rows*w);
+      showPromoButtons();
+    }
+
+    // Icones
     for (int i = 0; i < iconButtons.size(); i++) {
       Button b = iconButtons.get(i);
       if (i == 7) b.show(play ? 0 : 1); // Play / Pause
       else b.show(0);
     }
 
-    // Affichage de l'écran de fin de partie
+    // Écran de fin de partie
     if (!disableEndScreen && gameEnded && millis() - timeAtEnd > timeBeforeEndDisplay) {
       float dy = targetEndScreenY - yEndScreen;
       yEndScreen += dy * endScreenEasing;
@@ -626,23 +644,10 @@ void draw() {
       rematchButton.show();
     }
 
-    // Hacker
-    if (useHacker) {
-      if (!hackerPret) { drawHackerPage(); }
-      else if (!hackerAPImode) {
-        if (play && !gameEnded && enPromotion == null && millis() - lastHackerScan >= hackerScanCooldown) {
-          deltaTimeMesured = millis() - lastMoveTime;
-          scanMoveOnBoard();
-        }
+    // Page d'accueil du hacker
+    if (useHacker && !hackerPret) drawHackerPage();
 
-        if (gameEnded && !hackerWaitingToRestart && millis() - timeAtHackerEnd >= timeBeforeHackerRestart) hackStartGame();
-        if (hackerWaitingToRestart && millis() - timeAtLastRestartTry >= hackerTestRestartCooldown) {
-          handleWaitForRestart();
-        }
-      }
-    }
-
-    // Affichages
+    // Messages
     if (alert != "") displayAlert();
     if (infoBox != "") drawInfoBox(infoBox);
     if (messageMouton != "") displayMoutonAlert();

@@ -9,8 +9,6 @@ class Piece {
   boolean dragging;
 
   int roquable = -1, petitRoquable = -1, grandRoquable = -1;
-  int enPassantable = -1;
-  float saveTour;
 
   int maireEval; //Matériel
   int loicEval;
@@ -22,10 +20,6 @@ class Piece {
   }
 
   void show() {
-    if (this.enPassantable == 1 && nbTour == this.saveTour + 1) {
-      this.enPassantable = 0;
-    }
-
     imageMode(CENTER);
     fill(0);
     noStroke();
@@ -328,7 +322,6 @@ class Pion extends Piece {
     this.c = c_;
     this.type = "pion";
     this.pieceIndex = PION_INDEX;
-    this.enPassantable = 0;
 
     // Index unique pour chaque type de pièce
     this.zobristIndex = (c == 0) ? 0 : 6;
@@ -727,14 +720,14 @@ ArrayList getPawnMoves(Piece p, boolean engine) {
     if (p.j == 3) {
       if (p.i - 1 >= 0) { //à gauche
         if (grid[p.i-1][p.j].piece != null) {
-          if (grid[p.i-1][p.j].piece.enPassantable == 1) {
+          if (grid[p.i-1][p.j].piece == currentEnPassantable[grid[p.i-1][p.j].piece.c]) {
             moves.add(new Move(p, p.i-1, p.j-1, grid[p.i-1][p.j].piece, 3));
           }
         }
       }
       if (p.i + 1 < cols) { //à droite
         if (grid[p.i+1][p.j].piece != null) {
-          if (grid[p.i+1][p.j].piece.enPassantable == 1) {
+          if (grid[p.i+1][p.j].piece == currentEnPassantable[grid[p.i+1][p.j].piece.c]) {
             moves.add(new Move(p, p.i+1, p.j-1, grid[p.i+1][p.j].piece, 3));
           }
         }
@@ -810,14 +803,14 @@ ArrayList getPawnMoves(Piece p, boolean engine) {
     if (p.j == 4) {
       if (p.i - 1 >= 0) { //à gauche
         if (grid[p.i-1][p.j].piece != null) {
-          if (grid[p.i-1][p.j].piece.enPassantable == 1) {
+          if (grid[p.i-1][p.j].piece == currentEnPassantable[grid[p.i-1][p.j].piece.c]) {
             moves.add(new Move(p, p.i-1, p.j+1, grid[p.i-1][p.j].piece, 3));
           }
         }
       }
       if (p.i + 1 < cols) { //à droite
         if (grid[p.i+1][p.j].piece != null) {
-          if (grid[p.i+1][p.j].piece.enPassantable == 1) {
+          if (grid[p.i+1][p.j].piece == currentEnPassantable[grid[p.i+1][p.j].piece.c]) {
             moves.add(new Move(p, p.i+1, p.j+1, grid[p.i+1][p.j].piece, 3));
           }
         }
@@ -1123,14 +1116,14 @@ ArrayList getQuietPawnMoves(Piece p, int colorToDetect, boolean engine) {
     if (p.j == 3) {
       if (p.i - 1 >= 0) { //à gauche
         if (grid[p.i-1][p.j].piece != null) {
-          if (grid[p.i-1][p.j].piece.enPassantable == 1) {
+          if (grid[p.i-1][p.j].piece == currentEnPassantable[grid[p.i-1][p.j].piece.c]) {
             moves.add(new Move(p, p.i-1, p.j-1, grid[p.i-1][p.j].piece, 3));
           }
         }
       }
       if (p.i + 1 < cols) { //à droite
         if (grid[p.i+1][p.j].piece != null) {
-          if (grid[p.i+1][p.j].piece.enPassantable == 1) {
+          if (grid[p.i+1][p.j].piece == currentEnPassantable[grid[p.i+1][p.j].piece.c]) {
             moves.add(new Move(p, p.i+1, p.j-1, grid[p.i+1][p.j].piece, 3));
           }
         }
@@ -1184,14 +1177,14 @@ ArrayList getQuietPawnMoves(Piece p, int colorToDetect, boolean engine) {
     if (p.j == 4) {
       if (p.i - 1 >= 0) { //à gauche
         if (grid[p.i-1][p.j].piece != null) {
-          if (grid[p.i-1][p.j].piece.enPassantable == 1) {
+          if (grid[p.i-1][p.j].piece == currentEnPassantable[grid[p.i-1][p.j].piece.c]) {
             moves.add(new Move(p, p.i-1, p.j+1, grid[p.i-1][p.j].piece, 3));
           }
         }
       }
       if (p.i + 1 < cols) { //à droite
         if (grid[p.i+1][p.j].piece != null) {
-          if (grid[p.i+1][p.j].piece.enPassantable == 1) {
+          if (grid[p.i+1][p.j].piece == currentEnPassantable[grid[p.i+1][p.j].piece.c]) {
             moves.add(new Move(p, p.i+1, p.j+1, grid[p.i+1][p.j].piece, 3));
           }
         }

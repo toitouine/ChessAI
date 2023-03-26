@@ -264,6 +264,8 @@ void printHelpMenu() {
   println(" L        | En partie / Editeur | Épingler/Désépingler");
   println(" P        | En partie           | Afficher la PGN");
   println(" P        | Éditeur             | Coller le HTML (chess.com) pour récupérer la position");
+  println(" Q (MAJ)  | En partie           | Quitter la partie / Revenir à l'accueil");
+  println(" R        | En partie + Hacker  | Forcer la détection de fin de partie du hacker sans fin");
   println(" S        | En partie           | Lancer perft 5");
   println(" T        | En partie           | Fonction de tests");
   println(" V        | En partie           | Afficher les variantes");
@@ -295,7 +297,8 @@ void perft(int d) {
     numPos = 0;
     m.unmake();
   }
-  println("Total : " + total);
+  println("Total    : " + total);
+  // println("Expected : 4865609");
 }
 
 void runCaptureSearch(int d) {

@@ -1,16 +1,9 @@
-// Test OrderMoves vecteur vitesse :
-
-// Recherche sur position départ avec OrderMoves, sans ID, profondeur 5 avec alpha beta : 8 394 (0,99), 113 ms
-// Recherche sur position départ avec OrderMoves, sans ID, profondeur 4 sans alpha beta : 128 856 (0,00) 10131 ms
-// Recherche sur position départ sans OrderMoves, sans ID, profondeur 5 avec alpha beta : 106 108 (0,23) 514 ms
-// Recherche sur position départ sans OrderMoves, sans ID, profondeur 4 sans alpha beta : 138 928 (0,00) 9494 ms
-
 void test() {
-   //Move move = new Move(grid[1][7].piece, 2, 5, null, 0);
+  // Move move = new Move(grid[1][7].piece, 2, 5, null, 0);
   // Move move2 = new Move(grid[4][6].piece, 4, 4, null, 0);
   // Move move = new Move(grid[4][4].piece, 3, 3, grid[3][3].piece, 0);
   // Move move = new Move(grid[5][5].piece, 5, 2, grid[5][2].piece, 0);
-   //LeMaire m = new LeMaire(1, 2, 3, true);
+  // LeMaire m = new LeMaire(1, 2, 3, true);
 
    long count = 0;
    long numTest = 1000000;
@@ -66,6 +59,7 @@ void keyPressed() {
     else if (key == 's' || key == 'S') runPerft();
     else if (key == 'd' || key == 'D') toggleSearchController();
     else if (key == 'b' || key == 'B') highlightBook();
+    else if (key == 'Q') forceQuit();
     else if (keyCode == 'v' || keyCode == 'V') toggleVariantes();
     else if (keyCode == 'c' || keyCode == 'C') savePGN();
     else if (keyCode == UP) delayUp();
@@ -73,7 +67,7 @@ void keyPressed() {
     else if (keyCode == LEFT) rewindBack();
     else if (keyCode == RIGHT) rewindForward();
     else if (key == 'T') test();
-    else if (key == 'r' || key == 'R' && useHacker) {
+    else if ((key == 'r' || key == 'R') && useHacker && hackerPret) {
       endOnHackerDetect();
       timeAtHackerEnd = millis();
     }
@@ -97,6 +91,8 @@ void keyPressed() {
 }
 
 void mouseReleased() {
+  if (MODE_SANS_AFFICHAGE && useHacker && hackerPret) return;
+
   if (gameState == 1) {
     if (pieceSelectionne != null && enPromotion == null) {
       int i =  getGridI();
@@ -173,6 +169,8 @@ void mouseReleased() {
 }
 
 void mouseDragged() {
+  if (MODE_SANS_AFFICHAGE && useHacker && hackerPret) return;
+
   if (pieceSelectionne != null) {
     pieceSelectionne.dragging = true;
     cursor(HAND);
@@ -237,6 +235,8 @@ void mouseDragged() {
 }
 
 void mousePressed() {
+  if (MODE_SANS_AFFICHAGE && useHacker && hackerPret) return;
+
   if (gameState == 1) {
 
     // Boutons de revanche
@@ -391,6 +391,8 @@ void mousePressed() {
 }
 
 void mouseMoved() {
+  if (MODE_SANS_AFFICHAGE && useHacker && hackerPret) return;
+
   if (gameState == 1) {
 
     // Button rematch
