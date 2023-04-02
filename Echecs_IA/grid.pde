@@ -62,10 +62,6 @@ class Cell {
       fill(224, 76, 56, 200);
       rect(this.x, this.y, w, w);
     }
-    if (this.piece != null && this.piece == currentEnPassantable[this.piece.c]) {
-      fill(224, 76, 56, 200);
-      rect(this.x, this.y, w, w);
-    }
 
     if (this.possibleMove != null && this.possibleMove.capture != null) {
       noFill();

@@ -5,8 +5,8 @@
 // Editeur de position : Trait et roques
 // Bouton d'abandon
 // Bouton d'aide
-// Anti annulation de partie
-// Mode sans affichage
+// (Recherche de coup sur autre thread)
+// Héritage : boutons et gui
 
 /////////////////////////////////////////////////////////////////
 

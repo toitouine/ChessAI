@@ -62,6 +62,7 @@ class Joueur {
   void play() {
     if (name == "Humain") return;
     player.play();
+    // thread("playPlayer");
   }
 
   float getScore() {
@@ -80,6 +81,10 @@ class Joueur {
     totalScores[this.index] += add;
   }
 }
+
+// void playPlayer() {
+//   joueurs.get(tourDeQui).player.play();
+// }
 
 /////////////////////////////////////////////////////////////////
 
