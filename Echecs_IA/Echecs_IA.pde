@@ -5,8 +5,6 @@
 // Editeur de position : Trait et roques
 // Bouton d'abandon
 // Bouton d'aide
-// (Recherche de coup sur autre thread)
-// Héritage : boutons et gui
 
 /////////////////////////////////////////////////////////////////
 
@@ -23,6 +21,29 @@ import processing.awt.PSurfaceAWT;
 import processing.awt.PSurfaceAWT.SmoothCanvas;
 import processing.sound.*;
 import controlP5.*;
+
+/////////////////////////////////////////////////////////////////
+
+// Constantes
+
+int CONSTANTE_DE_STOCKFISH = 3;
+float TOTAL_DEPART = 3200.0;
+
+int ROI_INDEX = 0;
+int DAME_INDEX = 1;
+int TOUR_INDEX = 2;
+int FOU_INDEX = 3;
+int CAVALIER_INDEX = 4;
+int PION_INDEX = 5;
+
+int CHESSCOM = 0;
+int LICHESS = 1;
+
+int MENU = 0;
+int GAME = 1;
+int EDITOR = 2;
+
+int INITIAL_TOTAL_MAIRE_MATERIAL = 0;
 
 /////////////////////////////////////////////////////////////////
 
@@ -103,16 +124,18 @@ int[] materials = new int[2];
 
 // Interfaces, boutons et arraylist
 
+ArrayList<Button> allButtons = new ArrayList<Button>(); // ArrayList de tous les boutons (et toggles) de l'interface
+
 ArrayList<Piece> piecesToDisplay = new ArrayList<Piece>();
 ArrayList<Piece>[] pieces = new ArrayList[2];
 Piece[] currentEnPassantable = {null, null};
 ArrayList<Joueur> joueurs = new ArrayList<Joueur>();
-ArrayList<Button> promoButtons = new ArrayList<Button>();
 
+ArrayList<PromotionButton> promoButtons = new ArrayList<PromotionButton>();
 ArrayList<ToggleButton> toggles1 = new ArrayList<ToggleButton>();
 ArrayList<ToggleButton> toggles2 = new ArrayList<ToggleButton>();
-ArrayList<Button> iconButtons = new ArrayList<Button>();
-ArrayList<Button> editorIconButtons = new ArrayList<Button>();
+ArrayList<ShortcutButton> iconButtons = new ArrayList<ShortcutButton>();
+ArrayList<ShortcutButton> editorIconButtons = new ArrayList<ShortcutButton>();
 ArrayList<TextButton> hubButtons = new ArrayList<TextButton>();
 ArrayList<ButtonFEN> savedFENSbuttons = new ArrayList<ButtonFEN>();
 ArrayList<DragAndDrop>[] addPiecesButtons = new ArrayList[2];
@@ -128,8 +151,8 @@ ArrayList<Move> movesHistory = new ArrayList<Move>();
 ArrayList<Long> zobristHistory = new ArrayList<Long>();
 
 CircleToggleButton addPiecesColorSwitch;
-Button positionEditor;
-Button hackerButton;
+ImageButton positionEditor;
+ImageButton hackerButton;
 Piece pieceSelectionne = null;
 Piece enPromotion = null;
 TextButton rematchButton;
@@ -155,7 +178,6 @@ String pgn = "";
 boolean play = true;
 boolean disableEndScreen = false;
 boolean engineToPlay = false;
-boolean playEngineMoveNextFrame = false;
 boolean stopSearch = false;
 boolean rewind = false;
 boolean showGraph = false;
@@ -165,11 +187,10 @@ boolean showSearchController = false;
 boolean showParameters = false;
 boolean blockPlaying = false;
 boolean useTime = false;
-int gameState = 0;
+int gameState = MENU;
 int winner = -1;
 int timeAtEnd = 0;
 int rewindCount = 0;
-int requestToRestart = -1;
 long rngState = 1804289383;
 String endReason = "";
 String alert = "";
@@ -219,25 +240,6 @@ boolean hackerPret = false;
 boolean hackerAPImode = false;
 Point[][] hackerCoords = new Point[8][8];
 Point[][] saveHackerCoords = new Point[8][8];
-
-/////////////////////////////////////////////////////////////////
-
-// Constantes
-
-int CONSTANTE_DE_STOCKFISH = 3;
-float TOTAL_DEPART = 3200.0;
-
-int ROI_INDEX = 0;
-int DAME_INDEX = 1;
-int TOUR_INDEX = 2;
-int FOU_INDEX = 3;
-int CAVALIER_INDEX = 4;
-int PION_INDEX = 5;
-
-int CHESSCOM = 0;
-int LICHESS = 1;
-
-int INITIAL_TOTAL_MAIRE_MATERIAL = 0;
 
 /////////////////////////////////////////////////////////////////
 
@@ -452,55 +454,69 @@ void setup() {
   }
 
   // Initialise les boutons et interfaces
-  hubButtons.add(new TextButton(width/2 - 190, 480, 380, 75, "Nouvelle partie", 30, 10));
-  hubButtons.add(new TextButton(width-110, height-40, 100, 30, "Coller FEN", 18, 8)); hubButtons.get(1).setColors(#1d1c1a, #ffffff);
-  hubButtons.add(new TextButton(width-220, height-40, 100, 30, "Copier FEN", 18, 8)); hubButtons.get(2).setColors(#1d1c1a, #ffffff);
+  Condition hubCondition = new Condition() { public boolean c() { return gameState == MENU; } };
+  hubButtons.add(new TextButton(width/2 - 190, 480, 380, 75, "Nouvelle partie", 30, 10, "verifStartGame", hubCondition));
+  hubButtons.add(new TextButton(width-110, height-40, 100, 30, "Coller FEN", 18, 8, "pasteFEN", hubCondition)); hubButtons.get(1).setColors(#1d1c1a, #ffffff);
+  hubButtons.add(new TextButton(width-220, height-40, 100, 30, "Copier FEN", 18, 8, "copyFEN", hubCondition)); hubButtons.get(2).setColors(#1d1c1a, #ffffff);
+  allButtons.addAll(hubButtons);
 
-  promoButtons.add(new Button(0.25*w + offsetX, 3.25*w + offsetY, 1.5*w, imageArrayB[1], imageArrayN[1]));
-  promoButtons.add(new Button(2.25*w + offsetX, 3.25*w + offsetY, 1.5*w, imageArrayB[2], imageArrayN[2]));
-  promoButtons.add(new Button(4.25*w + offsetX, 3.25*w + offsetY, 1.5*w, imageArrayB[3], imageArrayN[3]));
-  promoButtons.add(new Button(6.25*w + offsetX, 3.25*w + offsetY, 1.5*w, imageArrayB[4], imageArrayN[4]));
+  Condition promoCondition = new Condition() { public boolean c() { return (gameState == GAME && !blockPlaying && enPromotion != null && joueurs.get(tourDeQui).name == "Humain"); } };
+  promoButtons.add(new PromotionButton(0.25*w + offsetX, 3.25*w + offsetY, 1.5*w, imageArrayB[1], imageArrayN[1], 0, promoCondition));
+  promoButtons.add(new PromotionButton(2.25*w + offsetX, 3.25*w + offsetY, 1.5*w, imageArrayB[2], imageArrayN[2], 1, promoCondition));
+  promoButtons.add(new PromotionButton(4.25*w + offsetX, 3.25*w + offsetY, 1.5*w, imageArrayB[3], imageArrayN[3], 2, promoCondition));
+  promoButtons.add(new PromotionButton(6.25*w + offsetX, 3.25*w + offsetY, 1.5*w, imageArrayB[4], imageArrayN[4], 3, promoCondition));
+  allButtons.addAll(promoButtons);
 
-  toggles1.add(new ToggleButton(40, 80, 150, stockfish, "Stockfish"));
-  toggles1.add(new ToggleButton(230, 80, 150, antoine, "Antoine"));
-  toggles1.add(new ToggleButton(420, 80, 150, loic, "Loic"));
-  toggles1.add(new ToggleButton(610, 80, 150, lesmoutons, "LesMoutons"));
-  toggles1.add(new ToggleButton(800, 80, 150, lemaire, "LeMaire"));
-  toggles1.add(new ToggleButton(990, 80, 150, human, "Humain"));
+  toggles1.add(new ToggleButton(40, 80, 150, stockfish, "Stockfish", 0, hubCondition));
+  toggles1.add(new ToggleButton(230, 80, 150, antoine, "Antoine", 0, hubCondition));
+  toggles1.add(new ToggleButton(420, 80, 150, loic, "Loic", 0, hubCondition));
+  toggles1.add(new ToggleButton(610, 80, 150, lesmoutons, "LesMoutons", 0, hubCondition));
+  toggles1.add(new ToggleButton(800, 80, 150, lemaire, "LeMaire", 0, hubCondition));
+  toggles1.add(new ToggleButton(990, 80, 150, human, "Humain", 0, hubCondition));
+  allButtons.addAll(toggles1);
 
-  toggles2.add(new ToggleButton(40, 290, 150, stockfish, "Stockfish"));
-  toggles2.add(new ToggleButton(230, 290, 150, antoine, "Antoine"));
-  toggles2.add(new ToggleButton(420, 290, 150, loic, "Loic"));
-  toggles2.add(new ToggleButton(610, 290, 150, lesmoutons, "LesMoutons"));
-  toggles2.add(new ToggleButton(800, 290, 150, lemaire, "LeMaire"));
-  toggles2.add(new ToggleButton(990, 290, 150, human, "Humain"));
+  toggles2.add(new ToggleButton(40, 290, 150, stockfish, "Stockfish", 1, hubCondition));
+  toggles2.add(new ToggleButton(230, 290, 150, antoine, "Antoine", 1, hubCondition));
+  toggles2.add(new ToggleButton(420, 290, 150, loic, "Loic", 1, hubCondition));
+  toggles2.add(new ToggleButton(610, 290, 150, lesmoutons, "LesMoutons", 1, hubCondition));
+  toggles2.add(new ToggleButton(800, 290, 150, lemaire, "LeMaire", 1, hubCondition));
+  toggles2.add(new ToggleButton(990, 290, 150, human, "Humain", 1, hubCondition));
+  allButtons.addAll(toggles2);
 
-  addPiecesColorSwitch = new CircleToggleButton(offsetX/2, (offsetY+w/2 + w*6) + 70, w/1.3);
-  positionEditor = new Button(width-55, 10, 50, chess, chess);
-  hackerButton = new Button(width-100, 11, 40, bot, bot);
-  rematchButton = new TextButton(offsetX - offsetX/1.08, offsetY+4*w-29, offsetX-2*(offsetX - offsetX/1.08), 24, "Revanche", 15, 3);
+  Condition buttonEditorCondition = new Condition() { public boolean c() { return (gameState == EDITOR && !showParameters && !showSavedPositions); } };
+  addPiecesColorSwitch = new CircleToggleButton(offsetX/2, (offsetY+w/2 + w*6) + 70, w/1.3, "switchAddPieceColor", buttonEditorCondition);
+  positionEditor = new ImageButton(width-55, 10, 50, 50, 0, #ffffff, chess, true, "startEditor", hubCondition);
+  hackerButton = new ImageButton(width-100, 11, 40, 40, 0, #ffffff, bot, true, "toggleUseHacker", hubCondition);
+  hackerButton.display = false;
+  allButtons.add(addPiecesColorSwitch);
+  allButtons.add(positionEditor);
+  allButtons.add(hackerButton);
+
+  Condition endButtons = new Condition() { public boolean c() { return(gameState == GAME && gameEnded && !useHacker && !hackerPret); } };
+  rematchButton = new TextButton(offsetX - offsetX/1.08, offsetY+4*w-29, offsetX-2*(offsetX - offsetX/1.08), 24, "Revanche", 15, 3, "rematch", endButtons);
   rematchButton.setColors(#1d1c1a, #ffffff);
-  newGameButton = new TextButton(offsetX - offsetX/1.08, offsetY+4*w+5, offsetX-2*(offsetX - offsetX/1.08), 24, "Menu", 15, 3);
+  newGameButton = new TextButton(offsetX - offsetX/1.08, offsetY+4*w+5, offsetX-2*(offsetX - offsetX/1.08), 24, "Menu", 15, 3, "newGame", endButtons);
   newGameButton.setColors(#1d1c1a, #ffffff);
+  allButtons.add(rematchButton);
+  allButtons.add(newGameButton);
 
+  Condition timeCondition = new Condition() { public boolean c() { return (gameState == MENU && timeControl); } };
   timeButtons[0] = new ArrayList<TimeButton>();
   timeButtons[1] = new ArrayList<TimeButton>();
-  timeButtons[0].add(new TimeButton(37, 472, 48, 11, 5, 0, 0, 0, #f0f0f0, #26211b, #d1cfcf, true));
-  timeButtons[0].add(new TimeButton(86, 472, 49, 11, 0, 5, 0, 0, #f0f0f0, #26211b, #d1cfcf, true));
-  timeButtons[0].add(new TimeButton(142, 472, 49, 11, 5, 5, 0, 0, #f0f0f0, #26211b, #d1cfcf, true));
-  timeButtons[0].add(new TimeButton(37, 533, 48, 10, 0, 0, 0, 5, #f0f0f0, #26211b, #d1cfcf, false));
-  timeButtons[0].add(new TimeButton(86, 533, 49, 10, 0, 0, 5, 0, #f0f0f0, #26211b, #d1cfcf, false));
-  timeButtons[0].add(new TimeButton(142, 533, 49, 10, 0, 0, 5, 5, #f0f0f0, #26211b, #d1cfcf, false));
-  timeButtons[1].add(new TimeButton(227, 472, 48, 10, 5, 0, 0, 0, #26211b, #f0f0f0, #2d2d2a, true));
-  timeButtons[1].add(new TimeButton(276, 472, 49, 10, 0, 5, 0, 0, #26211b, #f0f0f0, #2d2d2a, true));
-  timeButtons[1].add(new TimeButton(332, 472, 49, 10, 5, 5, 0, 0, #26211b, #f0f0f0, #2d2d2a, true));
-  timeButtons[1].add(new TimeButton(227, 533, 48, 10, 0, 0, 0, 5, #26211b, #f0f0f0, #2d2d2a, false));
-  timeButtons[1].add(new TimeButton(276, 533, 49, 10, 0, 0, 5, 0, #26211b, #f0f0f0, #2d2d2a, false));
-  timeButtons[1].add(new TimeButton(332, 533, 49, 10, 0, 0, 5, 5, #26211b, #f0f0f0, #2d2d2a, false));
-
-  presetButtons.add(new ImageButton(width-272, 465, 70, 70, 5, #272522, loadImage("icons/rapid.png")));
-  presetButtons.add(new ImageButton(width-177, 465, 70, 70, 5, #272522, loadImage("icons/blitz.png")));
-  presetButtons.add(new ImageButton(width-82, 465, 70, 70, 5, #272522, loadImage("icons/bullet.png")));
+  timeButtons[0].add(new TimeButton(37, 472, 48, 11, 5, 0, 0, 0, #f0f0f0, #26211b, #d1cfcf, true, timeCondition));
+  timeButtons[0].add(new TimeButton(86, 472, 49, 11, 0, 5, 0, 0, #f0f0f0, #26211b, #d1cfcf, true, timeCondition));
+  timeButtons[0].add(new TimeButton(142, 472, 49, 11, 5, 5, 0, 0, #f0f0f0, #26211b, #d1cfcf, true, timeCondition));
+  timeButtons[0].add(new TimeButton(37, 533, 48, 10, 0, 0, 0, 5, #f0f0f0, #26211b, #d1cfcf, false, timeCondition));
+  timeButtons[0].add(new TimeButton(86, 533, 49, 10, 0, 0, 5, 0, #f0f0f0, #26211b, #d1cfcf, false, timeCondition));
+  timeButtons[0].add(new TimeButton(142, 533, 49, 10, 0, 0, 5, 5, #f0f0f0, #26211b, #d1cfcf, false, timeCondition));
+  timeButtons[1].add(new TimeButton(227, 472, 48, 10, 5, 0, 0, 0, #26211b, #f0f0f0, #2d2d2a, true, timeCondition));
+  timeButtons[1].add(new TimeButton(276, 472, 49, 10, 0, 5, 0, 0, #26211b, #f0f0f0, #2d2d2a, true, timeCondition));
+  timeButtons[1].add(new TimeButton(332, 472, 49, 10, 5, 5, 0, 0, #26211b, #f0f0f0, #2d2d2a, true, timeCondition));
+  timeButtons[1].add(new TimeButton(227, 533, 48, 10, 0, 0, 0, 5, #26211b, #f0f0f0, #2d2d2a, false, timeCondition));
+  timeButtons[1].add(new TimeButton(276, 533, 49, 10, 0, 0, 5, 0, #26211b, #f0f0f0, #2d2d2a, false, timeCondition));
+  timeButtons[1].add(new TimeButton(332, 533, 49, 10, 0, 0, 5, 5, #26211b, #f0f0f0, #2d2d2a, false, timeCondition));
+  allButtons.addAll(timeButtons[0]);
+  allButtons.addAll(timeButtons[1]);
 
   for (int i = 0; i < timeButtons.length; i++) {
     for (int j = 0; j < timeButtons[i].size(); j++) {
@@ -508,29 +524,40 @@ void setup() {
     }
   }
 
+  presetButtons.add(new ImageButton(width-272, 465, 70, 70, 5, #272522, loadImage("icons/rapid.png"), false, "rapidPreset", hubCondition));
+  presetButtons.add(new ImageButton(width-177, 465, 70, 70, 5, #272522, loadImage("icons/blitz.png"), false, "blitzPreset", hubCondition));
+  presetButtons.add(new ImageButton(width-82, 465, 70, 70, 5, #272522, loadImage("icons/bullet.png"), false, "bulletPreset", hubCondition));
+  allButtons.addAll(presetButtons);
+
   // Drag and drops
   addPiecesButtons[0] = new ArrayList<DragAndDrop>();
   for (int i = 0; i < 6; i++) {
-    addPiecesButtons[0].add(new DragAndDrop(offsetX/2, (offsetY+w/2 + w*i) + i*12.5, w, w, imageArrayB[i], i));
+    addPiecesButtons[0].add(new DragAndDrop(offsetX/2, (offsetY+w/2 + w*i) + i*12.5, w, w, imageArrayB[i], i, buttonEditorCondition));
   }
+  allButtons.addAll(addPiecesButtons[0]);
   addPiecesButtons[1] = new ArrayList<DragAndDrop>();
   for (int i = 0; i < 6; i++) {
-    addPiecesButtons[1].add(new DragAndDrop(offsetX/2, (offsetY+w/2 + w*i) + i*12.5, w, w, imageArrayN[i], i + 6));
+    addPiecesButtons[1].add(new DragAndDrop(offsetX/2, (offsetY+w/2 + w*i) + i*12.5, w, w, imageArrayN[i], i + 6, buttonEditorCondition));
   }
+  allButtons.addAll(addPiecesButtons[1]);
 
   // Icones de la partie
+  Condition iconCondition = new Condition() { public boolean c() { return gameState == GAME; } };
   int[] numSc1 = {0, 1, 2, 3, 4, 5, 6, 7, 16, 10};
   for (int i = 0; i < icons.length; i++) {
-    iconButtons.add(new Button(edgeSpacing + i*iconSize + i*spacingBetweenIcons, distanceFromTop, iconSize, icons[i], pause));
+    iconButtons.add(new ShortcutButton(edgeSpacing + i*iconSize + i*spacingBetweenIcons, distanceFromTop, iconSize, icons[i], pause, iconCondition));
     iconButtons.get(i).setNumShortcut(numSc1[i]);
   }
+  allButtons.addAll(iconButtons);
 
   // Icones de l'éditeur
+  Condition editorCondition = new Condition() { public boolean c() { return gameState == EDITOR; } };
   int[] numSc2 = {0, 11, 13, 12, 15, 18, 17, 6, 14};
   for (int i = 0; i < editorIcons.length; i++) {
-    editorIconButtons.add(new Button(editorEdgeSpacing + i*editorIconSize + i*spacingBetweenEditorIcons, distanceFromTop, editorIconSize, editorIcons[i], editorIcons[i]));
+    editorIconButtons.add(new ShortcutButton(editorEdgeSpacing + i*editorIconSize + i*spacingBetweenEditorIcons, distanceFromTop, editorIconSize, editorIcons[i], editorIcons[i], editorCondition));
     editorIconButtons.get(i).setNumShortcut(numSc2[i]);
   }
+  allButtons.addAll(editorIconButtons);
 
   // Boutons fens
   int startX = 12 + offsetX;
@@ -538,14 +565,16 @@ void setup() {
   int size = 145;
   float espacementX = ( w*8 - (startX-offsetX)*2 - 3*size ) / 2;
   float espacementY = ( w*8 - (startX-offsetX) - 3*size ) / 3;
+  Condition fenCondition = new Condition() { public boolean c() { return (gameState == EDITOR && showSavedPositions); } };
 
   for (int i = 0; i < 3; i++) {
     for (int j = 0; j < 3; j++) {
       int index = 3*i + j;
       if (index >= savedFENS.length) break;
-      savedFENSbuttons.add(new ButtonFEN(startX + size/2 + j*(size + espacementX), startY + size/2 + i*(size + espacementY), size, saveFENSimage[index], savedFENSname[index]));
+      savedFENSbuttons.add(new ButtonFEN(startX + size/2 + j*(size + espacementX), startY + size/2 + i*(size + espacementY), size, saveFENSimage[index], savedFENSname[index], index, fenCondition));
     }
   }
+  allButtons.addAll(savedFENSbuttons);
 
   // Initialise les pièces
   pieces[0] = new ArrayList<Piece>();
@@ -562,25 +591,17 @@ void draw() {
 
   ////////////////////////////////////////////////////////////////
 
-  // Update request to restart
-  if (requestToRestart != -1 && millis() - requestToRestart >= restartTimeOut) {
-    requestToRestart = -1;
-    println(">>> Annulation\n");
-  }
-
-  ////////////////////////////////////////////////////////////////
-
-  // Partie
-
-  if (gameState == 1) {
+  if (gameState == GAME) {
     background(49, 46, 43);
 
-    // Actualise "block playing", qui empêche éventuellement un joueur de jouer
+    // Actualise blockPlaying, qui empêche éventuellement un joueur de jouer
     updateBlockPlaying();
 
     // Gestion du joueur
-    if (playEngineMoveNextFrame) { joueurs.get(tourDeQui).play(); playEngineMoveNextFrame = false; engineToPlay = false; }
-    if (engineToPlay) { playEngineMoveNextFrame = true; }
+    if (engineToPlay) { joueurs.get(tourDeQui).play(); engineToPlay = false; }
+    if (!blockPlaying && (joueurs.get(0).name == "Humain" && joueurs.get(1).name != "Humain") || (joueurs.get(0).name != "Humain" && joueurs.get(1).name == "Humain")) {
+      if (joueurs.get(tourDeQui).name != "Humain") engineToPlay = true;
+    }
 
     if (!gameEnded && play && (!useHacker || hackerPret)) {
       if (joueurs.get(0).name != "Humain" && joueurs.get(1).name != "Humain") {
@@ -607,14 +628,6 @@ void draw() {
     // Affichages
     surface.setTitle(name + " - " + j1 + " (" + ((joueurs.get(0).useIterativeDeepening) ? "ID" : j1depth) +  ") contre " + j2 + " (" + ((joueurs.get(1).useIterativeDeepening) ? "ID" : j2depth) + ")" + ((infos == "") ? "" : " - ") + infos);
 
-    // Plateau
-    updateBoard();
-    drawPlayersInfos();
-    for (Arrow b : bookArrows) b.show();
-    if (showVariante) {
-      for (Arrow arrow : varianteArrows) arrow.show();
-    }
-
     // Promotion
     if (enPromotion != null) {
       fill(220, 220, 220, 200);
@@ -625,9 +638,17 @@ void draw() {
 
     // Icones
     for (int i = 0; i < iconButtons.size(); i++) {
-      Button b = iconButtons.get(i);
+      ShortcutButton b = iconButtons.get(i);
       if (i == 7) b.show(play ? 0 : 1); // Play / Pause
       else b.show(0);
+    }
+
+    // Plateau
+    drawPlayersInfos();
+    updateBoard();
+    for (Arrow b : bookArrows) b.show();
+    if (showVariante) {
+      for (Arrow arrow : varianteArrows) arrow.show();
     }
 
     // Écran de fin de partie
@@ -655,9 +676,7 @@ void draw() {
 
   ////////////////////////////////////////////////////////////////
 
-  // Menu principal
-
-  else if (gameState == 0) {
+  else if (gameState == MENU) {
     background(49, 46, 43);
 
     for (TextButton b : hubButtons) b.show();
@@ -675,8 +694,8 @@ void draw() {
     textSize(15);
     text(startFEN, 10, height-10);
 
-    positionEditor.show(0);
-    if (useHacker) hackerButton.show(0);
+    positionEditor.show();
+    if (useHacker) hackerButton.show();
 
     if (timeControl) {
       fill(#f0f0f0);
@@ -718,9 +737,7 @@ void draw() {
 
   ////////////////////////////////////////////////////////////////
 
-  // Éditeur de position
-
-  else if (gameState == 3) {
+  else if (gameState == EDITOR) {
     background(49, 46, 43);
 
     updateBoard();

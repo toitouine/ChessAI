@@ -1,3 +1,10 @@
+/////////////////////////////////////////////////////////////////
+
+// PGN
+// Contient les fonctions principales pour gérer la PGN de la partie en cours, la lecture de PGNs et la création du livre d'ouverture
+
+/////////////////////////////////////////////////////////////////
+
 String getPGNString(Move m) {
   String movePgn = "";
   char ambichar = ' '; //ambichar = char pour ambiguités dans la pgn

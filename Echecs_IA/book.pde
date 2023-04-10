@@ -1,9 +1,16 @@
-// Format du livre d'ouverture :
+/////////////////////////////////////////////////////////////////
+
+// Livre d'ouverture
+
+// Format :
 // fen:XXXXYYY_XXXXYYY_XXXXYYY
+
 // XXXX représente le coup dans le format (i1 j1 i2 j2)
 // YYY représente le nombre de fois que ce coup apparait
 // _ représente la séparation
-// Exception pour le roque, de la forme 88XX et 99XX
+// (Exception pour le roque, de la forme 88XX et 99XX)
+
+/////////////////////////////////////////////////////////////////
 
 class Arrow {
   float x, y, tx, ty;

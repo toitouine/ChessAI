@@ -1,8 +1,17 @@
+/////////////////////////////////////////////////////////////////
+
+// Données précalculées pour accélérer la recherche
+
+// Distance table : Renvoie true/false selon si deux cases sont accessibles par un mouvement d'une certaine pièce
+// Distance from center : Renvoie la distance entre une case et une des quatre cases centrales
+// Tropism distance : Renvoie la valeur du bonus de distance entre deux cases (plus elles sont proches, plus la valeur est élevée)
+
+/////////////////////////////////////////////////////////////////
+
 class PreComputedData {
   boolean[][][][][] distanceTable = new boolean[6][8][8][8][8]; // piece index / grid[from][from] / grid[target][target]
   int[][] distanceFromCenter = new int[8][8]; // i, j
   int[][][][] tropismDistance = new int[8][8][8][8]; // i1, j1, i2, j2
-  HashMap<Integer, ArrayList<Move>[][]> preComputedMovesMap = new HashMap<Integer, ArrayList<Move>[][]>(); // pieceIndex, i, j
 
   PreComputedData() { }
 
@@ -10,7 +19,6 @@ class PreComputedData {
     this.initDistanceTable();
     this.initDistanceFromCenter();
     this.initTropismDistance();
-    this.initMoveMap();
   }
 
   boolean getDistanceTable(int p, int fi, int fj, int ti, int tj) {
@@ -23,24 +31,6 @@ class PreComputedData {
 
   int getTropismDistance(int i1, int i2, int j1, int j2) {
     return this.tropismDistance[i1][i2][j1][j2];
-  }
-
-  ArrayList<Move> getMove(int pieceIndex, int i, int j) {
-    return this.preComputedMovesMap.get(pieceIndex)[i][j];
-  }
-
-  void initMoveMap() {
-    preComputedMovesMap.put(ROI_INDEX, new ArrayList[8][8]);
-    preComputedMovesMap.put(TOUR_INDEX, new ArrayList[8][8]);
-    preComputedMovesMap.put(FOU_INDEX, new ArrayList[8][8]);
-    preComputedMovesMap.put(CAVALIER_INDEX, new ArrayList[8][8]);
-    // Pion ?
-
-    // Cavalier : 336
-    // Fou : 560
-    // Tour : 896
-    // Roi : 420
-    // --> 2212
   }
 
   void initDistanceTable() {

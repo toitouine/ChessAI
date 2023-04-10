@@ -566,6 +566,11 @@ void calibrerHacker() {
   println();
 }
 
+void toggleUseHacker() {
+  useHacker =! useHacker;
+  hackerButton.display = !hackerButton.display;
+}
+
 void setHackerPOV(int pov) {
   if (pov == currentHackerPOV) return;
   hackerCoords = reverseCoords(hackerCoords);
@@ -907,7 +912,14 @@ void playerPromote(int numButton) {
   else tourDeQui = 0;
 }
 
+void switchAddPieceColor() {
+  addPiecesColorSwitch.toggle();
+  addPiecesColor = (addPiecesColor == 1) ? 0 : 1;
+}
+
 void clickedOnBoard(int i, int j) {
+  if (enPromotion != null) return;
+
   Piece p = grid[i][j].piece;
   if (stats && details) println("Case : [" + i + "][" + j + "] (" + grid[i][j].name + ")");
 
@@ -926,7 +938,45 @@ void clickedOnBoard(int i, int j) {
     p.select(true);
     grid[p.i][p.j].selected = true;
     pieceSelectionne = p;
+    pieceDisplayOnEnd(p);
     return;
+  }
+}
+
+void clickedOnEditorBoard(int i, int j) {
+  Piece p = grid[i][j].piece;
+
+  if (grid[i][j].freeMove) {
+    pieceSelectionne.quickMove(i, j);
+    pieceSelectionne = null;
+    deselectAll();
+    return;
+  }
+  if (p == null) return;
+
+  if (mouseButton == LEFT) {
+    deselectAll();
+    p.fly();
+    grid[p.i][p.j].selected = true;
+    pieceSelectionne = p;
+    pieceDisplayOnEnd(p);
+    return;
+  }
+  if (mouseButton == RIGHT) {
+    for (int n = 0; n < piecesToDisplay.size(); n++) {
+      if (piecesToDisplay.get(n) == p) { piecesToDisplay.remove(n); break; }
+    }
+    removePiece(p);
+  }
+}
+
+void pieceDisplayOnEnd(Piece p) {
+  for (int i = 0; i < piecesToDisplay.size(); i++) {
+    Piece piece = piecesToDisplay.get(i);
+    if (piece == p) {
+      piecesToDisplay.remove(i);
+      piecesToDisplay.add(p);
+    }
   }
 }
 
@@ -1328,6 +1378,17 @@ Piece removePiece(Piece piece) {
       grid[piece.i][piece.j].piece = null;
       Piece p = pieces[piece.c].get(i);
       pieces[piece.c].remove(i);
+      return p;
+    }
+  }
+  return null;
+}
+
+Piece removePieceToDisplay(Piece piece) {
+  for (int n = 0; n < piecesToDisplay.size(); n++) {
+    if (piecesToDisplay.get(n) == piece) {
+      Piece p = piecesToDisplay.get(n);
+      piecesToDisplay.remove(n);
       return p;
     }
   }

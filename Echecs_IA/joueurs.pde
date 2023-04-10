@@ -884,6 +884,28 @@ void arnaques() {
   }
 }
 
+void missclick(int i, int j) {
+  boolean castling = false;
+  if (random(1) <= 0.75) {
+    if (pieceSelectionne.pieceIndex == ROI_INDEX) {
+      ArrayList<Move> moves = pieceSelectionne.generateLegalMoves(true, false);
+      for (int n = 0; n < moves.size(); n++) {
+        if (moves.get(n).special != 0) castling = true;
+      }
+    }
+  }
+
+  if (!castling && !missclickDragNextMove) return;
+  if (i < 0 || i >= cols || j < 0 || j >= rows) return;
+
+  if (grid[i][j].possibleMove != null) {
+    grid[i][j].possibleMove.play();
+    missclickCount++;
+    pieceSelectionne = null;
+    missclickDragNextMove = false;
+  }
+}
+
 /////////////////////////////////////////////////////////////////
 
 class Loic extends IA {

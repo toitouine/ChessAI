@@ -2,9 +2,9 @@
 
 // Table de transposition
 
-// Méthode Probe : Recherche la position dans la table. Si elle est trouvée, la renvoie (sinon null)
-// Méthode Store : Enregistre la position dans la table, et écrase l'entrée précédente si collision
-// L'index est calculé selon : hash & indexMax (où indexMax est size-1 et size une puissance de 2)
+// Probe : Recherche la position dans la table. Si elle est trouvée, la renvoie (sinon null)
+// Store : Enregistre la position dans la table, et écrase l'entrée précédente si collision
+// L'index est calculé avec : hash & indexMax (où indexMax est size-1 et size une puissance de 2)
 // (Collision : 1 sur 100 hash environ)
 
 /////////////////////////////////////////////////////////////////

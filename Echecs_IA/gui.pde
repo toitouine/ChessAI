@@ -1,9 +1,69 @@
 class Button {
+  String function;
+  Condition condition;
+
+  Button(String f, Condition c) {
+    this.function = f;
+    this.condition = c;
+  }
+
+  void call() {
+    if (this.function == "") return;
+    method(this.function);
+  }
+
+  boolean isEnabled() {
+    return this.condition.c();
+  }
+
+  void show() {}
+  boolean contains(int x, int y) { error("Button.contains()", "Pas de surcharge de méthode"); return false; }
+  String getDescription() { error("Button.getDescription()", "Pas de surcharge de méthode"); return ""; }
+}
+
+public interface Condition {
+  public boolean c();
+}
+
+class PromotionButton extends Button {
+  int promoNumber;
+  float x, y, w;
+  PImage i1, i2;
+
+  PromotionButton(float x, float y, float w, PImage i1, PImage i2, int pn, Condition c) {
+    super("", c);
+    this.x = x;
+    this.y = y;
+    this.w = w;
+    this.i1 = i1;
+    this.i2 = i2;
+    this.promoNumber = pn;
+  }
+
+  void show(int c) {
+    fill(0);
+    imageMode(CENTER);
+    if (c == 0) image(this.i1, this.x+w/2, this.y+w/2, this.w/1.1, this.w/1.1);
+    else if (c == 1) image(this.i2, this.x+w/2, this.y+w/2, this.w/1.1, this.w/1.1);
+  }
+
+  @Override
+  void call() {
+    playerPromote(this.promoNumber);
+  }
+
+  boolean contains(int x, int y) {
+    return (x >= this.x && x < this.x+w && y >= this.y && y < this.y+w);
+  }
+}
+
+class ShortcutButton extends Button {
   float x, y, w;
   PImage i1, i2;
   int numShortcut = -1;
 
-  Button(float x, float y, float w, PImage i1, PImage i2) {
+  ShortcutButton(float x, float y, float w, PImage i1, PImage i2, Condition c) {
+    super("", c);
     this.x = x;
     this.y = y;
     this.w = w;
@@ -15,7 +75,8 @@ class Button {
     this.numShortcut = n;
   }
 
-  void callShortcut() {
+  @Override
+  void call() {
     if (this.numShortcut == -1) { println("Erreur initialisation shortcut dans bouton"); return; }
     sc.call(this.numShortcut);
   }
@@ -27,23 +88,16 @@ class Button {
   void show(int c) {
     fill(0);
     imageMode(CENTER);
-    if (c == 0) {
-      image(this.i1, this.x+w/2, this.y+w/2, this.w/1.1, this.w/1.1);
-    } else if (c == 1) {
-      image(this.i2, this.x+w/2, this.y+w/2, this.w/1.1, this.w/1.1);
-    }
+    if (c == 0) image(this.i1, this.x+w/2, this.y+w/2, this.w/1.1, this.w/1.1);
+    else if (c == 1) image(this.i2, this.x+w/2, this.y+w/2, this.w/1.1, this.w/1.1);
   }
 
   boolean contains(int x, int y) {
-    if (x >= this.x && x < this.x+w && y >= this.y && y < this.y+w) {
-      return true;
-    } else {
-      return false;
-    }
+    return (x >= this.x && x < this.x+w && y >= this.y && y < this.y+w);
   }
 }
 
-class TimeButton {
+class TimeButton extends Button {
   float x, y, w, h;
   int r1, r2, r3, r4;
   int background, arrowColor, hoveredColor;
@@ -52,7 +106,8 @@ class TimeButton {
   int cooldownFastIncrement = 500, pressedAt;
   int i, j;
 
-  TimeButton(float x, float y, float w, float h, int r1, int r2, int r3, int r4, int background, int arrowColor, int hoveredColor, boolean facing) {
+  TimeButton(float x, float y, float w, float h, int r1, int r2, int r3, int r4, int background, int arrowColor, int hoveredColor, boolean facing, Condition c) {
+    super("", c);
     this.x = x;
     this.y = y;
     this.w = w;
@@ -89,6 +144,11 @@ class TimeButton {
     }
   }
 
+  @Override
+  void call() {
+    this.click();
+  }
+
   void update() {
     if (this.pressed && millis() - pressedAt >= this.cooldownFastIncrement) {
       if (frameCount % 2 == 0) this.updateAssignedTimer();
@@ -120,12 +180,14 @@ class TimeButton {
   }
 }
 
-class ImageButton {
+class ImageButton extends Button {
   float x, y, w, h;
   int background, r;
+  boolean fullImageSize, display = true;
   PImage img;
 
-  ImageButton(float x, float y, float w, float h, int r, int background, PImage img) {
+  ImageButton(float x, float y, float w, float h, int r, int background, PImage img, boolean fullSize, String f, Condition c) {
+    super(f, c);
     this.x = x;
     this.y = y;
     this.w = w;
@@ -133,14 +195,22 @@ class ImageButton {
     this.r = r;
     this.img = img;
     this.background = background;
+    this.fullImageSize = fullSize;
   }
 
   void show() {
+    if (!this.display) return;
+
+    imageMode(CENTER);
+    if (this.fullImageSize) {
+      image(this.img, this.x+w/2, this.y+w/2, this.w/1.1, this.w/1.1);
+      return;
+    }
+
     rectMode(CORNER);
     fill(this.background);
     stroke(this.background);
     rect(this.x, this.y, this.w, this.h, this.r, this.r, this.r, this.r);
-    imageMode(CENTER);
     image(this.img, this.x+this.w/2, this.y+this.h/2, this.w/1.9, this.h/1.9);
   }
 
@@ -149,11 +219,12 @@ class ImageButton {
   }
 }
 
-class CircleToggleButton {
+class CircleToggleButton extends Button {
   float x, y, d;
   boolean state = false;
 
-  CircleToggleButton(float x, float y, float d) {
+  CircleToggleButton(float x, float y, float d, String f, Condition c) {
+    super(f, c);
     this.x = x;
     this.y = y;
     this.d = d;
@@ -175,13 +246,14 @@ class CircleToggleButton {
   }
 }
 
-class DragAndDrop {
+class DragAndDrop extends Button {
   float x, y, w, h;
   int value;
   boolean lock = false;
   PImage img;
 
-  DragAndDrop(float x, float y, float w, float h, PImage img, int value) {
+  DragAndDrop(float x, float y, float w, float h, PImage img, int value, Condition c) {
+    super("", c);
     this.x = x;
     this.y = y;
     this.w = w;
@@ -197,6 +269,14 @@ class DragAndDrop {
 
     //rectMode(CENTER); noFill(); stroke(0); strokeWeight(3);
     //rect(this.x, this.y, this.w, this.h);
+  }
+
+  @Override
+  void call() {
+    if (enAjoutPiece == null) {
+      enAjoutPiece = this;
+      this.lockToMouse();
+    }
   }
 
   int getValue() {
@@ -216,7 +296,7 @@ class DragAndDrop {
   }
 }
 
-class TextButton {
+class TextButton extends Button {
   float x, y, w, h;
   int backColor = color(#8da75a);
   int textColor = color(#ffffff);
@@ -224,7 +304,8 @@ class TextButton {
   int textSize;
   int arrondi;
 
-  TextButton(float x, float y, float w, float h, String t, int textSize, int arrondi) {
+  TextButton(float x, float y, float w, float h, String t, int textSize, int arrondi, String f, Condition c) {
+    super(f, c);
     this.x = x;
     this.y = y;
     this.w = w;
@@ -256,18 +337,21 @@ class TextButton {
   }
 }
 
-class ToggleButton {
+class ToggleButton extends Button {
   float x, y, imgWidth;
+  int c;
   PImage img;
   boolean state = false;
   String name;
 
-  ToggleButton(float x, float y, float imgWidth, PImage img, String n) {
+  ToggleButton(float x, float y, float imgWidth, PImage img, String n, int c, Condition cond) {
+    super("", cond);
     this.x = x;
     this.y = y;
     this.imgWidth = imgWidth;
     this.img = img;
     this.name = n;
+    this.c = c;
   }
 
   void show() {
@@ -280,6 +364,20 @@ class ToggleButton {
     }
   }
 
+  @Override
+  void call() {
+    if (this.c == 0) {
+      for (ToggleButton t : toggles1) t.state = false;
+      this.state = !this.state;
+      j1 = this.name;
+    }
+    else if (this.c == 1) {
+      for (ToggleButton t : toggles2) t.state = false;
+      this.state = !this.state;
+      j2 = this.name;
+    }
+  }
+
   boolean contains(int x, int y) {
     if (x >= this.x && x < this.x+this.imgWidth && y >= this.y && y < this.y+imgWidth) {
       return true;
@@ -289,17 +387,20 @@ class ToggleButton {
   }
 }
 
-class ButtonFEN {
+class ButtonFEN extends Button {
   float x, y, size;
+  int numFEN;
   PImage img;
   String text;
 
-  ButtonFEN(float x, float y, float size, PImage img, String text) {
+  ButtonFEN(float x, float y, float size, PImage img, String text, int num, Condition c) {
+    super("", c);
     this.x = x;
     this.y = y;
     this.size = size;
     this.img = img;
     this.text = text;
+    this.numFEN = num;
   }
 
   void show() {
@@ -310,7 +411,13 @@ class ButtonFEN {
     text(this.text, this.x, this.y + this.size/2 + 10);
   }
 
-  boolean contains(float mx, float my) {
+  @Override
+  void call() {
+    importSavedFEN(this.numFEN);
+    toggleSavedPos();
+  }
+
+  boolean contains(int mx, int my) {
     return (mx > this.x - this.size/2 &&
             mx < this.x + this.size/2 &&
             my > this.y - this.size/2 &&

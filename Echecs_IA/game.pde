@@ -33,7 +33,7 @@ void startGame() {
     violons.stop();
     pachamama.play(); pachamama.loop();
   }
-  gameState = 1;
+  gameState = GAME;
 
   println(" ");
   if (stats) {
@@ -89,7 +89,7 @@ void startGame() {
 }
 
 void startEditor() {
-  gameState = 3;
+  gameState = EDITOR;
 
   if (attach) infos = "Épinglé";
 
@@ -133,6 +133,10 @@ void newAIGame(int ia, String type) {
   startGame();
 }
 
+void newGame() {
+  resetGame(true);
+}
+
 void resetGame(boolean menu) {
   // reset les timers
   if (useTime) {
@@ -146,14 +150,14 @@ void resetGame(boolean menu) {
   // réinitialise les variables
   resetSettingsToDefault();
 
-  // resize la fenêtre et gameState en mode sélection
+  // resize la fenêtre
   if (menu) {
     surface.setSize(selectWidth, selectHeight);
     surface.setLocation(displayWidth/2 - width/2, 0);
     surface.setTitle(name + " - Selection des joueurs");
     surface.setAlwaysOnTop(false);
     surface.setVisible(true);
-    gameState = 0;
+    gameState = MENU;
   }
 
   // arrête la musique :(
@@ -232,7 +236,6 @@ void resetSettingsToDefault() {
   hackerPret = false;
   timeAtHackerEnd = 0;
   engineToPlay = false;
-  playEngineMoveNextFrame = false;
   showGraph = false;
   showVariante = false;
   showSearchController = false;
