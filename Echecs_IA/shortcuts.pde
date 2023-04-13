@@ -85,6 +85,11 @@ void toggleSavedPos() {
 
 void flipBoard() {
   pointDeVue = !pointDeVue;
+
+  humanButton.get(0).y = humanButton.get(1).y;
+  humanButton.get(1).y = humanButton.get(2).y;
+  humanButton.get(2).y = humanButton.get(0).y;
+  humanButton.get(3).y = humanButton.get(1).y;
 }
 
 void toggleVariantes() {

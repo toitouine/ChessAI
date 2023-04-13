@@ -55,7 +55,7 @@ public class SearchApplet extends PApplet {
       transpositions[inNormalSearch] = formatInt(joueurs.get(inNormalSearch).player.numTranspositions);
     }
 
-    if (!show) return;
+    if (!show || (MODE_SANS_AFFICHAGE && useHacker && hackerPret)) return;
     surface.setAlwaysOnTop(attach);
 
     background(#272522);

@@ -62,7 +62,6 @@ class Joueur {
   void play() {
     if (name == "Humain") return;
     player.play();
-    // thread("playPlayer");
   }
 
   float getScore() {
@@ -81,16 +80,12 @@ class Joueur {
     totalScores[this.index] += add;
   }
 }
-
-// void playPlayer() {
-//   joueurs.get(tourDeQui).player.play();
-// }
-
 /////////////////////////////////////////////////////////////////
 
 class IA {
   int c, depth, maxQuietDepth;
   boolean useIterativeDeepening = false;
+  boolean inFastSearch = false;
 
   float time;
   int depthSearched;
@@ -126,6 +121,30 @@ class IA {
 
     stopSearch = false;
     cursor(ARROW);
+  }
+
+  Move getBestMove(int time) {
+    sa.setTime(this.c, time);
+    sa.startSearch(this.c);
+    this.inFastSearch = true;
+    Move bestMove = null;
+
+    for (int d = 1; d < 1000; d++) {
+      this.bestMoveFound = null;
+      this.cuts = new int[d];
+
+      float eval;
+      if (this instanceof LesMoutons) eval = -this.moyennemax(d, 0, -Infinity, Infinity, null).eval;
+      else eval = -this.minimax(d, 0, -Infinity, Infinity, null);
+
+      if (stopSearch) break;
+      bestMove = this.bestMoveFound;
+    }
+
+    this.inFastSearch = false;
+    sa.setTime(this.c, sa.savedTimes[this.c]);
+    stopSearch = false;
+    return bestMove;
   }
 
   float findBestMove() {
@@ -169,7 +188,7 @@ class IA {
     sa.startSearch(this.c);
 
     for (int d = 1; d < 1000; d++) {
-      this.resetStats();
+      if (!MODE_SANS_AFFICHAGE) this.resetStats();
       this.cuts = new int[d];
 
       // effectue la recherche à la profondeur
@@ -183,20 +202,22 @@ class IA {
 
       // si la recherche a été interrompue par search controller
       if (stopSearch) {
-        this.numQuiet = lastNumQuiet;
-        this.numPos = lastNumPos;
-        this.depthSearched = d-1;
-        this.cuts = lastCuts;
-        this.cutsFirst = lastCutsFirst;
-        this.numMoves = lastNumMoves;
-        this.numCaptures = lastNumCaptures;
-        this.numPos = lastNumPos;
-        this.numQuiet = lastNumQuiet;
-        this.numQuietCuts = lastNumQuietCuts;
-        this.firstPlyMoves = lastFirstPlyMoves;
-        this.higherPlyFromRoot = lastHigherPlyFromRoot;
-        this.numTranspositions = lastNumTranspositions;
-        this.time = sa.getTime(this.c);
+        if (!MODE_SANS_AFFICHAGE) {
+          this.numQuiet = lastNumQuiet;
+          this.numPos = lastNumPos;
+          this.depthSearched = d-1;
+          this.cuts = lastCuts;
+          this.cutsFirst = lastCutsFirst;
+          this.numMoves = lastNumMoves;
+          this.numCaptures = lastNumCaptures;
+          this.numPos = lastNumPos;
+          this.numQuiet = lastNumQuiet;
+          this.numQuietCuts = lastNumQuietCuts;
+          this.firstPlyMoves = lastFirstPlyMoves;
+          this.higherPlyFromRoot = lastHigherPlyFromRoot;
+          this.numTranspositions = lastNumTranspositions;
+          this.time = sa.getTime(this.c);
+        }
         this.bestMoveFound = lastBestMove;
         return -lastEval;
       }
@@ -204,29 +225,32 @@ class IA {
       // sauvegarde les résultats et statistiques
       lastEval = eval;
       lastBestMove = this.bestMoveFound;
-      lastNumQuiet = this.numQuiet;
-      lastNumPos = this.numPos;
-      lastCuts = this.cuts;
-      lastCutsFirst = this.cutsFirst;
-      lastNumMoves = this.numMoves;
-      lastNumCaptures = this.numCaptures;
-      lastNumPos = this.numPos;
-      lastNumQuiet = this.numQuiet;
-      lastNumQuietCuts = this.numQuietCuts;
-      lastFirstPlyMoves = this.firstPlyMoves;
-      lastHigherPlyFromRoot = this.higherPlyFromRoot;
-      lastNumTranspositions = this.numTranspositions;
 
-      float evalToDisplay = (this.c == 0) ? -eval : eval;
-      sa.setDepths(str(d), this.c);
-      if (this instanceof Loic) sa.setEvals(evalToStringLoic(evalToDisplay), this.c);
-      else sa.setEvals(evalToStringMaire(evalToDisplay), this.c);
-      sa.setBestMoves(getPGNString(this.bestMoveFound), this.c);
-      sa.setPositions(formatInt(this.numPos), this.c);
-      sa.setTris("...", this.c);
-      sa.setTranspositions(formatInt(this.numTranspositions), this.c);
-      sa.setTimeDisplays(str((int)sa.getTime(this.c)) + " ms", this.c);
-      sa.resetDepthTracker(this.c);
+      if (!MODE_SANS_AFFICHAGE) {
+        lastNumQuiet = this.numQuiet;
+        lastNumPos = this.numPos;
+        lastCuts = this.cuts;
+        lastCutsFirst = this.cutsFirst;
+        lastNumMoves = this.numMoves;
+        lastNumCaptures = this.numCaptures;
+        lastNumPos = this.numPos;
+        lastNumQuiet = this.numQuiet;
+        lastNumQuietCuts = this.numQuietCuts;
+        lastFirstPlyMoves = this.firstPlyMoves;
+        lastHigherPlyFromRoot = this.higherPlyFromRoot;
+        lastNumTranspositions = this.numTranspositions;
+
+        float evalToDisplay = (this.c == 0) ? -eval : eval;
+        sa.setDepths(str(d), this.c);
+        if (this instanceof Loic) sa.setEvals(evalToStringLoic(evalToDisplay), this.c);
+        else sa.setEvals(evalToStringMaire(evalToDisplay), this.c);
+        sa.setBestMoves(getPGNString(this.bestMoveFound), this.c);
+        sa.setPositions(formatInt(this.numPos), this.c);
+        sa.setTris("...", this.c);
+        sa.setTranspositions(formatInt(this.numTranspositions), this.c);
+        sa.setTimeDisplays(str((int)sa.getTime(this.c)) + " ms", this.c);
+        sa.resetDepthTracker(this.c);
+      }
 
       // si la valeur est un mat, arrête la recherche
       if (abs(eval) > 20000) {
@@ -565,7 +589,7 @@ class LeMaire extends IA {
     moves = this.OrderMoves(moves);
     this.numMoves += moves.size();
     if (plyFromRoot == 0) this.firstPlyMoves += moves.size();
-    if (plyFromRoot == 1) sa.incrementSearchTracker(this.c);
+    if (plyFromRoot == 1 && !this.inFastSearch) sa.incrementSearchTracker(this.c);
 
     // Détection des mats et pats
     if (moves.size() == 0) {
@@ -736,7 +760,7 @@ class LesMoutons extends IA {
     moves = this.OrderMoves(moves);
     this.numMoves += moves.size();
     if (plyFromRoot == 0) this.firstPlyMoves += moves.size();
-    if (plyFromRoot == 1) sa.incrementSearchTracker(this.c);
+    if (plyFromRoot == 1 && !this.inFastSearch) sa.incrementSearchTracker(this.c);
 
     if (moves.size() == 0) {
       if (playerInCheck(tourDeQui) == tourDeQui) {
@@ -966,7 +990,7 @@ class Loic extends IA {
     ArrayList<Move> moves = generateAllLegalMoves(tourDeQui, true, true);
     moves = this.OrderMoves(moves);
     if (plyFromRoot == 0) this.firstPlyMoves += moves.size();
-    if (plyFromRoot == 1) sa.incrementSearchTracker(this.c);
+    if (plyFromRoot == 1 && !this.inFastSearch) sa.incrementSearchTracker(this.c);
 
     if (moves.size() == 0) {
       if (playerInCheck(tourDeQui) == tourDeQui) {
@@ -1049,7 +1073,7 @@ class Stockfish extends IA {
     ArrayList<Move> moves = generateAllLegalMoves(tourDeQui, true, true);
     moves = this.OrderMoves(moves);
     if (plyFromRoot == 0) this.firstPlyMoves += moves.size();
-    if (plyFromRoot == 1) sa.incrementSearchTracker(this.c);
+    if (plyFromRoot == 1 && !this.inFastSearch) sa.incrementSearchTracker(this.c);
 
     if (moves.size() == 0) {
       if (playerInCheck(tourDeQui) == tourDeQui) {

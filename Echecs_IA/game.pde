@@ -1,4 +1,7 @@
 void startGame() {
+
+  if (MODE_SANS_AFFICHAGE) frameRate(20);
+
   joueurs.add(new Joueur(j1, 0, j1depth, j1Quiet, (j1Time == 0) ? false : true));
   joueurs.add(new Joueur(j2, 1, j2depth, j2Quiet, (j2Time == 0) ? false : true));
   surface.setSize(gameWidth, gameHeight);
@@ -179,6 +182,7 @@ void resetSettingsToDefault() {
   rois[1] = null;
   currentEnPassantable[0] = null;
   currentEnPassantable[1] = null;
+  bestMoveArrow = null;
   piecesToDisplay.clear();
   positionHistory.clear();
   zobristHistory.clear();
@@ -241,7 +245,7 @@ void resetSettingsToDefault() {
   showSearchController = false;
   pieceSelectionne = null;
   enPromotion = null;
-  pointDeVue = true;
+  if (pointDeVue == false) flipBoard();
   attach = true;
   tourDeQui = 0;
   nbTour = 0.5;
@@ -387,7 +391,6 @@ void checkGameState() {
   if (playerInCheck(2) != -1) {
     addPgnCheck();
   }
-
 }
 
 void loseOnTime(int loser) {
@@ -406,6 +409,44 @@ void loseOnTime(int loser) {
   infos = "Game ended";
 
   if (soundControl >= 1) nulle_sound.play();
+  if (useTime) ta.stopTimers();
+}
+
+void resignWhite() {
+  if (useHacker && hackerPret) return;
+
+  winner = 1;
+  println();
+  println("Victoire des noirs par abandon");
+  println();
+  addPgnWin(winner);
+  updateScores(winner);
+  endReason = "par abandon";
+
+  gameEnded = true;
+  timeAtEnd = millis();
+  infos = "Game ended";
+
+  if (soundControl >= 1) mat_sound.play();
+  if (useTime) ta.stopTimers();
+}
+
+void resignBlack() {
+  if (useHacker && hackerPret) return;
+
+  winner = 0;
+  println();
+  println("Victoire des blancs par abandon");
+  println();
+  addPgnWin(winner);
+  updateScores(winner);
+  endReason = "par abandon";
+
+  gameEnded = true;
+  timeAtEnd = millis();
+  infos = "Game ended";
+
+  if (soundControl >= 1) mat_sound.play();
   if (useTime) ta.stopTimers();
 }
 

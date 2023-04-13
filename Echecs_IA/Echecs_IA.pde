@@ -141,10 +141,12 @@ ArrayList<ButtonFEN> savedFENSbuttons = new ArrayList<ButtonFEN>();
 ArrayList<DragAndDrop>[] addPiecesButtons = new ArrayList[2];
 ArrayList<TimeButton>[] timeButtons = new ArrayList[2];
 ArrayList<ImageButton> presetButtons = new ArrayList<ImageButton>();
+ArrayList<ImageButton> humanButton = new ArrayList<ImageButton>();
 
 ArrayList<String> book = new ArrayList<String>();
 ArrayList<Arrow> bookArrows = new ArrayList<Arrow>();
 ArrayList<Arrow> varianteArrows = new ArrayList<Arrow>();
+Arrow bestMoveArrow;
 
 ArrayList<String> positionHistory = new ArrayList<String>();
 ArrayList<Move> movesHistory = new ArrayList<Move>();
@@ -529,15 +531,26 @@ void setup() {
   presetButtons.add(new ImageButton(width-82, 465, 70, 70, 5, #272522, loadImage("icons/bullet.png"), false, "bulletPreset", hubCondition));
   allButtons.addAll(presetButtons);
 
+  Condition humanWCondition = new Condition() { public boolean c() { return(gameState == GAME && !gameEnded && joueurs.get(0).name == "Humain"); } };
+  Condition humanBCondition = new Condition() { public boolean c() { return(gameState == GAME && !gameEnded && joueurs.get(1).name == "Humain"); } };
+  humanButton.add(new ImageButton(6, height - w - 117, 38, 38, 10, #272522, loadImage("icons/resign.png"), false, "resignWhite", humanWCondition));
+  humanButton.add(new ImageButton(6, offsetY + w + 80, 38, 38, 10, #272522, loadImage("icons/resign.png"), false, "resignBlack", humanBCondition));
+  humanButton.add(new ImageButton(offsetX-44, height - w - 117, 38, 38, 10, #272522, loadImage("icons/helpMove.png"), false, "helpMoveWhite", humanWCondition));
+  humanButton.add(new ImageButton(offsetX-44, offsetY + w + 80, 38, 38, 10, #272522, loadImage("icons/helpMove.png"), false, "helpMoveBlack", humanBCondition));
+  allButtons.addAll(humanButton);
+
   // Drag and drops
+  Condition dragAndDropWCondition = new Condition() { public boolean c() { return (gameState == EDITOR && !showParameters && !showSavedPositions && addPiecesColor == 0); } };
+  Condition dragAndDropBCondition = new Condition() { public boolean c() { return (gameState == EDITOR && !showParameters && !showSavedPositions && addPiecesColor == 1); } };
+
   addPiecesButtons[0] = new ArrayList<DragAndDrop>();
   for (int i = 0; i < 6; i++) {
-    addPiecesButtons[0].add(new DragAndDrop(offsetX/2, (offsetY+w/2 + w*i) + i*12.5, w, w, imageArrayB[i], i, buttonEditorCondition));
+    addPiecesButtons[0].add(new DragAndDrop(offsetX/2, (offsetY+w/2 + w*i) + i*12.5, w, w, imageArrayB[i], i, dragAndDropWCondition));
   }
   allButtons.addAll(addPiecesButtons[0]);
   addPiecesButtons[1] = new ArrayList<DragAndDrop>();
   for (int i = 0; i < 6; i++) {
-    addPiecesButtons[1].add(new DragAndDrop(offsetX/2, (offsetY+w/2 + w*i) + i*12.5, w, w, imageArrayN[i], i + 6, buttonEditorCondition));
+    addPiecesButtons[1].add(new DragAndDrop(offsetX/2, (offsetY+w/2 + w*i) + i*12.5, w, w, imageArrayN[i], i + 6, dragAndDropBCondition));
   }
   allButtons.addAll(addPiecesButtons[1]);
 
@@ -597,12 +610,13 @@ void draw() {
     // Actualise blockPlaying, qui empêche éventuellement un joueur de jouer
     updateBlockPlaying();
 
-    // Gestion du joueur
+    // Bot vs humain
     if (engineToPlay) { joueurs.get(tourDeQui).play(); engineToPlay = false; }
-    if (!blockPlaying && (joueurs.get(0).name == "Humain" && joueurs.get(1).name != "Humain") || (joueurs.get(0).name != "Humain" && joueurs.get(1).name == "Humain")) {
+    if (!blockPlaying && ((joueurs.get(0).name == "Humain" && joueurs.get(1).name != "Humain") || (joueurs.get(0).name != "Humain" && joueurs.get(1).name == "Humain"))) {
       if (joueurs.get(tourDeQui).name != "Humain") engineToPlay = true;
     }
 
+    // Bot vs bot
     if (!gameEnded && play && (!useHacker || hackerPret)) {
       if (joueurs.get(0).name != "Humain" && joueurs.get(1).name != "Humain") {
         if (speed == 0) joueurs.get(tourDeQui).play();
@@ -625,22 +639,17 @@ void draw() {
 
     if (MODE_SANS_AFFICHAGE && useHacker && hackerPret) return;
 
-    // Affichages
+    // Titre
     surface.setTitle(name + " - " + j1 + " (" + ((joueurs.get(0).useIterativeDeepening) ? "ID" : j1depth) +  ") contre " + j2 + " (" + ((joueurs.get(1).useIterativeDeepening) ? "ID" : j2depth) + ")" + ((infos == "") ? "" : " - ") + infos);
-
-    // Promotion
-    if (enPromotion != null) {
-      fill(220, 220, 220, 200);
-      rectMode(CORNER);
-      rect(offsetX, offsetY, cols*w, rows*w);
-      showPromoButtons();
-    }
 
     // Icones
     for (int i = 0; i < iconButtons.size(); i++) {
       ShortcutButton b = iconButtons.get(i);
       if (i == 7) b.show(play ? 0 : 1); // Play / Pause
       else b.show(0);
+    }
+    for (int i = 0; i < humanButton.size(); i++) {
+      if (humanButton.get(i).isEnabled()) humanButton.get(i).show();
     }
 
     // Plateau
@@ -649,6 +658,15 @@ void draw() {
     for (Arrow b : bookArrows) b.show();
     if (showVariante) {
       for (Arrow arrow : varianteArrows) arrow.show();
+    }
+    if (bestMoveArrow != null) bestMoveArrow.show();
+
+    // Promotion
+    if (enPromotion != null) {
+      fill(220, 220, 220, 200);
+      rectMode(CORNER);
+      rect(offsetX, offsetY, cols*w, rows*w);
+      showPromoButtons();
     }
 
     // Écran de fin de partie

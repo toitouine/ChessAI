@@ -12,7 +12,7 @@ Color endColorLichess = new Color(67, 107, 27);
 
 boolean ENABLE_ARNAQUES = true; // Activer les arnaques des moutons (ou pas)
 boolean MODE_PROBLEME = false; // Activer le mode résolution de problèmes (ou pas)
-boolean MODE_SANS_AFFICHAGE = false; // Affiche (ou pas) l'échiquier pendant le hacker
+boolean MODE_SANS_AFFICHAGE = true; // Afficher (ou pas) l'échiquier pendant le hacker
 
 /////////////////////////////////////////////////////////////////
 

@@ -142,6 +142,24 @@ void error(String function, String message) {
   println();
 }
 
+void helpMoveWhite() {
+  if (tourDeQui != 0) return;
+  cursor(WAIT);
+  LeMaire cmaire = new LeMaire(0, 7, 30, true);
+  Move bestMove = cmaire.getBestMove(2000);
+  bestMoveArrow = new Arrow(bestMove.fromI, bestMove.fromJ, bestMove.i, bestMove.j);
+  cursor(HAND);
+}
+
+void helpMoveBlack() {
+  if (tourDeQui != 1) return;
+  cursor(WAIT);
+  LeMaire cmaire = new LeMaire(1, 7, 30, true);
+  Move bestMove = cmaire.getBestMove(2000);
+  bestMoveArrow = new Arrow(bestMove.fromI, bestMove.fromJ, bestMove.i, bestMove.j);
+  cursor(HAND);
+}
+
 /////////////////////////////////////////////////////////////////
 
 // Hacker

@@ -209,7 +209,7 @@ class ImageButton extends Button {
 
     rectMode(CORNER);
     fill(this.background);
-    stroke(this.background);
+    noStroke();
     rect(this.x, this.y, this.w, this.h, this.r, this.r, this.r, this.r);
     image(this.img, this.x+this.w/2, this.y+this.h/2, this.w/1.9, this.h/1.9);
   }

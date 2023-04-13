@@ -175,6 +175,7 @@ class Move {
     // Divers et variés
     if (useTime && !gameEnded) ta.switchTimers(tourDeQui);
     if (showGraph) updateGraph();
+    bestMoveArrow = null;
 
     // Hacker
     if (useHacker && hackerPret && !hackerAPImode && !isNextMoveRestranscrit) {

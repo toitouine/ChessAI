@@ -212,6 +212,6 @@ void mouseDragged() {
     else cursor(ARROW);
 
     // Missclicks :(
-    if (joueurs.get((int)pow(tourDeQui-1, 2)).name == "LesMoutons") missclick(i, j);
+    if (gameState == GAME && joueurs.get((int)pow(tourDeQui-1, 2)).name == "LesMoutons") missclick(i, j);
   }
 }
