@@ -99,7 +99,7 @@ class IA {
 
   void play() {
     if (gameEnded || stopSearch) return;
-    if (!MODE_SANS_AFFICHAGE) cursor(WAIT);
+    if (!(MODE_SANS_AFFICHAGE && useHacker && hackerPret)) cursor(WAIT);
 
     // Recherche du meilleur coup
     float posEval;
@@ -117,7 +117,6 @@ class IA {
 
     // Reset les infos du hacker
     lastMoveTime = millis();
-    deltaTimeMesured = 0;
 
     stopSearch = false;
     cursor(ARROW);
@@ -180,6 +179,7 @@ class IA {
     // démarre la recherche sur search controller
     if (useHacker && hackerPret) {
       if (nbTour > 1) {
+        int deltaTimeMesured = millis() - lastMoveTime;
         int timeToPlay = constrain((deltaTimeMesured/2)-500, 20, sa.savedTimes[this.c]*3);
         sa.setTime(this.c, timeToPlay);
       } else sa.setTime(this.c, sa.savedTimes[this.c]);
@@ -188,7 +188,7 @@ class IA {
     sa.startSearch(this.c);
 
     for (int d = 1; d < 1000; d++) {
-      if (!MODE_SANS_AFFICHAGE) this.resetStats();
+      if (!(MODE_SANS_AFFICHAGE && useHacker && hackerPret)) this.resetStats();
       this.cuts = new int[d];
 
       // effectue la recherche à la profondeur
@@ -202,7 +202,7 @@ class IA {
 
       // si la recherche a été interrompue par search controller
       if (stopSearch) {
-        if (!MODE_SANS_AFFICHAGE) {
+        if (!(MODE_SANS_AFFICHAGE && useHacker && hackerPret)) {
           this.numQuiet = lastNumQuiet;
           this.numPos = lastNumPos;
           this.depthSearched = d-1;
@@ -226,7 +226,7 @@ class IA {
       lastEval = eval;
       lastBestMove = this.bestMoveFound;
 
-      if (!MODE_SANS_AFFICHAGE) {
+      if (!(MODE_SANS_AFFICHAGE && useHacker && hackerPret)) {
         lastNumQuiet = this.numQuiet;
         lastNumPos = this.numPos;
         lastCuts = this.cuts;
@@ -483,7 +483,7 @@ class LeMaire extends IA {
 
   @Override
   void play() {
-    if (!MODE_SANS_AFFICHAGE) cursor(WAIT);
+    if (!(MODE_SANS_AFFICHAGE && useHacker && hackerPret)) cursor(WAIT);
 
     if (nbTour < 9) {
      if (this.tryPlayingBookMove()) return;
@@ -682,7 +682,7 @@ class LesMoutons extends IA {
 
   @Override
   void play() {
-    if (!MODE_SANS_AFFICHAGE) cursor(WAIT);
+    if (!(MODE_SANS_AFFICHAGE && useHacker && hackerPret)) cursor(WAIT);
     if (nbTour < 5) {
      if (this.tryPlayingBookMove()) return;
     }

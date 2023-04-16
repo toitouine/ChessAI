@@ -1,7 +1,4 @@
 void startGame() {
-
-  if (MODE_SANS_AFFICHAGE) frameRate(20);
-
   joueurs.add(new Joueur(j1, 0, j1depth, j1Quiet, (j1Time == 0) ? false : true));
   joueurs.add(new Joueur(j2, 1, j2depth, j2Quiet, (j2Time == 0) ? false : true));
   surface.setSize(gameWidth, gameHeight);
@@ -189,6 +186,7 @@ void resetSettingsToDefault() {
   movesHistory.clear();
   joueurs.clear();
   varianteArrows.clear();
+  hackerMoves.clear();
   tt.clear();
   sa.reset();
 
@@ -216,7 +214,6 @@ void resetSettingsToDefault() {
   numberOfScan = 0;
   hackerWaitingToRestart = false;
   lastMoveTime = 0;
-  deltaTimeMesured = 0;
   isNextMoveRestranscrit = false;
   messagesCount = 0;
   missclickCount = 0;

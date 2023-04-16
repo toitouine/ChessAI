@@ -228,13 +228,11 @@ Point upLeftCorner, downRightCorner, newgameLocation;
 Point saveUpLeftCorner, saveDownRightCorner, saveNewgameLocation;
 Color hackerWhitePieceColor, hackerBlackPieceColor;
 Color saveWhitePieceColor, saveBlackPieceColor;
-long lastHackerScan = 0;
 boolean hackerWaitingToRestart = false;
 int timeAtLastRestartTry = 0;
 int currentHackerPOV = 0;
 int timeAtHackerEnd = 0;
 int lastMoveTime = 0;
-int deltaTimeMesured = 0;
 int numberOfScan = 0;
 boolean isNextMoveRestranscrit = false;
 boolean useHacker = false;
@@ -242,6 +240,7 @@ boolean hackerPret = false;
 boolean hackerAPImode = false;
 Point[][] hackerCoords = new Point[8][8];
 Point[][] saveHackerCoords = new Point[8][8];
+ArrayList<Move> hackerMoves = new ArrayList<Move>();
 
 /////////////////////////////////////////////////////////////////
 
@@ -626,15 +625,10 @@ void draw() {
 
     // Hacker
     if (useHacker && hackerPret  && !hackerAPImode) {
-      if (play && !gameEnded && enPromotion == null && millis() - lastHackerScan >= hackerScanCooldown) {
-        deltaTimeMesured = millis() - lastMoveTime;
-        scanMoveOnBoard();
-      }
+      if (play && !gameEnded && enPromotion == null) scanMoveOnBoard();
 
       if (gameEnded && !hackerWaitingToRestart && millis() - timeAtHackerEnd >= timeBeforeHackerRestart) hackStartGame();
-      if (hackerWaitingToRestart && millis() - timeAtLastRestartTry >= hackerTestRestartCooldown) {
-        handleWaitForRestart();
-      }
+      if (hackerWaitingToRestart && millis() - timeAtLastRestartTry >= hackerTestRestartCooldown) handleWaitForRestart();
     }
 
     if (MODE_SANS_AFFICHAGE && useHacker && hackerPret) return;

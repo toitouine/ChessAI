@@ -5,14 +5,16 @@
 boolean timeControl = false; // Activer le temps (ou pas)
 boolean hackerSansFin = true; // Activer le hacker sans fin (ou pas)
 int hackerSite = LICHESS; // Hacker sur chess.com ou lichess
-int hackerScanCooldown = 100; // Temps (ms) entre chaque scan du hacker
 int hackerTestRestartCooldown = 1300; // Temps (ms) entre chaque scan du hacker pour relancer la partie
 int scansBetweenEndDetect = 50; // Nombre de scans entre chaque détection de fin de partie
 Color endColorLichess = new Color(67, 107, 27);
+Color coupLichessWhite = new Color(194, 202, 87);
+Color coupLichessBlack = new Color(153, 147, 45);
 
+int SCANS_PAR_SECONDE = 10;
 boolean ENABLE_ARNAQUES = true; // Activer les arnaques des moutons (ou pas)
 boolean MODE_PROBLEME = false; // Activer le mode résolution de problèmes (ou pas)
-boolean MODE_SANS_AFFICHAGE = true; // Afficher (ou pas) l'échiquier pendant le hacker
+boolean MODE_SANS_AFFICHAGE = false; // Afficher (ou pas) l'échiquier pendant le hacker
 
 /////////////////////////////////////////////////////////////////
 

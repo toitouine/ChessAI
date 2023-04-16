@@ -187,7 +187,7 @@ void cheat(int c, int fromI, int fromJ, int i, int j, int special) {
 
   // Joue le coup
   click(hackerCoords[fromJ][fromI].x, hackerCoords[fromJ][fromI].y);
-  int delay = (int)random(100, 300);
+  int delay = (int)random(150, 350);
   delay(delay);
   click(hackerCoords[j][i].x, hackerCoords[j][i].y);
 
@@ -229,6 +229,17 @@ boolean hackerEndDetected() {
   return ( (hackerSite == CHESSCOM && chessComEndDetected()) || (hackerSite == LICHESS && lichessEndDetected()) );
 }
 
+void updateHackerMoves() {
+  hackerMoves.clear();
+  int player = (joueurs.get(0).name == "Humain" ? 0 : 1);
+  ArrayList<Move> movesGenerated = generateAllLegalMoves(player, true, false);
+  for (int i = 0; i < movesGenerated.size(); i++) {
+    if (movesGenerated.get(i).special == 4) movesGenerated.get(i).special = 5;
+    if (movesGenerated.get(i).special != 0) hackerMoves.add(0, movesGenerated.get(i));
+    else hackerMoves.add(movesGenerated.get(i));
+  }
+}
+
 Color[][] scanBoard(boolean debugPrint) {
   // int before = millis();
   Color[][] scannedBoard = new Color[8][8];
@@ -253,46 +264,41 @@ Color[][] scanBoard(boolean debugPrint) {
   return scannedBoard;
 }
 
+boolean isMovePlayed(Move m) {
+  Color scannedFrom = hacker.getPixelColor(hackerCoords[m.fromJ][m.fromI].x, hackerCoords[m.fromJ][m.fromI].y);
+  if (isSimilarColor(scannedFrom, coupLichessWhite) || isSimilarColor(scannedFrom, coupLichessBlack)) {
+    Color scannedAt = hacker.getPixelColor(hackerCoords[m.j][m.i].x, hackerCoords[m.j][m.i].y);
+    if (isSimilarColor(scannedAt, (tourDeQui == 0 ? hackerWhitePieceColor : hackerBlackPieceColor))) {
+      return true;
+    }
+  }
+  return false;
+}
 
 Move getMoveOnBoard() {
-  Color[][] scannedBoard = scanBoard(false);
-  Color pieceColor = (tourDeQui == 0) ? hackerWhitePieceColor : hackerBlackPieceColor;
+  if (hackerMoves.size() == 0) updateHackerMoves();
 
-  ArrayList<Piece> piecesToCheck = new ArrayList<Piece>();
-  piecesToCheck.add(rois[tourDeQui]);
-  for (int i = 0; i < pieces[tourDeQui].size(); i++) {
-    if (pieces[tourDeQui].get(i) == rois[tourDeQui]) continue;
-    piecesToCheck.add(pieces[tourDeQui].get(i));
-  }
+  for (int i = 0; i < hackerMoves.size(); i++) {
+    Move m = hackerMoves.get(i);
 
-  for (int n = 0; n < piecesToCheck.size(); n++) {
-    // On regarde si les pièces sont à la bonne case (i et j sont inversés)
-    Piece p = piecesToCheck.get(n);
-    Color scannedColor = scannedBoard[p.j][p.i];
-    if (isSimilarColor(scannedColor, pieceColor)) continue;
-
-    // C'est cette pièce qui s'est déplacé, on génère ses coups (les coups spéciaux sont regardés en premier pour régler le problème du roque)
-    ArrayList<Move> moves = p.generateLegalMoves(true, false);
-    for (int k = 0; k < moves.size(); k++) {
-      if (moves.get(k).special != 0) {
-        if (moves.get(k).special == 4) moves.get(k).special = 5; // autopromotion en dame pour le hacker
-        Move m = moves.remove(k);
-        moves.add(0, m);
+    if (isMovePlayed(m)) {
+      for (int n = 0; n < hackerMoves.size(); n++) { // Vérification du roque
+        Move testedMove = hackerMoves.get(n);
+        if (testedMove.special == 0 || i == n) continue;
+        if (isMovePlayed(testedMove)) {
+          hackerMoves.clear();
+          return testedMove;
+        }
       }
-    }
 
-    for (int k = 0; k < moves.size(); k++) {
-      Move m = moves.get(k);
-      Color scannedColorMove = hacker.getPixelColor(hackerCoords[m.j][m.i].x, hackerCoords[m.j][m.i].y);
-      if (isSimilarColor(scannedColorMove, pieceColor)) return m;
+      hackerMoves.clear();
+      return m;
     }
   }
-
   return null;
 }
 
 void scanMoveOnBoard() {
-  lastHackerScan = millis();
   numberOfScan++;
 
   // Détection du hacker sans fin
@@ -304,6 +310,8 @@ void scanMoveOnBoard() {
       return;
     }
   }
+
+  if (joueurs.get(tourDeQui).name != "Humain") return;
 
   Move sm = getMoveOnBoard();
   if (sm != null) {
@@ -462,6 +470,7 @@ void restoreCalibrationSaves() {
     ta.hide();
     ga.hide();
   }
+  frameRate(SCANS_PAR_SECONDE);
 
   println("Sauvegardes restaurées");
 }
@@ -500,6 +509,7 @@ void forceCalibrationRestore() {
     ta.hide();
     ga.hide();
   }
+  frameRate(SCANS_PAR_SECONDE);
 
   alert("Sauvegarde forcée", 1500);
   println("Restauration forcée des sauvegardes");
@@ -578,6 +588,7 @@ void calibrerHacker() {
     ta.hide();
     ga.hide();
   }
+  frameRate(SCANS_PAR_SECONDE);
 
   println();
   println(">>> Hacker calibré avec succès (ou pas)");
@@ -684,6 +695,7 @@ void displayMoutonAlert() {
 
 void blur(int alpha) {
   fill(220, 220, 220, alpha);
+  noStroke();
   rectMode(CORNER);
   rect(offsetX, offsetY, rows * w, cols * w);
 }
