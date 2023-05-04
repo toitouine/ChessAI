@@ -1,7 +1,6 @@
 # Chess AI
-This is a chess AI, still in progress, using Processing 3. It's based on the negamax algorithm with alpha-beta pruning and transposition table.
-
-You need to install the library ControlP5 and Processing Sound in order to use it.
+Multiple chess AIs using processing 3. They are based on the negamax algorithm with alpha-beta pruning, transposition table and quiet move search.
+You need to install the libraries ControlP5 and Processing Sound in order to use it.
 
 ## Bots
  - LeMaire : the most advanced bot so far : it has positionnal, material, endgame and opening knowledge (using an opening book). It has basic understanding of king safety, but it needs to be improved and it misses the pawn structure knowledge. It is pretty good in endgame thanks to the transposition table.
@@ -10,15 +9,12 @@ You need to install the library ControlP5 and Processing Sound in order to use i
  - LesMoutons : this bot is very special. It is a sheep, that will try to beat you by threatening your pieces. It also cheats sometimes, so watch his pieces because some might appear... Be careful, he will steal your time and make you mouse slip too!
  - Stockfish : a bot that will try to lose the game. It is extremely hard to lose against him, that's the most challenging.
  
- You can adjust the settings using the sliders in the menu : one is for the depth, one for the max depth of the second search (quiet search only looking for captures) and the last is for the time limit of the search (iterative deepening). If no time limit is set, then the AI will just directly search at the depth entered.
- Also, there is a position editor accessible from the home page (top right icon), from which you can... well... edit a position, copy the FEN and play a game from it.
-
-Pretty much everything is in french so good luck understanding everything :)
+You can adjust the settings using the sliders in the menu : one is for the time limit of the search (iterative deepening) and the other one is for the depth to search directly if no time limit is set. There is also a position editor accessible from the home page (top right icon), from which you can edit a position, copy the FEN and play a game from it.
  
  
 Home page :
 
-<img width="1379" alt="ChessAI1" src="https://user-images.githubusercontent.com/107322964/227307760-9b2082ef-6401-4f87-8c6c-b2cc9d7ef7b1.png">
+<img width="1099" alt="ChessAI1" src="https://user-images.githubusercontent.com/107322964/236176632-4b1a5ed3-8349-4ad4-a968-8928c9ce39ae.png">
 
 Game between two AIs :
 
