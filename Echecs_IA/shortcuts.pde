@@ -252,9 +252,7 @@ void savePGN() {
 }
 
 void printHelpMenu() {
-  println("---------------------");
-  println("Menu d'aide et raccourcis clavier");
-  println();
+  println(" ");
   println("  Touche  |       Endroit       |     Description     ");
   println("----------+---------------------+---------------------");
   println(" B        | En partie           | Afficher les coups du livre d'ouverture");
@@ -274,8 +272,8 @@ void printHelpMenu() {
   println(" S        | En partie           | Lancer perft 5");
   println(" T        | En partie           | Fonction de tests");
   println(" V        | En partie           | Afficher les variantes");
-  println(" UP       | En partie           | Augmenter délai par coups");
-  println(" DOWN     | En partie           | Diminuer délai par coups");
+  println(" HAUT     | En partie           | Augmenter délai par coups");
+  println(" BAS      | En partie           | Diminuer délai par coups");
   println(" GAUCHE   | En partie           | Reculer d'un coup (uniquement en pause)");
   println(" DROITE   | En partie           | Avancer d'un coup (uniquement en pause)");
   println(" ESPACE   | En partie           | Pause/Play");

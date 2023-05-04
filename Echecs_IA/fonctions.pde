@@ -143,7 +143,7 @@ void error(String function, String message) {
 }
 
 void helpMoveWhite() {
-  if (tourDeQui != 0) return;
+  if (tourDeQui != 0 || useHacker) return;
   cursor(WAIT);
   LeMaire cmaire = new LeMaire(0, 7, 30, true);
   Move bestMove = cmaire.getBestMove(2000);
@@ -152,7 +152,7 @@ void helpMoveWhite() {
 }
 
 void helpMoveBlack() {
-  if (tourDeQui != 1) return;
+  if (tourDeQui != 1 || useHacker) return;
   cursor(WAIT);
   LeMaire cmaire = new LeMaire(1, 7, 30, true);
   Move bestMove = cmaire.getBestMove(2000);
@@ -470,7 +470,7 @@ void restoreCalibrationSaves() {
     ta.hide();
     ga.hide();
   }
-  frameRate(SCANS_PAR_SECONDE);
+  frameRate(HACKER_RATE);
 
   println("Sauvegardes restaurées");
 }
@@ -509,7 +509,7 @@ void forceCalibrationRestore() {
     ta.hide();
     ga.hide();
   }
-  frameRate(SCANS_PAR_SECONDE);
+  frameRate(HACKER_RATE);
 
   alert("Sauvegarde forcée", 1500);
   println("Restauration forcée des sauvegardes");
@@ -588,7 +588,7 @@ void calibrerHacker() {
     ta.hide();
     ga.hide();
   }
-  frameRate(SCANS_PAR_SECONDE);
+  frameRate(HACKER_RATE);
 
   println();
   println(">>> Hacker calibré avec succès (ou pas)");
@@ -646,6 +646,240 @@ Point[][] copyCoords(Point[][] array) {
 /////////////////////////////////////////////////////////////////
 
 // Affichages
+
+void initGUI() {
+  cp5 = new ControlP5(this);
+  s1 = cp5.addSlider("j1depth")
+     .setPosition(30, 80)
+     .setSize(30,153)
+     .setLabel("Profondeur")
+     .setRange(1,30)
+     .setNumberOfTickMarks(30)
+     .setValue(j1depth)
+     .setColorForeground(#8da75a)
+     .setColorActive(#abcc6a)
+     .setColorBackground(#5d6e3b);
+
+  s2 = cp5.addSlider("j2depth")
+     .setPosition(selectWidth-120, 80)
+     .setSize(30, 153)
+     .setLabel("Profondeur")
+     .setRange(1,30)
+     .setNumberOfTickMarks(30)
+     .setValue(j2depth)
+     .setColorForeground(#8da75a)
+     .setColorActive(#abcc6a)
+     .setColorBackground(#5d6e3b);
+
+  t1 = cp5.addSlider("j1Time")
+      .setPosition(90, 80)
+      .setSize(30, 153)
+      .setLabel("Temps")
+      .setRange(0, 10000)
+      .setValue(1000)
+      .setColorForeground(#bdbd64)
+      .setColorActive(#d6d46f)
+      .setColorBackground(#827e40);
+
+  t2 = cp5.addSlider("j2Time")
+      .setPosition(selectWidth-60, 80)
+      .setSize(30, 153)
+      .setLabel("Temps")
+      .setRange(0, 10000)
+      .setValue(1000)
+      .setColorForeground(#bdbd64)
+      .setColorActive(#d6d46f)
+      .setColorBackground(#827e40);
+
+  // Boutons de FEN et nouvelle partie
+  Condition hubCondition = new Condition() { public boolean c() { return gameState == MENU; } };
+  hubButtons.add(new TextButton(width/2 - 190, height-125, 380, 75, "Nouvelle partie", 30, 10, "verifStartGame", hubCondition));
+  hubButtons.add(new TextButton(width-110, height-40, 100, 30, "Coller FEN", 18, 8, "pasteFEN", hubCondition)); hubButtons.get(1).setColors(#1d1c1a, #ffffff);
+  hubButtons.add(new TextButton(width-220, height-40, 100, 30, "Copier FEN", 18, 8, "copyFEN", hubCondition)); hubButtons.get(2).setColors(#1d1c1a, #ffffff);
+  allButtons.addAll(hubButtons);
+
+  // Boutons de promotion
+  Condition promoCondition = new Condition() { public boolean c() { return (gameState == GAME && !blockPlaying && enPromotion != null && joueurs.get(tourDeQui).name == "Humain"); } };
+  promoButtons.add(new PromotionButton(0.25*w + offsetX, 3.25*w + offsetY, 1.5*w, imageArrayB[1], imageArrayN[1], 0, promoCondition));
+  promoButtons.add(new PromotionButton(2.25*w + offsetX, 3.25*w + offsetY, 1.5*w, imageArrayB[2], imageArrayN[2], 1, promoCondition));
+  promoButtons.add(new PromotionButton(4.25*w + offsetX, 3.25*w + offsetY, 1.5*w, imageArrayB[3], imageArrayN[3], 2, promoCondition));
+  promoButtons.add(new PromotionButton(6.25*w + offsetX, 3.25*w + offsetY, 1.5*w, imageArrayB[4], imageArrayN[4], 3, promoCondition));
+  allButtons.addAll(promoButtons);
+
+  // Selecteurs
+  PImage[] imgs = {human, lemaire, lesmoutons, loic, antoine, stockfish};
+  String[] strs = {"Humain", "LeMaire", "LesMoutons", "Loic", "Antoine", "Stockfish"};
+  selectors.add(new ImageSelector(230, 80, 165, imgs, strs, 0, hubCondition));
+  selectors.add(new ImageSelector(selectWidth - 395, 80, 165, imgs, strs, 1, hubCondition));
+  allButtons.addAll(selectors);
+
+  // Hacker et éditeur de position
+  positionEditor = new ImageButton(selectWidth-55, 10, 55, 55, 0, #ffffff, chess, true, "startEditor", hubCondition);
+  hackerButton = new ImageButton(selectWidth-105, 11, 44, 44, 0, #ffffff, bot, true, "toggleUseHacker", hubCondition);
+  hackerButton.display = false;
+  allButtons.add(positionEditor);
+  allButtons.add(hackerButton);
+
+  // Revanche et menu en fin de partie
+  Condition endButtons = new Condition() { public boolean c() { return(gameState == GAME && gameEnded && !useHacker && !hackerPret); } };
+  rematchButton = new TextButton(offsetX - offsetX/1.08, offsetY+4*w-29, offsetX-2*(offsetX - offsetX/1.08), 24, "Revanche", 15, 3, "rematch", endButtons);
+  rematchButton.setColors(#1d1c1a, #ffffff);
+  newGameButton = new TextButton(offsetX - offsetX/1.08, offsetY+4*w+5, offsetX-2*(offsetX - offsetX/1.08), 24, "Menu", 15, 3, "newGame", endButtons);
+  newGameButton.setColors(#1d1c1a, #ffffff);
+  allButtons.add(rematchButton);
+  allButtons.add(newGameButton);
+
+  // Boutons du temps
+  Condition timeCondition = new Condition() { public boolean c() { return (gameState == MENU && timeControl); } };
+  timeButtons[0] = new ArrayList<TimeButton>();
+  timeButtons[1] = new ArrayList<TimeButton>();
+  timeButtons[0].add(new TimeButton(whiteTimePosition.x,       whiteTimePosition.y - 8,  48, 11, 5, 0, 0, 0, #f0f0f0, #26211b, #d1cfcf, true, timeCondition));
+  timeButtons[0].add(new TimeButton(whiteTimePosition.x + 49,  whiteTimePosition.y - 8,  49, 11, 0, 5, 0, 0, #f0f0f0, #26211b, #d1cfcf, true, timeCondition));
+  timeButtons[0].add(new TimeButton(whiteTimePosition.x + 105, whiteTimePosition.y - 8,  49, 11, 5, 5, 0, 0, #f0f0f0, #26211b, #d1cfcf, true, timeCondition));
+  timeButtons[0].add(new TimeButton(whiteTimePosition.x,       whiteTimePosition.y + 53, 48, 10, 0, 0, 0, 5, #f0f0f0, #26211b, #d1cfcf, false, timeCondition));
+  timeButtons[0].add(new TimeButton(whiteTimePosition.x + 49,  whiteTimePosition.y + 53, 49, 10, 0, 0, 5, 0, #f0f0f0, #26211b, #d1cfcf, false, timeCondition));
+  timeButtons[0].add(new TimeButton(whiteTimePosition.x + 105, whiteTimePosition.y + 53, 49, 10, 0, 0, 5, 5, #f0f0f0, #26211b, #d1cfcf, false, timeCondition));
+  timeButtons[1].add(new TimeButton(blackTimePosition.x,       blackTimePosition.y - 8,  48, 10, 5, 0, 0, 0, #26211b, #f0f0f0, #2d2d2a, true, timeCondition));
+  timeButtons[1].add(new TimeButton(blackTimePosition.x + 49,  blackTimePosition.y - 8,  49, 10, 0, 5, 0, 0, #26211b, #f0f0f0, #2d2d2a, true, timeCondition));
+  timeButtons[1].add(new TimeButton(blackTimePosition.x + 105, blackTimePosition.y - 8,  49, 10, 5, 5, 0, 0, #26211b, #f0f0f0, #2d2d2a, true, timeCondition));
+  timeButtons[1].add(new TimeButton(blackTimePosition.x,       blackTimePosition.y + 53, 48, 10, 0, 0, 0, 5, #26211b, #f0f0f0, #2d2d2a, false, timeCondition));
+  timeButtons[1].add(new TimeButton(blackTimePosition.x + 49,  blackTimePosition.y + 53, 49, 10, 0, 0, 5, 0, #26211b, #f0f0f0, #2d2d2a, false, timeCondition));
+  timeButtons[1].add(new TimeButton(blackTimePosition.x + 105, blackTimePosition.y + 53, 49, 10, 0, 0, 5, 5, #26211b, #f0f0f0, #2d2d2a, false, timeCondition));
+  allButtons.addAll(timeButtons[0]);
+  allButtons.addAll(timeButtons[1]);
+
+  for (int i = 0; i < timeButtons.length; i++) {
+    for (int j = 0; j < timeButtons[i].size(); j++) {
+      timeButtons[i].get(j).setIndex(i, j % 3);
+    }
+  }
+
+  // Boutons de presets
+  presetButtons.add(new ImageButton(30, selectHeight-98, 65, 65, 5, #272522, loadImage("icons/rapid.png"), false, "rapidPreset", hubCondition));
+  presetButtons.add(new ImageButton(110, selectHeight-98, 65, 65, 5, #272522, loadImage("icons/blitz.png"), false, "blitzPreset", hubCondition));
+  presetButtons.add(new ImageButton(190, selectHeight-98, 65, 65, 5, #272522, loadImage("icons/bullet.png"), false, "bulletPreset", hubCondition));
+  allButtons.addAll(presetButtons);
+
+  // Aide et abandon
+  Condition humanWCondition = new Condition() { public boolean c() { return(gameState == GAME && !useHacker && !gameEnded && joueurs.get(0).name == "Humain"); } };
+  Condition humanBCondition = new Condition() { public boolean c() { return(gameState == GAME && !useHacker && !gameEnded && joueurs.get(1).name == "Humain"); } };
+  humanButton.add(new ImageButton(6, offsetY + 7*w - 127, 38, 38, 10, #272522, loadImage("icons/resign.png"), false, "resignWhite", humanWCondition));
+  humanButton.add(new ImageButton(6, offsetY + w + 80, 38, 38, 10, #272522, loadImage("icons/resign.png"), false, "resignBlack", humanBCondition));
+  humanButton.add(new ImageButton(offsetX-44, offsetY + 7*w - 127, 38, 38, 10, #272522, loadImage("icons/helpMove.png"), false, "helpMoveWhite", humanWCondition));
+  humanButton.add(new ImageButton(offsetX-44, offsetY + w + 80, 38, 38, 10, #272522, loadImage("icons/helpMove.png"), false, "helpMoveBlack", humanBCondition));
+  allButtons.addAll(humanButton);
+
+  // Drag and drops
+  Condition dragAndDropWCondition = new Condition() { public boolean c() { return (gameState == EDITOR && !showParameters && !showSavedPositions && addPiecesColor == 0); } };
+  Condition dragAndDropBCondition = new Condition() { public boolean c() { return (gameState == EDITOR && !showParameters && !showSavedPositions && addPiecesColor == 1); } };
+  Condition buttonEditorCondition = new Condition() { public boolean c() { return (gameState == EDITOR && !showParameters && !showSavedPositions); } };
+
+  addPiecesColorSwitch = new CircleToggleButton(offsetX/2, (offsetY+w/2 + w*6) + 70, w/1.3, "switchAddPieceColor", buttonEditorCondition);
+  allButtons.add(addPiecesColorSwitch);
+
+  addPiecesButtons[0] = new ArrayList<DragAndDrop>();
+  for (int i = 0; i < 6; i++) {
+    addPiecesButtons[0].add(new DragAndDrop(offsetX/2, (offsetY+w/2 + w*i) + i*12.5, w, w, imageArrayB[i], i, dragAndDropWCondition));
+  }
+  allButtons.addAll(addPiecesButtons[0]);
+  addPiecesButtons[1] = new ArrayList<DragAndDrop>();
+  for (int i = 0; i < 6; i++) {
+    addPiecesButtons[1].add(new DragAndDrop(offsetX/2, (offsetY+w/2 + w*i) + i*12.5, w, w, imageArrayN[i], i + 6, dragAndDropBCondition));
+  }
+  allButtons.addAll(addPiecesButtons[1]);
+
+  // Icones de la partie
+  Condition iconCondition = new Condition() { public boolean c() { return gameState == GAME; } };
+  int[] numSc1 = {0, 1, 2, 3, 4, 5, 6, 7, 16, 10};
+  for (int i = 0; i < icons.length; i++) {
+    iconButtons.add(new ShortcutButton(edgeSpacing + i*iconSize + i*spacingBetweenIcons, distanceFromTop, iconSize, icons[i], pause, iconCondition));
+    iconButtons.get(i).setNumShortcut(numSc1[i]);
+  }
+  allButtons.addAll(iconButtons);
+
+  // Icones de l'éditeur
+  Condition editorCondition = new Condition() { public boolean c() { return gameState == EDITOR; } };
+  int[] numSc2 = {0, 11, 13, 12, 15, 18, 17, 6, 14};
+  for (int i = 0; i < editorIcons.length; i++) {
+    editorIconButtons.add(new ShortcutButton(editorEdgeSpacing + i*editorIconSize + i*spacingBetweenEditorIcons, distanceFromTop, editorIconSize, editorIcons[i], editorIcons[i], editorCondition));
+    editorIconButtons.get(i).setNumShortcut(numSc2[i]);
+  }
+  allButtons.addAll(editorIconButtons);
+
+  // Boutons fens
+  int startX = 12 + offsetX;
+  int startY = 12 + offsetY;
+  int size = 145;
+  float espacementX = ( w*8 - (startX-offsetX)*2 - 3*size ) / 2;
+  float espacementY = ( w*8 - (startX-offsetX) - 3*size ) / 3;
+  Condition fenCondition = new Condition() { public boolean c() { return (gameState == EDITOR && showSavedPositions); } };
+
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 3; j++) {
+      int index = 3*i + j;
+      if (index >= savedFENS.length) break;
+      savedFENSbuttons.add(new ButtonFEN(startX + size/2 + j*(size + espacementX), startY + size/2 + i*(size + espacementY), size, saveFENSimage[index], savedFENSname[index], index, fenCondition));
+    }
+  }
+  allButtons.addAll(savedFENSbuttons);
+}
+
+void initImages() {
+  imageArrayB[4] = loadImage("pieces/cavalier_b.png");
+  imageArrayN[4] = loadImage("pieces/cavalier_n.png");
+  imageArrayB[1] = loadImage("pieces/dame_b.png");
+  imageArrayN[1] = loadImage("pieces/dame_n.png");
+  imageArrayB[0] = loadImage("pieces/roi_b.png");
+  imageArrayN[0] = loadImage("pieces/roi_n.png");
+  imageArrayB[2] = loadImage("pieces/tour_b.png");
+  imageArrayN[2] = loadImage("pieces/tour_n.png");
+  imageArrayB[5] = loadImage("pieces/pion_b.png");
+  imageArrayN[5] = loadImage("pieces/pion_n.png");
+  imageArrayB[3] = loadImage("pieces/fou_b.png");
+  imageArrayN[3] = loadImage("pieces/fou_n.png");
+
+  icons[0] = loadImage("icons/pin.png");
+  icons[1] = loadImage("icons/variante.png");
+  icons[2] = loadImage("icons/analysis.png");
+  icons[3] = loadImage("icons/info.png");
+  icons[4] = loadImage("icons/pgn.png");
+  icons[5] = loadImage("icons/save.png");
+  icons[6] = loadImage("icons/rotate.png");
+  icons[7] = loadImage("icons/play.png");
+  icons[8] = loadImage("icons/parameter.png");
+  icons[9] = loadImage("icons/quit.png");
+
+  editorIcons[0] = loadImage("icons/pin.png");
+  editorIcons[1] = loadImage("icons/delete.png");
+  editorIcons[2] = loadImage("icons/copy.png");
+  editorIcons[3] = loadImage("icons/info.png");
+  editorIcons[4] = loadImage("icons/start.png");
+  editorIcons[5] = loadImage("icons/paste.png");
+  editorIcons[6] = loadImage("icons/parameter.png");
+  editorIcons[7] = loadImage("icons/rotate.png");
+  editorIcons[8] = loadImage("icons/quit.png");
+
+  pause = loadImage("icons/pause.png");
+  chess = loadImage("icons/chess.png");
+  bot = loadImage("icons/hacker.png");
+  botLarge = loadImage("icons/hacker-large.png");
+  warning = loadImage("icons/warning.png");
+  mouton = loadImage("joueurs/lesmoutonsImgEnd.jpg");
+
+  loic = loadImage("joueurs/loic.jpeg");
+  antoine = loadImage("joueurs/antoine.jpg");
+  stockfish = loadImage("joueurs/stockfish.png");
+  lemaire = loadImage("joueurs/lemaire.jpg");
+  lesmoutons = loadImage("joueurs/lesmoutons.jpg");
+  human = loadImage("joueurs/human.png");
+
+  leftArrow = loadImage("icons/leftArrow.png");
+  rightArrow = loadImage("icons/rightArrow.png");
+
+  for (int i = 0; i < saveFENSimage.length; i++) {
+    saveFENSimage[i] = loadImage("positions/position_" + i + ".png");
+  }
+}
 
 void displayAlert() {
   if (millis() - alertStarted >= alertTime) {
@@ -1122,7 +1356,7 @@ void addPieceToBoardByDrop(int value, int i, int j) {
 }
 
 void bulletPreset() {
-  if (timeControl) {
+  if (timeControl && !useHacker) {
     times[0][0] = 1; times[0][1] = 0; times[0][2] = 0;
     times[1][0] = 1; times[1][1] = 0; times[1][2] = 0;
   }
@@ -1131,7 +1365,7 @@ void bulletPreset() {
 }
 
 void blitzPreset() {
-  if (timeControl) {
+  if (timeControl && !useHacker) {
     times[0][0] = 3; times[0][1] = 0; times[0][2] = 0;
     times[1][0] = 3; times[1][1] = 0; times[1][2] = 0;
   }
@@ -1140,7 +1374,7 @@ void blitzPreset() {
 }
 
 void rapidPreset() {
-  if (timeControl) {
+  if (timeControl && !useHacker) {
     times[0][0] = 10; times[0][1] = 0; times[0][2] = 0;
     times[1][0] = 10; times[1][1] = 0; times[1][2] = 0;
   }

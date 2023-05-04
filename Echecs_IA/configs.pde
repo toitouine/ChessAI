@@ -2,7 +2,7 @@
 
 // Configurations principales
 
-boolean timeControl = false; // Activer le temps (ou pas)
+boolean timeControl = true; // Activer le temps (ou pas)
 boolean hackerSansFin = true; // Activer le hacker sans fin (ou pas)
 int hackerSite = LICHESS; // Hacker sur chess.com ou lichess
 int hackerTestRestartCooldown = 1300; // Temps (ms) entre chaque scan du hacker pour relancer la partie
@@ -11,10 +11,10 @@ Color endColorLichess = new Color(67, 107, 27);
 Color coupLichessWhite = new Color(194, 202, 87);
 Color coupLichessBlack = new Color(153, 147, 45);
 
-int SCANS_PAR_SECONDE = 10;
+int HACKER_RATE = 10;
 boolean ENABLE_ARNAQUES = true; // Activer les arnaques des moutons (ou pas)
 boolean MODE_PROBLEME = false; // Activer le mode résolution de problèmes (ou pas)
-boolean MODE_SANS_AFFICHAGE = false; // Afficher (ou pas) l'échiquier pendant le hacker
+boolean MODE_SANS_AFFICHAGE = true; // Afficher (ou pas) l'échiquier pendant le hacker
 
 /////////////////////////////////////////////////////////////////
 
@@ -48,8 +48,11 @@ float pieceSize = w;
 boolean pointDeVue = true;
 int offsetX = 100 * w/75; //100 * w/100 pour Windows
 int offsetY = 50 * w/75; //50 * w/100 pour Windows
-int selectWidth = 1380;
-int selectHeight = 595;
+int selectWidth = 1100;
+int selectHeight = 460;
+// int selectWidth = 920;
+// int selectHeight = 397;
+
 int gameWidth = cols * w + offsetX;
 int gameHeight = rows * w + offsetY;
 
@@ -98,6 +101,9 @@ int spacingBetweenIcons = (gameWidth - (edgeSpacing*2 + icons.length*iconSize)) 
 int editorIconSize = 40 * w/75; // w/100 pour Windows
 int editorEdgeSpacing = (int)(offsetX - w) / 2 + 10;
 int spacingBetweenEditorIcons = (gameWidth - (editorEdgeSpacing*2 + editorIcons.length*editorIconSize)) / (editorIcons.length-1);
+
+Point whiteTimePosition = new Point(30, 283);
+Point blackTimePosition = new Point(selectWidth - 184, 283);
 
 int addPiecesColor = 0;
 

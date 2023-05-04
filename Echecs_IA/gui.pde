@@ -176,7 +176,8 @@ class TimeButton extends Button {
   }
 
   boolean contains(int x, int y) {
-   return (x >= this.x && x < this.x+this.w && y >= this.y && y < this.y+this.h);
+    this.hovered = (x >= this.x && x < this.x+this.w && y >= this.y && y < this.y+this.h);
+    return this.hovered;
   }
 }
 
@@ -337,53 +338,57 @@ class TextButton extends Button {
   }
 }
 
-class ToggleButton extends Button {
-  float x, y, imgWidth;
-  int c;
-  PImage img;
-  boolean state = false;
-  String name;
+class ImageSelector extends Button {
+  float x, y, w;
+  int c, number;
+  PImage[] images;
+  String[] names;
 
-  ToggleButton(float x, float y, float imgWidth, PImage img, String n, int c, Condition cond) {
+  ImageSelector(float x, float y, float w, PImage[] imgs, String[] names, int c, Condition cond) {
     super("", cond);
     this.x = x;
     this.y = y;
-    this.imgWidth = imgWidth;
-    this.img = img;
-    this.name = n;
+    this.w = w;
+    this.images = imgs;
+    this.names = names;
     this.c = c;
+    this.number = 0;
   }
 
   void show() {
     imageMode(CORNER);
-    if (this.state) {
-      image(this.img, this.x, this.y, this.imgWidth, this.imgWidth);
-      image(mark, this.x, this.y, this.imgWidth, this.imgWidth);
-    } else {
-      image(this.img, this.x, this.y, this.imgWidth, this.imgWidth);
-    }
+    image(this.images[this.number], this.x, this.y, this.w, this.w);
+
+    imageMode(CENTER);
+    image(leftArrow, this.x - this.w/4, this.y + this.w/2, this.w/4, this.w/4);
+    image(rightArrow, this.x + 5*this.w/4, this.y + this.w/2, this.w/4, this.w/4);
   }
 
   @Override
   void call() {
-    if (this.c == 0) {
-      for (ToggleButton t : toggles1) t.state = false;
-      this.state = !this.state;
-      j1 = this.name;
-    }
-    else if (this.c == 1) {
-      for (ToggleButton t : toggles2) t.state = false;
-      this.state = !this.state;
-      j2 = this.name;
-    }
+    int add;
+    if (isLeft(mouseX, mouseY)) add = -1;
+    else add = 1;
+
+    this.number += add;
+    if (this.number == -1) this.number = this.names.length-1;
+    else if (this.number == this.names.length) this.number = 0;
+
+    if (c == 0) j1 = this.names[this.number];
+    else if (c == 1) j2 = this.names[this.number];
   }
 
-  boolean contains(int x, int y) {
-    if (x >= this.x && x < this.x+this.imgWidth && y >= this.y && y < this.y+imgWidth) {
-      return true;
-    } else {
-      return false;
-    }
+  @Override
+  boolean contains(int mx, int my) {
+    return (isLeft(mx, my) || isRight(mx, my));
+  }
+
+  boolean isLeft(int mx, int my) {
+    return (mx >= this.x-3*this.w/8 && mx < this.x-this.w/8 && my >= this.y + 3*this.w/8 && my < this.y + 5*this.w/8);
+  }
+
+  boolean isRight(int mx, int my) {
+    return (mx >= this.x + 9*this.w/8 && mx < this.x + 11*this.w/8 && my >= this.y + 3*this.w/8 && my < this.y + 5*this.w/8);
   }
 }
 

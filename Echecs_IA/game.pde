@@ -29,6 +29,8 @@ void startGame() {
 
   s1.hide();
   s2.hide();
+  t1.hide();
+  t2.hide();
   if (soundControl >= 2) {
     violons.stop();
     pachamama.play(); pachamama.loop();
@@ -99,6 +101,8 @@ void startEditor() {
   surface.setVisible(true);
   s1.hide();
   s2.hide();
+  t1.hide();
+  t2.hide();
 
   cursor(ARROW);
 
@@ -202,14 +206,6 @@ void resetSettingsToDefault() {
     }
   }
 
-  // Reset les toggles
-  for (ToggleButton t : toggles1) {
-    t.state = false;
-  }
-  for (ToggleButton t : toggles2) {
-    t.state = false;
-  }
-
   // Variables
   numberOfScan = 0;
   hackerWaitingToRestart = false;
@@ -257,12 +253,12 @@ void resetSettingsToDefault() {
   yEndScreen = 0;
   infos = "";
   pgn = "";
-  j1 = null;
-  j2 = null;
 
-  //controlP5
+  // ControlP5
   s1.show();
   s2.show();
+  t1.show();
+  t2.show();
 }
 
 boolean checkFastRepetition(long hash) {
@@ -410,7 +406,7 @@ void loseOnTime(int loser) {
 }
 
 void resignWhite() {
-  if (useHacker && hackerPret) return;
+  if (useHacker) return;
 
   winner = 1;
   println();
@@ -429,7 +425,7 @@ void resignWhite() {
 }
 
 void resignBlack() {
-  if (useHacker && hackerPret) return;
+  if (useHacker) return;
 
   winner = 0;
   println();

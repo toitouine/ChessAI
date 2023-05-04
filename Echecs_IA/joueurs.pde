@@ -169,24 +169,25 @@ class IA {
   }
 
   float iterativeDeepening() {
-    // sauvegardes
+    // Sauvegardes des statistiques
     Move lastBestMove = null;
     float lastEval = 0;
     int lastNumPos = 0, lastNumQuiet = 0, lastNumMoves = 0, lastNumCaptures = 0, lastNumQuietCuts = 0, lastNumTranspositions = 0;
     int lastFirstPlyMoves = 0, lastHigherPlyFromRoot = 0;
     int[] lastCuts = {0};  int lastCutsFirst = 0;
 
-    // démarre la recherche sur search controller
-    if (useHacker && hackerPret) {
-      if (nbTour > 1) {
-        int deltaTimeMesured = millis() - lastMoveTime;
-        int timeToPlay = constrain((deltaTimeMesured/2)-500, 20, sa.savedTimes[this.c]*3);
-        sa.setTime(this.c, timeToPlay);
-      } else sa.setTime(this.c, sa.savedTimes[this.c]);
-    }
-    if (MODE_PROBLEME) sa.setTime(this.c, 10000000);
+    // Gestion du temps
+    int timeToPlay = sa.savedTimes[this.c];
+    float deltaTime = millis() - lastMoveTime;
+    deltaTime /= 1000;
+
+    if (useHacker && hackerPret && nbTour > 1) timeToPlay = ceil((((random(1)*10000) % ((deltaTime-deltaTime/2)*1000)) /1000 + deltaTime/2)*1000);
+    else if (MODE_PROBLEME) timeToPlay = 10000000;
+
+    sa.setTime(this.c, timeToPlay);
     sa.startSearch(this.c);
 
+    // Iterative deepening
     for (int d = 1; d < 1000; d++) {
       if (!(MODE_SANS_AFFICHAGE && useHacker && hackerPret)) this.resetStats();
       this.cuts = new int[d];
@@ -287,6 +288,7 @@ class IA {
       joueurs.get(this.c).lastEval = "Book";
       joueurs.get(this.c).evals.add(0.00);
       cursor(ARROW);
+      lastMoveTime = millis();
       return true;
     }
     return false;
@@ -467,6 +469,8 @@ class Antoine extends IA {
 
     joueurs.get(this.c).lastEval = roundNumber(eval, 3);
     joueurs.get(this.c).evals.add(eval);
+
+    lastMoveTime = millis();
   }
 }
 
