@@ -5,12 +5,10 @@ void test() {
   // Move move = new Move(grid[5][5].piece, 5, 2, grid[5][2].piece, 0);
   // LeMaire m = new LeMaire(1, 2, 3, true);
 
-  // float time = ((floor(random(1)*10000)) % (floor((deltaTimeMesured-deltaTimeMesured/2)*1000))) /1000 + deltaTimeMesured/2;
-
   // long count = 0;
   // long numTest = 1000000;
   // long pas = numTest/10;
-  //
+  
   // int before = millis();
   //
   // for (int i = 0; i < numTest; i++) {
@@ -23,35 +21,12 @@ void test() {
   // println(formatInt((int)count) + " itérations");
   // println(temps + " ms");
   // println(formatInt((int)(1000*count/temps)) + " par seconde");
-
-  ArrayList<Float>[] counts = new ArrayList[10];
-
-  for (int n = 0; n < counts.length; n++) {
-    counts[n] = new ArrayList<Float>();
-  }
-
-  for (int n = 0; n < 10000; n++) {
-    for (int i = 1; i < 11; i++) {
-      float val = ceil((((random(1)*10000) % ((i-i/2)*1000)) /1000 + i/2)*1000);
-      // print(i + " ");
-      // println(val);
-      counts[i-1].add(val);
-    }
-  }
-
-  for (int i = 0; i < 10; i++) {
-    float sum = 0;
-    for (int n = 0; n < counts[i].size(); n++) {
-      sum += counts[i].get(n);
-    }
-    println(i+1 + " " + (sum / counts[i].size()));
-  }
 }
 
 void mouseMoved() {
   if (MODE_SANS_AFFICHAGE && useHacker && hackerPret) return;
 
-  if ((gameState == GAME || gameState == EDITOR) && enPromotion == null && !gameEnded && !useHacker) {
+  if ((gameState == GAME || gameState == EDITOR) && enPromotion == null && !gameEnded && !useHacker && !showSavedPositions && !showParameters) {
     int i = getGridI();
     int j = getGridJ();
 
@@ -99,7 +74,7 @@ void mousePressed() {
     return;
   }
 
-  if (gameState == EDITOR) {
+  if (gameState == EDITOR && !showSavedPositions && !showParameters) {
     int i = getGridI();
     int j = getGridJ();
 

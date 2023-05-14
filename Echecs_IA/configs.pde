@@ -2,19 +2,41 @@
 
 // Configurations principales
 
+// [2][3] (f4 noirs en bas)
+
 boolean timeControl = true; // Activer le temps (ou pas)
+
+boolean ENABLE_ARNAQUES = true; // Activer les arnaques des moutons (ou pas)
+boolean MODE_PROBLEME = false; // Activer le mode résolution de problèmes (ou pas)
+
+// Configurations du hacker
+
 boolean hackerSansFin = true; // Activer le hacker sans fin (ou pas)
-int hackerSite = LICHESS; // Hacker sur chess.com ou lichess
+int hackerSite = CHESSCOM; // Hacker sur chess.com (CHESSCOM) ou lichess (LICHESS)
 int hackerTestRestartCooldown = 1300; // Temps (ms) entre chaque scan du hacker pour relancer la partie
 int scansBetweenEndDetect = 50; // Nombre de scans entre chaque détection de fin de partie
+int timeBeforeHackerRestart = 3500; // Temps d'attente avant de redémarrer une partie
+int timeCopycatSize = 5; // Taille du tableau des deltaTimes de time copycat
+
 Color endColorLichess = new Color(67, 107, 27);
 Color coupLichessWhite = new Color(194, 202, 87);
 Color coupLichessBlack = new Color(153, 147, 45);
+Color coupChesscomBlack = new Color(174, 195, 34);
+Color coupChesscomWhite = new Color(246, 249, 87);
 
-int HACKER_RATE = 10;
-boolean ENABLE_ARNAQUES = true; // Activer les arnaques des moutons (ou pas)
-boolean MODE_PROBLEME = false; // Activer le mode résolution de problèmes (ou pas)
-boolean MODE_SANS_AFFICHAGE = true; // Afficher (ou pas) l'échiquier pendant le hacker
+int HACKER_RATE = 10; // FPS du hacker (correspond entre autres au nombre de scans par seconde)
+boolean MODE_SANS_AFFICHAGE = false; // Afficher (ou pas) l'échiquier pendant le hacker
+
+// Sons et autres
+
+int soundControl = 0; //0 = aucun, 1 = partie, 2 = musique
+boolean attach = true; // Épingle la fenêtre par défaut
+boolean stats = true; // Afficher les statistiques et informations pendant le programme
+boolean details = true; // Afficher les statistiques détaillées
+int[][] times = { // Temps par défaut
+  {0, 0, 0}, //blancs : minutes, secondes, incrément
+  {0, 0, 0}  //noirs : minutes, secondes, incrément
+};
 
 /////////////////////////////////////////////////////////////////
 
@@ -28,19 +50,6 @@ String startFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq"; // Posit
 
 /////////////////////////////////////////////////////////////////
 
-// Sound control et time control
-
-int soundControl = 0; //0 = aucun, 1 = partie, 2 = musique
-boolean attach = true;
-boolean stats = true;
-boolean details = true;
-int[][] times = {
-  {0, 0, 0}, //blancs : minutes, secondes, incrément
-  {0, 0, 0}  //noirs : minutes, secondes, incrément
-};
-
-/////////////////////////////////////////////////////////////////
-
 // Fenêtre principale
 
 int w = 70; //100 pour Windows
@@ -50,13 +59,9 @@ int offsetX = 100 * w/75; //100 * w/100 pour Windows
 int offsetY = 50 * w/75; //50 * w/100 pour Windows
 int selectWidth = 1100;
 int selectHeight = 460;
-// int selectWidth = 920;
-// int selectHeight = 397;
 
 int gameWidth = cols * w + offsetX;
 int gameHeight = rows * w + offsetY;
-
-/////////////////////////////////////////////////////////////////
 
 // End screen
 
@@ -65,9 +70,25 @@ float targetEndScreenY = 2.5*w + offsetY;
 float endScreenEasing = 0.07;
 float yEndScreen = 0;
 
+// Interface
+
+int iconSize = 40 * w/75; //40 * w/100 pour Windows
+int edgeSpacing = (int)(offsetX - w) / 2 + 1;
+int distanceFromTop = (int)(offsetY - iconSize) / 2 + 1;
+int spacingBetweenIcons = (gameWidth - (edgeSpacing*2 + icons.length*iconSize)) / (icons.length-1);
+
+int editorIconSize = 40 * w/75; // w/100 pour Windows
+int editorEdgeSpacing = (int)(offsetX - w) / 2 + 10;
+int spacingBetweenEditorIcons = (gameWidth - (editorEdgeSpacing*2 + editorIcons.length*editorIconSize)) / (editorIcons.length-1);
+
+Point whiteTimePosition = new Point(30, 283);
+Point blackTimePosition = new Point(selectWidth - 184, 283);
+
+int addPiecesColor = 0;
+
 /////////////////////////////////////////////////////////////////
 
-// Gestionnaire de fens pour l'éditeur de position
+// Gestionnaire de fens pour l'éditeur de position et moutons
 
 String[] savedFENS = {
   "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq",
@@ -89,28 +110,6 @@ String[] savedFENSname = {
   "Transpositions"
 };
 
-/////////////////////////////////////////////////////////////////
-
-// Interface
-
-int iconSize = 40 * w/75; //40 * w/100 pour Windows
-int edgeSpacing = (int)(offsetX - w) / 2 + 1;
-int distanceFromTop = (int)(offsetY - iconSize) / 2 + 1;
-int spacingBetweenIcons = (gameWidth - (edgeSpacing*2 + icons.length*iconSize)) / (icons.length-1);
-
-int editorIconSize = 40 * w/75; // w/100 pour Windows
-int editorEdgeSpacing = (int)(offsetX - w) / 2 + 10;
-int spacingBetweenEditorIcons = (gameWidth - (editorEdgeSpacing*2 + editorIcons.length*editorIconSize)) / (editorIcons.length-1);
-
-Point whiteTimePosition = new Point(30, 283);
-Point blackTimePosition = new Point(selectWidth - 184, 283);
-
-int addPiecesColor = 0;
-
-/////////////////////////////////////////////////////////////////
-
-// Moutons, hacker et autres...
-
 String[] moutonMessages = {
   "Moutonn !! YOU LOUSE",
   "YOU CHEAT",
@@ -125,7 +124,6 @@ String[] moutonMessages = {
 };
 
 int missclickCooldown = 6;
-int timeBeforeHackerRestart = 3500;
 
 /////////////////////////////////////////////////////////////////
 
@@ -319,12 +317,6 @@ float[][] mairePosArray[] = {maireKingGrid, maireQueenGrid, maireRookGrid, maire
 // à voir pour les zéros
 float[][] mairePosArrayEnd[] = {zeroArray, zeroArray, zeroArray, zeroArray, zeroArray, mairePawnGridEnd};
 
-/////////////////////////////////////////////////////////////////
-
-// Configurations diverses et variées
-
-PImage[] imageArrayB = {roi_b, dame_b, tour_b, fou_b, cavalier_b, pion_b};
-PImage[] imageArrayN = {roi_n, dame_n, tour_n, fou_n, cavalier_n, pion_n};
 String codeArrayB[] = {"K", "Q", "R", "B", "N", "P"};
 String codeArrayN[] = {"k", "q", "r", "b", "n", "p"};
 

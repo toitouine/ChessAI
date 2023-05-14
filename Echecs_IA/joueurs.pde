@@ -115,9 +115,6 @@ class IA {
     // Reset les statistiques pour la prochaine recherche
     this.resetStats();
 
-    // Reset les infos du hacker
-    lastMoveTime = millis();
-
     stopSearch = false;
     cursor(ARROW);
   }
@@ -168,6 +165,27 @@ class IA {
     return posEval;
   }
 
+  int getTimeCopycat() {
+    int time; // en millisecondes
+
+    float deltaTime = millis() - lastMoveTime; // en secondes
+    deltaTime /= 1000;
+
+    if (deltaTimeHistory.size() < timeCopycatSize) {
+      time = sa.savedTimes[this.c] + (int)random(-sa.savedTimes[this.c]/2, sa.savedTimes[this.c]/4);
+    }
+    else {
+      int index = floor(random(0, timeCopycatSize));
+      float prevTime = deltaTimeHistory.remove(index);
+      time = (ceil((((random(1)*10000) % ((prevTime-prevTime/2)*1000)) /1000 + prevTime/2)*1000)) - (int)(exp(-2 * (float)sa.savedTimes[this.c]/1000) * pow(((float)sa.savedTimes[this.c]/1000 + 0.6), 2.7) * 1000);
+    }
+
+    if (useHacker && nbTour > 1) deltaTimeHistory.add(deltaTime);
+    // printArray(deltaTimeHistory);
+
+    return time;
+  }
+
   float iterativeDeepening() {
     // Sauvegardes des statistiques
     Move lastBestMove = null;
@@ -177,12 +195,12 @@ class IA {
     int[] lastCuts = {0};  int lastCutsFirst = 0;
 
     // Gestion du temps
-    int timeToPlay = sa.savedTimes[this.c];
-    float deltaTime = millis() - lastMoveTime;
-    deltaTime /= 1000;
+    int timeToPlay = sa.savedTimes[this.c]; // en millisecondes
 
-    if (useHacker && hackerPret && nbTour > 1) timeToPlay = ceil((((random(1)*10000) % ((deltaTime-deltaTime/2)*1000)) /1000 + deltaTime/2)*1000);
+    if (useHacker && hackerPret && nbTour > 1) timeToPlay = getTimeCopycat();
     else if (MODE_PROBLEME) timeToPlay = 10000000;
+
+    if (timeToPlay <= 20) timeToPlay = 20;
 
     sa.setTime(this.c, timeToPlay);
     sa.startSearch(this.c);
@@ -274,21 +292,24 @@ class IA {
     ArrayList<String> moves = getMovesFromFen(generateFEN());
 
     if (moves.size() > 0 && !gameEnded) {
-      delay(250);
+      int timeToWait = 250;
+      if (useHacker) timeToWait = getTimeCopycat();
+      delay(timeToWait);
+
       this.bestMoveFound = playMoveFromBook(moves);
       if (stats) {
         println(joueurs.get(this.c).name + " : " + "Book");
       }
       sa.setEvals("Book", this.c);
       sa.setBestMoves(getPGNString(this.bestMoveFound), this.c);
-      sa.setDepths("0", this.c);
-      sa.setPositions("0", this.c);
-      sa.setTris("0", this.c);
-      sa.setTranspositions("0", this.c);
+      sa.setDepths("/", this.c);
+      sa.setPositions("/", this.c);
+      sa.setTris("/", this.c);
+      sa.setTranspositions("/", this.c);
+      sa.setTimeDisplays(str(timeToWait) + " ms", this.c);
       joueurs.get(this.c).lastEval = "Book";
       joueurs.get(this.c).evals.add(0.00);
       cursor(ARROW);
-      lastMoveTime = millis();
       return true;
     }
     return false;
@@ -469,8 +490,6 @@ class Antoine extends IA {
 
     joueurs.get(this.c).lastEval = roundNumber(eval, 3);
     joueurs.get(this.c).evals.add(eval);
-
-    lastMoveTime = millis();
   }
 }
 

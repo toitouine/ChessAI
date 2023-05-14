@@ -64,6 +64,16 @@ void pasteHTMLtoBoard() {
   HTMLtoBoard(str);
 }
 
+void switchSite() {
+  if (hackerSite == LICHESS) {
+    hackerSite = CHESSCOM;
+    println("Hacker en mode : chess.com");
+  } else if (hackerSite == CHESSCOM) {
+    hackerSite = LICHESS;
+    println("Hacker en mode : Lichess");
+  }
+}
+
 void toggleSearchController() {
   showSearchController = !showSearchController;
   if (showSearchController) sa.show();

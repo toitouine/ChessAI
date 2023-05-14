@@ -220,6 +220,43 @@ class ImageButton extends Button {
   }
 }
 
+class ToggleImage extends Button {
+  int x, y, w, h;
+  PImage img1, img2;
+  boolean state = false;
+
+  ToggleImage(int x, int y, int w, int h, PImage img1, PImage img2, String f, Condition c) {
+    super(f, c);
+    this.x = x;
+    this.y = y;
+    this.w = w;
+    this.h = h;
+    this.img1 = img1;
+    this.img2 = img2;
+  }
+
+  void show() {
+    noStroke();
+    imageMode(CENTER);
+    if (state) image(img2, this.x, this.y, this.w, this.h);
+    else image(img1, this.x, this.y, this.w, this.h);
+  }
+
+  void toggle() {
+    this.state = !this.state;
+  }
+
+  @Override
+  void call() {
+    super.call();
+    this.toggle();
+  }
+
+  boolean contains(int x, int y) {
+    return (x >= this.x - this.w/2 && x <= this.x+this.w/2 && y >= this.y - this.h/2 && y <= this.y+this.h/2);
+  }
+}
+
 class CircleToggleButton extends Button {
   float x, y, d;
   boolean state = false;
@@ -240,6 +277,12 @@ class CircleToggleButton extends Button {
 
   void toggle() {
     this.state = !this.state;
+  }
+
+  @Override
+  void call() {
+    super.call();
+    this.toggle();
   }
 
   boolean contains(int x, int y) {

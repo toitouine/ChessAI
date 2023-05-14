@@ -180,6 +180,7 @@ class Move {
     // Hacker
     if (useHacker && hackerPret && !hackerAPImode && !isNextMoveRestranscrit) {
       cheat(this.piece.c, this.fromI, this.fromJ, this.i, this.j, this.special);
+      lastMoveTime = millis();
     }
     isNextMoveRestranscrit = false;
 

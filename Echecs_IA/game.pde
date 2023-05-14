@@ -184,6 +184,7 @@ void resetSettingsToDefault() {
   currentEnPassantable[0] = null;
   currentEnPassantable[1] = null;
   bestMoveArrow = null;
+  deltaTimeHistory.clear();
   piecesToDisplay.clear();
   positionHistory.clear();
   zobristHistory.clear();

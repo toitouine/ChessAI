@@ -4,6 +4,7 @@
 
 // Editeur de position : Trait et roques
 // La brebis
+// Hacker : le tableau + fonction du temps
 
 /////////////////////////////////////////////////////////////////
 
@@ -64,18 +65,8 @@ TimerApplet ta;
 GraphApplet ga;
 SearchApplet sa;
 
-PImage cavalier_b;
-PImage cavalier_n;
-PImage dame_b;
-PImage dame_n;
-PImage roi_b;
-PImage roi_n;
-PImage tour_b;
-PImage tour_n;
-PImage pion_b;
-PImage pion_n;
-PImage fou_b;
-PImage fou_n;
+PImage[] imageArrayB;
+PImage[] imageArrayN;
 
 PImage loic;
 PImage antoine;
@@ -105,6 +96,8 @@ PImage idIcon;
 PImage idIconOff;
 PImage warning;
 PImage mouton;
+PImage chesscomLogo;
+PImage lichessLogo;
 
 Robot hacker;
 
@@ -154,6 +147,7 @@ ArrayList<Long> zobristHistory = new ArrayList<Long>();
 CircleToggleButton addPiecesColorSwitch;
 ImageButton positionEditor;
 ImageButton hackerButton;
+ToggleImage siteButton;
 Piece pieceSelectionne = null;
 Piece enPromotion = null;
 TextButton rematchButton;
@@ -240,6 +234,7 @@ boolean hackerAPImode = false;
 Point[][] hackerCoords = new Point[8][8];
 Point[][] saveHackerCoords = new Point[8][8];
 ArrayList<Move> hackerMoves = new ArrayList<Move>();
+ArrayList<Float> deltaTimeHistory = new ArrayList<Float>(); // en secondes
 
 /////////////////////////////////////////////////////////////////
 
@@ -355,12 +350,13 @@ void setup() {
 
 void draw() {
 
-  ////////////////////////////////////////////////////////////////
+  // Point p = MouseInfo.getPointerInfo().getLocation();
+  // println(hacker.getPixelColor(p.x, p.y));
 
   if (gameState == GAME) {
     background(49, 46, 43);
 
-    // Actualise blockPlaying, qui empêche éventuellement un joueur de jouer
+    // Actualise blockPlaying
     updateBlockPlaying();
 
     // Bot vs humain
@@ -385,6 +381,7 @@ void draw() {
       if (hackerWaitingToRestart && millis() - timeAtLastRestartTry >= hackerTestRestartCooldown) handleWaitForRestart();
     }
 
+    // Affichages / Interface
     if (MODE_SANS_AFFICHAGE && useHacker && hackerPret) return;
 
     // Titre

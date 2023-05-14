@@ -169,11 +169,7 @@ void cheat(int c, int fromI, int fromJ, int i, int j, int special) {
 
   // Détection du hacker sans fin sur chess.com
   if (hackerSansFin && hackerSite == CHESSCOM) {
-    if (hackerEndDetected()) {
-      endOnHackerDetect();
-      timeAtHackerEnd = millis();
-      return;
-    }
+    if (hackerEndDetected()) return;
   }
 
   // Sauvegarde les coordonnées du curseur
@@ -187,7 +183,7 @@ void cheat(int c, int fromI, int fromJ, int i, int j, int special) {
 
   // Joue le coup
   click(hackerCoords[fromJ][fromI].x, hackerCoords[fromJ][fromI].y);
-  int delay = (int)random(150, 350);
+  int delay = (int)random(100, 250);
   delay(delay);
   click(hackerCoords[j][i].x, hackerCoords[j][i].y);
 
@@ -265,8 +261,17 @@ Color[][] scanBoard(boolean debugPrint) {
 }
 
 boolean isMovePlayed(Move m) {
+  Color coupColorWhite = null, coupColorBlack = null;
+  if (hackerSite == LICHESS) {
+    coupColorWhite = coupLichessWhite;
+    coupColorBlack = coupLichessBlack;
+  } else if (hackerSite == CHESSCOM) {
+    coupColorWhite = coupChesscomWhite;
+    coupColorBlack = coupChesscomBlack;
+  }
+
   Color scannedFrom = hacker.getPixelColor(hackerCoords[m.fromJ][m.fromI].x, hackerCoords[m.fromJ][m.fromI].y);
-  if (isSimilarColor(scannedFrom, coupLichessWhite) || isSimilarColor(scannedFrom, coupLichessBlack)) {
+  if (isSameColor(scannedFrom, coupColorWhite) || isSameColor(scannedFrom, coupColorBlack)) {
     Color scannedAt = hacker.getPixelColor(hackerCoords[m.j][m.i].x, hackerCoords[m.j][m.i].y);
     if (isSimilarColor(scannedAt, (tourDeQui == 0 ? hackerWhitePieceColor : hackerBlackPieceColor))) {
       return true;
@@ -720,6 +725,16 @@ void initGUI() {
   allButtons.add(positionEditor);
   allButtons.add(hackerButton);
 
+  // Bouton sur page du hacker
+  int rectX = (gameWidth-offsetX)/2 + offsetX;
+  int rectY = (gameHeight-offsetY)/2 + offsetY;
+  int rectW = 7*w, rectH = 3*w;
+
+  PImage img1 = (hackerSite == LICHESS ? lichessLogo : chesscomLogo);
+  PImage img2 = (hackerSite == LICHESS ? chesscomLogo : lichessLogo);
+  siteButton = new ToggleImage(rectX+rectW/2-25, rectY-rectH/2+25, 35, 35, img1, img2, "switchSite", new Condition() { public boolean c() { return (gameState == GAME && useHacker && !hackerPret);}});
+  allButtons.add(siteButton);
+
   // Revanche et menu en fin de partie
   Condition endButtons = new Condition() { public boolean c() { return(gameState == GAME && gameEnded && !useHacker && !hackerPret); } };
   rematchButton = new TextButton(offsetX - offsetX/1.08, offsetY+4*w-29, offsetX-2*(offsetX - offsetX/1.08), 24, "Revanche", 15, 3, "rematch", endButtons);
@@ -825,6 +840,9 @@ void initGUI() {
 }
 
 void initImages() {
+  imageArrayB = new PImage[6];
+  imageArrayN = new PImage[6];
+
   imageArrayB[4] = loadImage("pieces/cavalier_b.png");
   imageArrayN[4] = loadImage("pieces/cavalier_n.png");
   imageArrayB[1] = loadImage("pieces/dame_b.png");
@@ -865,6 +883,8 @@ void initImages() {
   botLarge = loadImage("icons/hacker-large.png");
   warning = loadImage("icons/warning.png");
   mouton = loadImage("joueurs/lesmoutonsImgEnd.jpg");
+  chesscomLogo = loadImage("icons/chesscom.png");
+  lichessLogo = loadImage("icons/lichess.png");
 
   loic = loadImage("joueurs/loic.jpeg");
   antoine = loadImage("joueurs/antoine.jpg");
@@ -945,9 +965,10 @@ void drawHackerPage() {
   rectMode(CENTER);
   rect(rectX, rectY, rectW, rectH);
 
-  // Image
+  // Images
   imageMode(CORNER);
   image(botLarge, rectX - rectW/2 + 10*w/75, rectY - rectH/2 + 10*w/75, 90 * w/75, 90 * w/75);
+  siteButton.show();
 
   // Titre
   fill(color(#b33430));
@@ -987,13 +1008,13 @@ void drawParameters() {
   blur(220);
   fill(0);
   stroke(0);
-  textSize(35 * w/75);
-  textAlign(LEFT, CENTER);
-  text("Trait :", offsetX + w/2, offsetY + w/2);
-  line(offsetX + w/2, offsetY + 0.875*w, offsetX + w/2 + textWidth("Trait :"), offsetY + 0.875*w);
-
-  text("Roques :", offsetX + w/2, offsetY + 2.5*w);
-  line(offsetX + w/2, offsetY + 2.875*w, offsetX + w/2 + textWidth("Roques :"), offsetY + 2.875*w);
+  // textSize(35 * w/75);
+  // textAlign(LEFT, CENTER);
+  // text("Trait :", offsetX + w/2, offsetY + w/2);
+  // line(offsetX + w/2, offsetY + 0.875*w, offsetX + w/2 + textWidth("Trait :"), offsetY + 0.875*w);
+  //
+  // text("Roques :", offsetX + w/2, offsetY + 2.5*w);
+  // line(offsetX + w/2, offsetY + 2.875*w, offsetX + w/2 + textWidth("Roques :"), offsetY + 2.875*w);
 }
 
 void drawInfoBox(String i) {
@@ -1177,7 +1198,6 @@ void playerPromote(int numButton) {
 }
 
 void switchAddPieceColor() {
-  addPiecesColorSwitch.toggle();
   addPiecesColor = (addPiecesColor == 1) ? 0 : 1;
 }
 
