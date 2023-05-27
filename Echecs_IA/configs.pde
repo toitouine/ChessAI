@@ -2,8 +2,6 @@
 
 // Configurations principales
 
-// [2][3] (f4 noirs en bas)
-
 boolean timeControl = true; // Activer le temps (ou pas)
 
 boolean ENABLE_ARNAQUES = true; // Activer les arnaques des moutons (ou pas)
@@ -15,8 +13,9 @@ boolean hackerSansFin = true; // Activer le hacker sans fin (ou pas)
 int hackerSite = CHESSCOM; // Hacker sur chess.com (CHESSCOM) ou lichess (LICHESS)
 int hackerTestRestartCooldown = 1300; // Temps (ms) entre chaque scan du hacker pour relancer la partie
 int scansBetweenEndDetect = 50; // Nombre de scans entre chaque détection de fin de partie
+int waitsBetweenStartRetry = 25; // Nombre d'essais de relance de partie avant de relancer une nouvelle fois (anti-revanche sur chess.com)
 int timeBeforeHackerRestart = 3500; // Temps d'attente avant de redémarrer une partie
-int timeCopycatSize = 5; // Taille du tableau des deltaTimes de time copycat
+int timeCopycatSize = 3; // Taille du tableau des deltaTimes de time copycat
 
 Color endColorLichess = new Color(67, 107, 27);
 Color coupLichessWhite = new Color(194, 202, 87);
@@ -25,7 +24,7 @@ Color coupChesscomBlack = new Color(174, 195, 34);
 Color coupChesscomWhite = new Color(246, 249, 87);
 
 int HACKER_RATE = 10; // FPS du hacker (correspond entre autres au nombre de scans par seconde)
-boolean MODE_SANS_AFFICHAGE = false; // Afficher (ou pas) l'échiquier pendant le hacker
+boolean MODE_SANS_AFFICHAGE = true; // Afficher (ou pas) l'échiquier pendant le hacker
 
 // Sons et autres
 

@@ -8,7 +8,7 @@ void test() {
   // long count = 0;
   // long numTest = 1000000;
   // long pas = numTest/10;
-  
+
   // int before = millis();
   //
   // for (int i = 0; i < numTest; i++) {
@@ -115,9 +115,9 @@ void keyPressed() {
     else if (keyCode == RIGHT)         rewindForward();
     else if (key == 'T')               test();
 
-    else if ((key == 'r' || key == 'R') && useHacker && hackerPret) {
-      endOnHackerDetect();
-      timeAtHackerEnd = millis();
+    else if (useHacker && hackerPret) {
+      if (key == 'r' || key == 'R') { endOnHackerDetect(); timeAtHackerEnd = millis(); }
+      else if (key == 'w' || key == 'W') hackStartGame();
     }
 
   } else if (gameState == EDITOR) {

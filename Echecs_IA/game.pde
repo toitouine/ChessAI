@@ -208,6 +208,7 @@ void resetSettingsToDefault() {
   }
 
   // Variables
+  numberOfRestartWait = 0;
   numberOfScan = 0;
   hackerWaitingToRestart = false;
   lastMoveTime = 0;
@@ -231,6 +232,7 @@ void resetSettingsToDefault() {
   upLeftCorner = null;
   downRightCorner = null;
   newgameLocation = null;
+  colorOfRematch = null;
   hackerPret = false;
   timeAtHackerEnd = 0;
   engineToPlay = false;

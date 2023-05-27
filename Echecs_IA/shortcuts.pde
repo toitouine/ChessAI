@@ -59,6 +59,11 @@ class Shortcut {
 
 // Fonctions de shortcuts
 
+void toggleUseHacker() {
+  useHacker =! useHacker;
+  hackerButton.display = !hackerButton.display;
+}
+
 void pasteHTMLtoBoard() {
   String str = GetTextFromClipboard();
   HTMLtoBoard(str);
@@ -282,6 +287,7 @@ void printHelpMenu() {
   println(" S        | En partie           | Lancer perft 5");
   println(" T        | En partie           | Fonction de tests");
   println(" V        | En partie           | Afficher les variantes");
+  println(" W        | En partie + Hacker  | Forcer le redémarrage d'une partie du hacker sans fin");
   println(" HAUT     | En partie           | Augmenter délai par coups");
   println(" BAS      | En partie           | Diminuer délai par coups");
   println(" GAUCHE   | En partie           | Reculer d'un coup (uniquement en pause)");

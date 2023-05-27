@@ -4,7 +4,7 @@
 
 // Editeur de position : Trait et roques
 // La brebis
-// Hacker : le tableau + fonction du temps
+// Hacker : anti-annulation Lichess
 
 /////////////////////////////////////////////////////////////////
 
@@ -186,7 +186,6 @@ int gameState = MENU;
 int winner = -1;
 int timeAtEnd = 0;
 int rewindCount = 0;
-long rngState = 1804289383;
 String endReason = "";
 String alert = "";
 int alertTime = 0;
@@ -205,36 +204,6 @@ float lastMissclick = 0;
 // En mémoire du vecteur vitesse
 int slider;
 int speed = 0;
-
-// Joueurs
-String j1;
-String j2;
-int j1depth = 3;
-int j2depth = 3;
-int j1Quiet = 30;
-int j2Quiet = 30;
-int j1Time = 1000;
-int j2Time = 1000;
-
-// Hacker
-Point upLeftCorner, downRightCorner, newgameLocation;
-Point saveUpLeftCorner, saveDownRightCorner, saveNewgameLocation;
-Color hackerWhitePieceColor, hackerBlackPieceColor;
-Color saveWhitePieceColor, saveBlackPieceColor;
-boolean hackerWaitingToRestart = false;
-int timeAtLastRestartTry = 0;
-int currentHackerPOV = 0;
-int timeAtHackerEnd = 0;
-int lastMoveTime = 0;
-int numberOfScan = 0;
-boolean isNextMoveRestranscrit = false;
-boolean useHacker = false;
-boolean hackerPret = false;
-boolean hackerAPImode = false;
-Point[][] hackerCoords = new Point[8][8];
-Point[][] saveHackerCoords = new Point[8][8];
-ArrayList<Move> hackerMoves = new ArrayList<Move>();
-ArrayList<Float> deltaTimeHistory = new ArrayList<Float>(); // en secondes
 
 /////////////////////////////////////////////////////////////////
 

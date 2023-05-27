@@ -1,5 +1,14 @@
 /////////////////////////////////////////////////////////////////
 
+String j1;
+String j2;
+int j1depth = 3;
+int j2depth = 3;
+int j1Quiet = 30;
+int j2Quiet = 30;
+int j1Time = 1000;
+int j2Time = 1000;
+
 int[] totalScores = {0, 0, 0, 0, 0, 0};
 float[] scores = {0, 0, 0, 0, 0, 0};
 
@@ -181,9 +190,8 @@ class IA {
     }
 
     if (useHacker && nbTour > 1) deltaTimeHistory.add(deltaTime);
-    // printArray(deltaTimeHistory);
 
-    return time;
+    return max(time, 20);
   }
 
   float iterativeDeepening() {

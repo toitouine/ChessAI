@@ -3,13 +3,15 @@
 // Zobrist hashing
 
 // Permet d'obtenir une clé presque identique pour chaque position de manière rapide
-// RNG : XOR-Shift algorithm
+// RNG : XOR-Shift algorithm (avec rngState)
 
 // initZobristKeys : pour initialiser les clés correspondant à chaque données concernant une positin (pas pion en passant)
 // initHash : pour initialiser la clé d'une position (au départ d'une nouvelle position)
 // updateHash : actualise le hash en fonction du coup qui a été joué (utile pendant la recherche car s'auto-inverse)
 
 /////////////////////////////////////////////////////////////////
+
+long rngState = 1804289383;
 
 class Zobrist {
 
