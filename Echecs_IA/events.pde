@@ -6,12 +6,13 @@ void test() {
   // LeMaire m = new LeMaire(1, 2, 3, true);
 
   // long count = 0;
-  // long numTest = 1000000;
+  // long numTest = 2000;
   // long pas = numTest/10;
-
+  //
   // int before = millis();
   //
   // for (int i = 0; i < numTest; i++) {
+  //   hackerEndDetected();
   //   count++;
   //   if (i % pas == 0) println(i);
   // }

@@ -448,7 +448,7 @@ void handleWaitForRestart() {
 void click(int x, int y) {
   hacker.mouseMove(x, y);
   hacker.mousePress(InputEvent.BUTTON1_DOWN_MASK);
-  delay(2);
+  delay(5);
   hacker.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
 }
 
@@ -471,11 +471,11 @@ void cheat(int c, int fromI, int fromJ, int i, int j, int special) {
 
   // Joue le coup
   click(hackerCoords[fromJ][fromI].x, hackerCoords[fromJ][fromI].y);
-  int delay = (int)random(100, 250);
+  int delay = (int)random(80, 100);
   delay(delay);
   click(hackerCoords[j][i].x, hackerCoords[j][i].y);
 
-  if (special >= 5) delay(20);
+  if (special >= 5) delay(30);
   if (special == 5) click(hackerCoords[j][i].x, hackerCoords[j][i].y);
   else if (special == 6) click(hackerCoords[j][i].x, hackerCoords[j+2*promoDir][i].y);
   else if (special == 7) click(hackerCoords[j][i].x, hackerCoords[j+3*promoDir][i].y);

@@ -181,7 +181,7 @@ class IA {
     deltaTime /= 1000;
 
     if (deltaTimeHistory.size() < timeCopycatSize) {
-      time = sa.savedTimes[this.c] + (int)random(-sa.savedTimes[this.c]/2, sa.savedTimes[this.c]/4);
+      time = sa.savedTimes[this.c] - (int)random(sa.savedTimes[this.c]/1.5, sa.savedTimes[this.c]/3);
     }
     else {
       int index = floor(random(0, timeCopycatSize));
