@@ -14,6 +14,7 @@ Point upLeftCorner, downRightCorner, newgameLocation;
 Point saveUpLeftCorner, saveDownRightCorner, saveNewgameLocation;
 Color hackerWhitePieceColor, hackerBlackPieceColor;
 Color saveWhitePieceColor, saveBlackPieceColor;
+
 Color colorOfRematch = null;
 boolean hackerWaitingToRestart = false;
 int timeAtLastRestartTry = 0;
@@ -36,9 +37,55 @@ ArrayList<Float> deltaTimeHistory = new ArrayList<Float>(); // en secondes
 // Calibration
 
 void calibrerHacker() {
-  println("Haut-gauche :", upLeftCorner.x, upLeftCorner.y);
-  println("Bas-droite :", downRightCorner.x, downRightCorner.y);
-  println("Nouvelle partie :", newgameLocation.x, newgameLocation.y);
+  calculateCalibrationData();
+
+  if (!verifyCalibration(0, false)) {
+    resetCalibrationData();
+    alert("Échec de la calibration", 1500);
+    return;
+  }
+
+  saveHackerData();
+  prepareEngine();
+  setupHacker();
+
+  alert("Hacker calibré avec succès", 1500);
+  println("[HACKER] Hacker calibré avec succès (ou pas)");
+}
+
+void restoreCalibrationSaves() {
+  if (noHackerSaves()) return;
+
+  loadHackerSaves();
+
+  if (!verifyCalibration(0, false)) {
+    resetCalibrationData();
+    alert("Échec de la calibration", 1500);
+    return;
+  }
+
+  prepareEngine();
+  setupHacker();
+
+  alert("Sauvegardes restaurées", 1500);
+  println("[HACKER] Sauvegardes restaurées");
+}
+
+void forceCalibrationRestore() {
+  if (noHackerSaves()) return;
+
+  loadHackerSaves();
+  prepareEngine();
+  setupHacker();
+
+  alert("Calibration forcée", 1500);
+  println("[HACKER] Restauration forcée des sauvegardes");
+}
+
+void calculateCalibrationData() {
+  println("[HACKER] Haut-gauche :", upLeftCorner.x, upLeftCorner.y);
+  println("[HACKER] Bas-droite :", downRightCorner.x, downRightCorner.y);
+  println("[HACKER] Nouvelle partie :", newgameLocation.x, newgameLocation.y);
 
   int boardWidth = downRightCorner.x - upLeftCorner.x;
   int boardHeight = downRightCorner.y - upLeftCorner.y;
@@ -53,131 +100,58 @@ void calibrerHacker() {
 
   hackerWhitePieceColor = hacker.getPixelColor(hackerCoords[7][7].x, hackerCoords[7][7].y);
   hackerBlackPieceColor = hacker.getPixelColor(hackerCoords[0][0].x, hackerCoords[0][0].y);
+}
 
-  if (!verifyCalibration(0, false)) {
-    upLeftCorner = null;
-    downRightCorner = null;
-    newgameLocation = null;
-    hackerWhitePieceColor = null;
-    hackerBlackPieceColor = null;
-    for (int i = 0; i < 8; i++) {
-      for (int j = 0; j < 8; j++) {
-        hackerCoords[i][j] = new Point();
-      }
+void resetCalibrationData() {
+  upLeftCorner = null;
+  downRightCorner = null;
+  newgameLocation = null;
+  hackerWhitePieceColor = null;
+  hackerBlackPieceColor = null;
+  for (int i = 0; i < 8; i++) {
+    for (int j = 0; j < 8; j++) {
+      hackerCoords[i][j] = new Point();
     }
-    alert("Échec de la calibration", 2500);
-    return;
   }
+}
 
+void saveHackerData() {
   saveUpLeftCorner = upLeftCorner;
   saveDownRightCorner = downRightCorner;
   saveHackerCoords = copyCoords(hackerCoords);
   saveWhitePieceColor = hackerWhitePieceColor;
   saveBlackPieceColor = hackerBlackPieceColor;
   saveNewgameLocation = newgameLocation;
-  println("Données du hacker sauvegardées");
-
-  if (play && !gameEnded && !rewind) {
-    if ((joueurs.get(0).name == "Humain" && joueurs.get(1).name != "Humain") || (joueurs.get(0).name != "Humain" && joueurs.get(1).name == "Humain")) {
-      if (joueurs.get(tourDeQui).name != "Humain") { engineToPlay = true; }
-    }
-  }
-
-  hackerPret = true;
-  if (MODE_SANS_AFFICHAGE) {
-    surface.setSize(150, 150);
-    surface.setLocation(displayWidth-150, 0);
-    hacker.mouseMove(displayWidth-75, 120);
-    sa.hide();
-    ta.hide();
-    ga.hide();
-  }
-  frameRate(HACKER_RATE);
-
-  println();
-  println(">>> Hacker calibré avec succès (ou pas)");
-  println();
+  println("[HACKER] Données du hacker sauvegardées");
 }
 
-void restoreCalibrationSaves() {
+void loadHackerSaves() {
+  upLeftCorner = copyPoint(saveUpLeftCorner);
+  downRightCorner = copyPoint(saveDownRightCorner);
+  newgameLocation = copyPoint(saveNewgameLocation);
+  hackerWhitePieceColor = copyColor(saveWhitePieceColor);
+  hackerBlackPieceColor = copyColor(saveBlackPieceColor);
+  hackerCoords = copyCoords(saveHackerCoords);
+  currentHackerPOV = 0;
+}
+
+boolean noHackerSaves() {
   if (saveUpLeftCorner == null || saveDownRightCorner == null || saveNewgameLocation == null || saveWhitePieceColor == null || saveBlackPieceColor == null) {
     alert("Aucune sauvegarde", 2500);
-    println("Aucune sauvegarde");
-    return;
+    return true;
   }
-
-  upLeftCorner = copyPoint(saveUpLeftCorner);
-  downRightCorner = copyPoint(saveDownRightCorner);
-  newgameLocation = copyPoint(saveNewgameLocation);
-  hackerWhitePieceColor = copyColor(saveWhitePieceColor);
-  hackerBlackPieceColor = copyColor(saveBlackPieceColor);
-  hackerCoords = copyCoords(saveHackerCoords);
-  currentHackerPOV = 0;
-
-  if (!verifyCalibration(0, false)) {
-    upLeftCorner = null;
-    downRightCorner = null;
-    newgameLocation = null;
-    hackerWhitePieceColor = null;
-    hackerBlackPieceColor = null;
-    for (int i = 0; i < 8; i++) {
-      for (int j = 0; j < 8; j++) {
-        hackerCoords[i][j] = new Point();
-      }
-    }
-    alert("Échec de la calibration", 2500);
-    return;
-  }
-
-  if (play && !gameEnded && !rewind) {
-    if (joueurs.get(0).name == "Humain" && joueurs.get(1).name != "Humain") {
-      setHackerPOV(1);
-      if (joueurs.get(tourDeQui).name != "Humain") engineToPlay = true;
-    }
-    else if (joueurs.get(0).name != "Humain" && joueurs.get(1).name == "Humain") {
-      if (joueurs.get(tourDeQui).name != "Humain") { engineToPlay = true; }
-    }
-  }
-
-  hackerPret = true;
-  if (MODE_SANS_AFFICHAGE) {
-    surface.setSize(150, 150);
-    surface.setLocation(displayWidth-150, 0);
-    hacker.mouseMove(displayWidth-75, 120);
-    sa.hide();
-    ta.hide();
-    ga.hide();
-  }
-  frameRate(HACKER_RATE);
-
-  println("Sauvegardes restaurées");
+  return false;
 }
 
-void forceCalibrationRestore() {
-  if (saveUpLeftCorner == null || saveDownRightCorner == null || hackerWhitePieceColor == null || hackerBlackPieceColor == null) {
-    alert("Aucune sauvegarde", 2500);
-    println("Aucune sauvegarde");
-    return;
-  }
-
-  upLeftCorner = copyPoint(saveUpLeftCorner);
-  downRightCorner = copyPoint(saveDownRightCorner);
-  newgameLocation = copyPoint(saveNewgameLocation);
-  hackerWhitePieceColor = copyColor(saveWhitePieceColor);
-  hackerBlackPieceColor = copyColor(saveBlackPieceColor);
-  hackerCoords = copyCoords(saveHackerCoords);
-  currentHackerPOV = 0;
-
+void prepareEngine() {
   if (play && !gameEnded && !rewind) {
-    if (joueurs.get(0).name == "Humain" && joueurs.get(1).name != "Humain") {
-      setHackerPOV(1);
+    if ((joueurs.get(0).name == "Humain" && joueurs.get(1).name != "Humain") || (joueurs.get(0).name != "Humain" && joueurs.get(1).name == "Humain")) {
       if (joueurs.get(tourDeQui).name != "Humain") engineToPlay = true;
     }
-    else if (joueurs.get(0).name != "Humain" && joueurs.get(1).name == "Humain") {
-      if (joueurs.get(tourDeQui).name != "Humain") { engineToPlay = true; }
-    }
   }
+}
 
+void setupHacker() {
   hackerPret = true;
   if (MODE_SANS_AFFICHAGE) {
     surface.setSize(150, 150);
@@ -188,9 +162,6 @@ void forceCalibrationRestore() {
     ga.hide();
   }
   frameRate(HACKER_RATE);
-
-  alert("Sauvegarde forcée", 1500);
-  println("Restauration forcée des sauvegardes");
 }
 
 void addPointToCalibration() {
@@ -206,7 +177,7 @@ void addPointToCalibration() {
     newgameLocation = p;
     calibrerHacker();
   }
-  else println(">>> Hacker déjà calibré");
+  else println("[HACKER] Hacker déjà calibré");
 }
 
 boolean verifyCalibration(int tolerance, boolean confondu) {
@@ -258,6 +229,20 @@ boolean verifyCalibration(int tolerance, boolean confondu) {
   return true;
 }
 
+void manualRestoreSaves() {
+  restoreCalibrationSaves();
+  if (joueurs.get(0).name == "Humain" && joueurs.get(1).name != "Humain") {
+    setHackerPOV(1);
+  }
+}
+
+void manualForceSaves() {
+  forceCalibrationRestore();
+  if (joueurs.get(0).name == "Humain" && joueurs.get(1).name != "Humain") {
+    setHackerPOV(1);
+  }
+}
+
 /////////////////////////////////////////////////////////////////
 
 // Scans
@@ -281,7 +266,7 @@ Color[][] scanBoard(boolean debugPrint) {
     if (debugPrint) { println(); }
   }
 
-  // println("Scan completed in " + (millis()-before) + " ms");
+  // println("[HACKER] Scan terminé en " + (millis()-before) + " ms");
 
   return scannedBoard;
 }
@@ -337,7 +322,6 @@ void scanMoveOnBoard() {
     numberOfScan = 0;
     if (hackerEndDetected()) {
       endOnHackerDetect();
-      timeAtHackerEnd = millis();
       return;
     }
   }
@@ -350,7 +334,7 @@ void scanMoveOnBoard() {
     sm.play();
     if (!blockPlaying) {
       if ((joueurs.get(0).name == "Humain" && joueurs.get(1).name != "Humain") || (joueurs.get(0).name != "Humain" && joueurs.get(1).name == "Humain")) {
-        if (joueurs.get(tourDeQui).name != "Humain") { engineToPlay = true; }
+        if (joueurs.get(tourDeQui).name != "Humain") engineToPlay = true;
       }
     }
   }
@@ -422,11 +406,10 @@ void handleWaitForRestart() {
     }
 
     // Protection anti-annulation
-    if (isSameColor(colorOfRematch, hacker.getPixelColor(newgameLocation.x, newgameLocation.y))) return;
+    // if (isSameColor(colorOfRematch, hacker.getPixelColor(newgameLocation.x, newgameLocation.y))) return;
   }
 
   boolean isGameStarted = verifyCalibration(2, true);
-  scanBoard(false);
   if (isGameStarted) {
     int botColor;
 
@@ -435,9 +418,10 @@ void handleWaitForRestart() {
 
     delay(500);
     String iaType = ((joueurs.get(0).name == "Humain") ? joueurs.get(1).name : joueurs.get(0).name);
-    setHackerPOV(botColor);
+    // La pov change quelque part !!! ATTENTION ANTI ANNULATION DESACTIVÉE
     newAIGame(botColor, iaType);
     forceCalibrationRestore();
+    setHackerPOV(botColor);
   }
 }
 
@@ -453,7 +437,6 @@ void click(int x, int y) {
 }
 
 void cheat(int c, int fromI, int fromJ, int i, int j, int special) {
-  deselectAll();
 
   // Détection du hacker sans fin sur chess.com
   if (hackerSansFin && hackerSite == CHESSCOM) {
@@ -467,6 +450,7 @@ void cheat(int c, int fromI, int fromJ, int i, int j, int special) {
   int promoDir = (c == 0 ? 1 : -1);
 
   // Prend le focus de chess.com
+  delay(10);
   click(hackerCoords[fromJ][fromI].x, hackerCoords[fromJ][fromI].y);
 
   // Joue le coup
@@ -483,8 +467,9 @@ void cheat(int c, int fromI, int fromJ, int i, int j, int special) {
 
   // Revient à la position initiale
   click(x, y);
+  delay(10);
 
-  // Déselectionne les pièces au cas où
+  // Déselectionne les pièces au cas où il clique dessus
   deselectAll();
 }
 

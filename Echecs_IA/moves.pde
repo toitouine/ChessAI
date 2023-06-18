@@ -50,7 +50,7 @@ class Move {
   }
 
   void log() {
-    print(this.piece.type + "->" + grid[this.i][this.j].name + " (" + this.special + ") + " + this.scoreGuess + " | ");
+    print("[MOVE] " + this.piece.type + "->" + grid[this.i][this.j].name + " (" + this.special + ") + " + this.scoreGuess + " | ");
   }
 
   boolean equals(Move m2) {

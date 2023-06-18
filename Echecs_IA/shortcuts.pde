@@ -49,7 +49,7 @@ class Shortcut {
       case 17: toggleParameters(); break;
       case 18: pasteHTMLtoBoard(); break;
 
-      default: println(">>> Erreur dans shortcut.call()");
+      default: error("shortcut.call()", "aucun raccourci assigné");
       break;
     }
   }
@@ -62,6 +62,7 @@ class Shortcut {
 void toggleUseHacker() {
   useHacker =! useHacker;
   hackerButton.display = !hackerButton.display;
+  if (!useHacker) frameRate(60);
 }
 
 void pasteHTMLtoBoard() {
@@ -72,10 +73,10 @@ void pasteHTMLtoBoard() {
 void switchSite() {
   if (hackerSite == LICHESS) {
     hackerSite = CHESSCOM;
-    println("Hacker en mode : chess.com");
+    println("[HACKER] Hacker en mode : chess.com");
   } else if (hackerSite == CHESSCOM) {
     hackerSite = LICHESS;
-    println("Hacker en mode : Lichess");
+    println("[HACKER] Hacker en mode : Lichess");
   }
 }
 
@@ -173,7 +174,7 @@ void clearPosition() {
 }
 
 void printFEN() {
-  println("Position fen : " + generateFEN());
+  println("Fen de la position : " + generateFEN());
 }
 
 void copyFEN() {
@@ -237,7 +238,7 @@ void toggleAttach() {
 void printMaireEval() {
   print("Evaluation statique du maire : ");
   LeMaire m = new LeMaire(1, 3, 0, false);
-  println(m.Evaluation()/100); //Evaluation statique de la position selon le maire
+  println(m.Evaluation()/100); // Evaluation statique de la position selon le maire
 }
 
 void delayUp() {
@@ -253,7 +254,7 @@ void delayDown() {
 }
 
 void printNewSpeed() {
-  println("Délai par coups : " + (float)speed/60 + " s");
+  println("[PARTIE] Délai par coups : " + (float)speed/60 + " s");
 }
 
 void savePGN() {

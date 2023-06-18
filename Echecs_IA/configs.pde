@@ -1,11 +1,16 @@
 /////////////////////////////////////////////////////////////////
 
-// Configurations principales
+// Configurations diverses
 
-boolean timeControl = true; // Activer le temps (ou pas)
+String name = "Echecs on java";
 
-boolean ENABLE_ARNAQUES = true; // Activer les arnaques des moutons (ou pas)
-boolean MODE_PROBLEME = false; // Activer le mode résolution de problèmes (ou pas)
+String startFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq"; // Position de départ
+// String startFEN = "7k/1pp3qp/3p3r/pQb1pr2/PP6/2P3B1/5PPP/3R1R1K b"; // Problème difficile
+// String startFEN = "7K/P1p1p1p1/2P1P1Pk/6pP/3p2P1/1P6/3P4/8 w"; // Sous-promotion
+
+boolean MODE_PROBLEME = true; // Activer le mode résolution de problèmes (ou pas)
+
+/////////////////////////////////////////////////////////////////
 
 // Configurations du hacker
 
@@ -17,21 +22,24 @@ int waitsBetweenStartRetry = 25; // Nombre d'essais de relance de partie avant d
 int timeBeforeHackerRestart = 3500; // Temps d'attente avant de redémarrer une partie
 int timeCopycatSize = 3; // Taille du tableau des deltaTimes de time copycat
 
-Color endColorLichess = new Color(67, 107, 27);
-Color coupLichessWhite = new Color(194, 202, 87);
-Color coupLichessBlack = new Color(153, 147, 45);
-Color coupChesscomBlack = new Color(174, 195, 34);
-Color coupChesscomWhite = new Color(246, 249, 87);
+Color endColorLichess = new Color(67, 107, 27); // Couleur du bouton de nouvelle partie de Lichess quand la souris est dessus
+Color coupLichessWhite = new Color(194, 202, 87); // Couleur de surlignage de case blanche sur Lichess
+Color coupLichessBlack = new Color(153, 147, 45); // Couleur de surlignage de case noire sur Lichess
+Color coupChesscomWhite = new Color(246, 249, 87); // Couleur de surlignage de case blanche sur chess.com
+Color coupChesscomBlack = new Color(174, 195, 34); // Couleur de surlignage de case noire sur chess.com
 
-int HACKER_RATE = 10; // FPS du hacker (correspond entre autres au nombre de scans par seconde)
-boolean MODE_SANS_AFFICHAGE = true; // Afficher (ou pas) l'échiquier pendant le hacker
+int HACKER_RATE = 5; // FPS du hacker (correspond entre autres au nombre de scans par seconde)
+boolean MODE_SANS_AFFICHAGE = false; // Afficher (ou pas) l'échiquier pendant le hacker
 
-// Sons et autres
+// Sons, temps et autres
 
-int soundControl = 0; //0 = aucun, 1 = partie, 2 = musique
+int soundControl = 0; // 0 = aucun, 1 = partie, 2 = musique
+
 boolean attach = true; // Épingle la fenêtre par défaut
 boolean stats = true; // Afficher les statistiques et informations pendant le programme
 boolean details = true; // Afficher les statistiques détaillées
+
+boolean timeControl = true; // Activer le temps (ou pas)
 int[][] times = { // Temps par défaut
   {0, 0, 0}, //blancs : minutes, secondes, incrément
   {0, 0, 0}  //noirs : minutes, secondes, incrément
@@ -39,55 +47,28 @@ int[][] times = { // Temps par défaut
 
 /////////////////////////////////////////////////////////////////
 
-// Configurations diverses et variées
+// Configuration de l'interface
 
-String name = "Echecs on java";
+int w = 70; // Taille d'une case
+float pieceSize = w; // Taille d'une pièce
+int offsetX = 100 * w/75; // Taille de la bande verticale à gauche
+int offsetY = 50 * w/75; // Taille de la bande horizontale en haut
+int gameWidth = cols * w + offsetX; // Largeur de la fenêtre de la partie
+int gameHeight = rows * w + offsetY; // Hauteur de la fenêtre de la partie
+int selectWidth = 1100; // Largeur de la page d'acceuil
+int selectHeight = 460; // Hauteur de la page d'acceuil
 
-String startFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq"; // Position de départ
-// String startFEN = "7k/1pp3qp/3p3r/pQb1pr2/PP6/2P3B1/5PPP/3R1R1K b"; // Problème difficile
-// String startFEN = "7K/P1p1p1p1/2P1P1Pk/6pP/3p2P1/1P6/3P4/8 w"; // Sous-promotion
+int timeBeforeEndDisplay = 750; // Temps avant d'afficher l'écran de fin de partie en ms
+float targetEndScreenY = 2.5*w + offsetY; // Position (hauteur) de fin de l'écran de fin de partie
+float defaultEndScreenY = -210; // Position (hauteur) de départ de l'écran de fin de partie
+float endScreenEasing = 0.04; // Vitesse de descente de l'écran de fin de partie
 
-/////////////////////////////////////////////////////////////////
-
-// Fenêtre principale
-
-int w = 70; //100 pour Windows
-float pieceSize = w;
-boolean pointDeVue = true;
-int offsetX = 100 * w/75; //100 * w/100 pour Windows
-int offsetY = 50 * w/75; //50 * w/100 pour Windows
-int selectWidth = 1100;
-int selectHeight = 460;
-
-int gameWidth = cols * w + offsetX;
-int gameHeight = rows * w + offsetY;
-
-// End screen
-
-int timeBeforeEndDisplay = 750; //en ms, temps avant d'afficher l'écran de fin de partie
-float targetEndScreenY = 2.5*w + offsetY;
-float endScreenEasing = 0.07;
-float yEndScreen = 0;
-
-// Interface
-
-int iconSize = 40 * w/75; //40 * w/100 pour Windows
-int edgeSpacing = (int)(offsetX - w) / 2 + 1;
-int distanceFromTop = (int)(offsetY - iconSize) / 2 + 1;
-int spacingBetweenIcons = (gameWidth - (edgeSpacing*2 + icons.length*iconSize)) / (icons.length-1);
-
-int editorIconSize = 40 * w/75; // w/100 pour Windows
-int editorEdgeSpacing = (int)(offsetX - w) / 2 + 10;
-int spacingBetweenEditorIcons = (gameWidth - (editorEdgeSpacing*2 + editorIcons.length*editorIconSize)) / (editorIcons.length-1);
-
-Point whiteTimePosition = new Point(30, 283);
-Point blackTimePosition = new Point(selectWidth - 184, 283);
-
-int addPiecesColor = 0;
+Point whiteTimePosition = new Point(30, 283); // Position du sélecteur de temps des blancs
+Point blackTimePosition = new Point(selectWidth - 184, 283); // Position du sélecteur de temps des noirs
 
 /////////////////////////////////////////////////////////////////
 
-// Gestionnaire de fens pour l'éditeur de position et moutons
+// Gestionnaire de fens pour l'éditeur de position
 
 String[] savedFENS = {
   "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq",
@@ -109,7 +90,13 @@ String[] savedFENSname = {
   "Transpositions"
 };
 
-String[] moutonMessages = {
+/////////////////////////////////////////////////////////////////
+
+// Moutons
+
+boolean ENABLE_ARNAQUES = true; // Activer les arnaques des moutons (ou pas)
+
+String[] moutonMessages = { // Liste des messages envoyés par les moutons
   "Moutonn !! YOU LOUSE",
   "YOU CHEAT",
   "LOIC LA GROSSE VACHE",
@@ -122,11 +109,11 @@ String[] moutonMessages = {
   "Sur prise, prise puis prise"
 };
 
-int missclickCooldown = 6;
+int missclickCooldown = 6; // Nombre minimum de tour entre chaque tentative de missclick
 
 /////////////////////////////////////////////////////////////////
 
-// Valeurs pour l'évaluation
+// Valeurs positionnelles du maire
 
 int[] kingSafetyPenalty = {
     0,   0,   1,   2,   3,   5,   7,   9,  12,  15,
@@ -198,24 +185,13 @@ float[][] mairePawnGridEnd = {
 float[][] maireKingGrid = {
   {-30, -30, -30, -30, -20, -10, 20,  20},
   {-40, -40, -40, -40, -30, -20, 20,  35},
-  {-40, -40, -40, -40, -30, -20,  0, -10}, // 0 à la fin avant
-  {-50, -50, -50, -50, -40, -20,  0, -10}, // 0 à la fin avant
-  {-50, -50, -50, -50, -40, -20,  0, -10}, // 0 à la fin avant
-  {-40, -40, -40, -40, -30, -20,  0, -10}, // 0 à la fin avant
+  {-40, -40, -40, -40, -30, -20,  0, -10},
+  {-50, -50, -50, -50, -40, -20,  0, -10},
+  {-50, -50, -50, -50, -40, -20,  0, -10},
+  {-40, -40, -40, -40, -30, -20,  0, -10},
   {-40, -40, -40, -40, -30, -20, 20,  35},
   {-30, -30, -30, -30, -20, -10, 20,  20},
 };
-
-// float[][] maireKingGridEnd = {
-//   {-55, -45, -35, -25, -25, -35, -45, -55},
-//   {-45, -25, -10, -10, -10, -10, -25, -45},
-//   {-35, -10,  20,  25,  25,  20, -10, -35},
-//   {-25,   0,  25,  30,  30,  25,   0, -25},
-//   {-25,   0,  25,  30,  30,  25,   0, -25},
-//   {-35, -10,  20,  25,  25,  20, -10, -35},
-//   {-45, -25, -10, -10, -10, -10, -25, -45},
-//   {-55, -45, -35, -25, -25, -35, -45, -55},
-// };
 
 float[][] maireRookGrid = {
   {0,  5, -5, -5, -5, -5, -5, 0},
@@ -240,6 +216,8 @@ float[][] zeroArray = {
 };
 
 /////////////////////////////////////////////////////////////////
+
+// Valeurs positionnelles de Loic
 
 float[][] loicKingGrid = {
   {-30, -30, -30, -30, -20, -10,  5,  0},
@@ -307,16 +285,13 @@ float[][] loicPawnGrid = {
   {100, 50, 10, 5, 0,  20,   5, 0}
 };
 
-int loicEvalArray[] = {100000, 900, 150, 300, 300, 100};
-float[][] loicPosArray[] = {loicKingGrid, loicQueenGrid, loicRookGrid, loicBishopGrid, loicKnightGrid, loicPawnGrid};
+/////////////////////////////////////////////////////////////////
 
-int maireEvalArray[] = {100000, 900, 500, 330, 320, 100};
+int maireEvalArray[] = {100000, 900, 500, 330, 320, 100}; // Valeurs de chaque pièce selon le maire
+int loicEvalArray[] = {100000, 900, 150, 300, 300, 100}; // Valeurs de chaque pièce selon Loic
+
 float[][] mairePosArray[] = {maireKingGrid, maireQueenGrid, maireRookGrid, maireBishopGrid, maireKnightGrid, mairePawnGrid};
-
-// à voir pour les zéros
 float[][] mairePosArrayEnd[] = {zeroArray, zeroArray, zeroArray, zeroArray, zeroArray, mairePawnGridEnd};
-
-String codeArrayB[] = {"K", "Q", "R", "B", "N", "P"};
-String codeArrayN[] = {"k", "q", "r", "b", "n", "p"};
+float[][] loicPosArray[] = {loicKingGrid, loicQueenGrid, loicRookGrid, loicBishopGrid, loicKnightGrid, loicPawnGrid};
 
 /////////////////////////////////////////////////////////////////

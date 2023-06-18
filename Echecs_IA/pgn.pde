@@ -184,7 +184,7 @@ boolean isAtPieceDist(Cell c1, Cell c2, String type) {
     case "fou": return (isAtBishopDist(c1, c2));
     case "dame": return (isAtQueenDist(c1, c2));
     case "tour": return (isAtRookDist(c1, c2));
-    default: println("ERREUR DANS isAtPieceDist() : TYPE INVALIDE"); return false;
+    default: error("isAtPieceDist()", "type invalide"); return false;
   }
 }
 
@@ -354,7 +354,7 @@ Piece getPiecePgn(String type, int c, int targetI, int targetJ, int reqI, int re
     }
   }
 
-  if (matches.size() > 1) println("ERREUR DANS getPiecePgn() : TROP DE MATCHES");
+  if (matches.size() > 1) error("getPiecePgn()", "trop de matches");
   if (matches.size() == 0) return null;
   return matches.get(0);
 }

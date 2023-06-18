@@ -12,6 +12,9 @@ int j2Time = 1000;
 int[] totalScores = {0, 0, 0, 0, 0, 0};
 float[] scores = {0, 0, 0, 0, 0, 0};
 
+int CONSTANTE_DE_STOCKFISH = 3;
+float TOTAL_DEPART = 3200.0;
+
 class Joueur {
   String name, elo, title = "", victoryTitle, lastEval = "";
   int c, depth, index, maxDepth;
@@ -306,7 +309,7 @@ class IA {
 
       this.bestMoveFound = playMoveFromBook(moves);
       if (stats) {
-        println(joueurs.get(this.c).name + " : " + "Book");
+        println("[BOT] " + joueurs.get(this.c).name + " : " + "Book");
       }
       sa.setEvals("Book", this.c);
       sa.setBestMoves(getPGNString(this.bestMoveFound), this.c);
@@ -410,7 +413,7 @@ class IA {
 
     // Affichage des statistiques de la console
     if (stats) {
-      print(joueurs.get(this.c).name + " : "
+      print("[BOT] " + joueurs.get(this.c).name + " : "
             + getPGNString(this.bestMoveFound) + ", "
             + posEval/100 + ", ");
 

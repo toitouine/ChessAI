@@ -77,7 +77,7 @@ class ShortcutButton extends Button {
 
   @Override
   void call() {
-    if (this.numShortcut == -1) { println("Erreur initialisation shortcut dans bouton"); return; }
+    if (this.numShortcut == -1) { error("ShortcutButton.call()", "pas d'initialisation de shortcut"); return; }
     sc.call(this.numShortcut);
   }
 

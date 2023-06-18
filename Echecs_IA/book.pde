@@ -281,7 +281,7 @@ void addMoveToBook(String fen, Move m) {
   if (index == -1) {
     // La fen introuvable, donc on l'ajoute au livre
     book.add(fen + ":" + moveString + "_1");
-    println(moveString + " ajouté + nouvelle position");
+    println("[BOOK] " + moveString + " ajouté + nouvelle position");
   }
   else {
     // La fen est déjà référencée (trouvée à index)
@@ -294,7 +294,7 @@ void addMoveToBook(String fen, Move m) {
         movesStringAtIndex[i+1] = str(effectif+1);
         String bookLine = fen + ":" + join(movesStringAtIndex, "_");
         book.set(index, bookLine);
-        println(moveString + " incrémenté : " + (effectif+1));
+        println("[BOOK] " + moveString + " incrémenté : " + (effectif+1));
         return;
       }
     }
@@ -303,7 +303,7 @@ void addMoveToBook(String fen, Move m) {
     String b = book.get(index);
     b = b + "_" + moveString + "_1";
     book.set(index, b);
-    println(moveString + " ajouté (nouveau coup, position connue)");
+    println("[BOOK] " + moveString + " ajouté (nouveau coup, position connue)");
   }
 }
 

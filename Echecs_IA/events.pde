@@ -94,8 +94,8 @@ void keyPressed() {
 
     if (useHacker && !hackerPret && !hackerAPImode) {
       if (keyCode == ENTER) addPointToCalibration();
-      if (keyCode == BACKSPACE) restoreCalibrationSaves();
-      if (keyCode == SHIFT) forceCalibrationRestore();
+      if (keyCode == BACKSPACE) manualRestoreSaves();
+      if (keyCode == SHIFT) manualForceSaves();
     }
 
     if (key == ' ')                    playPause();
@@ -117,7 +117,7 @@ void keyPressed() {
     else if (key == 'T')               test();
 
     else if (useHacker && hackerPret) {
-      if (key == 'r' || key == 'R') { endOnHackerDetect(); timeAtHackerEnd = millis(); }
+      if (key == 'r' || key == 'R') endOnHackerDetect();
       else if (key == 'w' || key == 'W') hackStartGame();
     }
 

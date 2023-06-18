@@ -1,3 +1,17 @@
+/////////////////////////////////////////////////////////////////
+
+// Fonctions concernant la gestion de la partie (démarrage, redémarrage, fin de partie...)
+
+/////////////////////////////////////////////////////////////////
+
+int MENU = 0;
+int GAME = 1;
+int EDITOR = 2;
+
+/////////////////////////////////////////////////////////////////
+
+// Démarrage d'une nouvelle partie
+
 void startGame() {
   joueurs.add(new Joueur(j1, 0, j1depth, j1Quiet, (j1Time == 0) ? false : true));
   joueurs.add(new Joueur(j2, 1, j2depth, j2Quiet, (j2Time == 0) ? false : true));
@@ -39,9 +53,9 @@ void startGame() {
 
   println(" ");
   if (stats) {
-    println("Nouvelle fenêtre (" + name + ") : " + width + " x " + height);
+    println("[PARTIE] Nouvelle fenêtre (" + name + ") : " + width + " x " + height);
   }
-  println("Nouvelle partie : " + j1 + " (aux blancs) contre " + j2 + " (aux noirs)");
+  println("[PARTIE] Nouvelle partie : " + j1 + " (aux blancs) contre " + j2 + " (aux noirs)");
   println(" ");
 
   pgn =       "[Event \"Chess AI Tournament\"]\n";
@@ -56,9 +70,9 @@ void startGame() {
 
   String fen = generateFEN();
   if (!fen.equals(startFEN)) {
-    println("ERREUR INITIALISATION FEN, generateFEN() != startFEN");
-    println("--> EXPECTED : " + generateFEN() + " / GOT : " + startFEN);
-    println(" ");
+    println("[ERREUR] INITIALISATION FEN : generateFEN() != startFEN");
+    println("--> EXPECTED : " + generateFEN() + " AND GOT : " + startFEN);
+    println();
   }
 
   addFenToHistory(fen);
@@ -116,7 +130,7 @@ void verifStartGame() {
   if (j1 != null && j2 != null) {
     startGame();
   } else {
-    println("Veuillez selectionner 2 joueurs");
+    println("[MENU] Veuillez selectionner 2 joueurs");
   }
 }
 
@@ -131,7 +145,6 @@ void rematch() {
 
 void newAIGame(int ia, String type) {
   resetGame(false);
-  println(ia, type);
   j1 = (ia == 0 ? type : "Humain");
   j2 = (ia == 0 ? "Humain" : type);
   startGame();
@@ -141,8 +154,12 @@ void newGame() {
   resetGame(true);
 }
 
+/////////////////////////////////////////////////////////////////
+
+// Redémarrage / Retour au menu
+
 void resetGame(boolean menu) {
-  // reset les timers
+  // Reset les timers
   if (useTime) {
     ta.resetTimers();
     ta.hide();
@@ -151,10 +168,10 @@ void resetGame(boolean menu) {
   ga.hide();
   sa.hide();
 
-  // réinitialise les variables
+  // Réinitialise les variables
   resetSettingsToDefault();
 
-  // resize la fenêtre
+  // Resize la fenêtre
   if (menu) {
     surface.setSize(selectWidth, selectHeight);
     surface.setLocation(displayWidth/2 - width/2, 0);
@@ -164,14 +181,14 @@ void resetGame(boolean menu) {
     gameState = MENU;
   }
 
-  // arrête la musique :(
+  // Arrête la musique :(
   if (soundControl >= 2) {
     pachamama.stop();
     diagnostic.stop();
     violons.play(); violons.loop();
   }
 
-  // replace les pièces
+  // Replace les pièces
   setPieces();
 }
 
@@ -232,6 +249,8 @@ void resetSettingsToDefault() {
   upLeftCorner = null;
   downRightCorner = null;
   newgameLocation = null;
+  hackerWhitePieceColor = null;
+  hackerBlackPieceColor = null;
   colorOfRematch = null;
   hackerPret = false;
   timeAtHackerEnd = 0;
@@ -253,7 +272,7 @@ void resetSettingsToDefault() {
   timeAtEnd = 0;
   endReason = "";
   disableEndScreen = false;
-  yEndScreen = 0;
+  yEndScreen = defaultEndScreenY;
   infos = "";
   pgn = "";
 
@@ -263,6 +282,10 @@ void resetSettingsToDefault() {
   t1.show();
   t2.show();
 }
+
+/////////////////////////////////////////////////////////////////
+
+// Gestion de fin de partie
 
 boolean checkFastRepetition(long hash) {
   int counter = 0;
@@ -311,7 +334,7 @@ void checkGameState() {
   if (manqueDeMateriel()) {
     winner = 2;
     println();
-    println("Nulle par manque de matériel");
+    println("[PARTIE] Nulle par manque de matériel");
     println();
     addPgnDraw();
     updateScores(0.5);
@@ -331,7 +354,7 @@ void checkGameState() {
   if (checkRepetition(hash)) {
     winner = 2;
     println();
-    println("Nulle par répétition");
+    println("[PARTIE] Nulle par répétition");
     println();
     addPgnDraw();
     updateScores(0.5);
@@ -355,7 +378,7 @@ void checkGameState() {
 
       winner = (int)pow(tourDeQui-1, 2);
       println();
-      println("Victoire des " + (tourDeQui == 0 ? "noirs" : "blancs") + " (" + joueurs.get(winner).name + ") par échec et mat");
+      println("[PARTIE] Victoire des " + (tourDeQui == 0 ? "noirs" : "blancs") + " (" + joueurs.get(winner).name + ") par échec et mat");
       println();
       addPgnMate(winner);
       updateScores(winner);
@@ -368,7 +391,7 @@ void checkGameState() {
 
       winner = 2;
       println();
-      println("Nulle par pat");
+      println("[PARTIE] Nulle par pat");
       println();
       addPgnDraw();
       updateScores(0.5);
@@ -394,7 +417,7 @@ void loseOnTime(int loser) {
 
   winner = (int)pow(loser-1, 2);
   println();
-  println("Victoire des " + ((winner == 0) ? "blancs" : "noirs") + " au temps");
+  println("[PARTIE] Victoire des " + ((winner == 0) ? "blancs" : "noirs") + " au temps");
   println();
   addPgnWin(winner);
   updateScores(winner);
@@ -413,7 +436,7 @@ void resignWhite() {
 
   winner = 1;
   println();
-  println("Victoire des noirs par abandon");
+  println("[PARTIE] Victoire des noirs par abandon");
   println();
   addPgnWin(winner);
   updateScores(winner);
@@ -432,7 +455,7 @@ void resignBlack() {
 
   winner = 0;
   println();
-  println("Victoire des blancs par abandon");
+  println("[PARTIE] Victoire des blancs par abandon");
   println();
   addPgnWin(winner);
   updateScores(winner);
@@ -447,9 +470,11 @@ void resignBlack() {
 }
 
 void endOnHackerDetect() {
+  timeAtHackerEnd = millis();
+
   winner = 2;
   println();
-  println("Fin de la partie (hacker)");
+  println("[PARTIE] Détection de fin de partie (hacker)");
   println();
   addPgnDraw();
   updateScores(0.5);

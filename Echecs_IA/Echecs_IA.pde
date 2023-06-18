@@ -8,7 +8,8 @@
 
 /////////////////////////////////////////////////////////////////
 
-// Libraries
+// Bibliothèques
+
 import java.awt.*;
 import java.awt.Frame;
 import java.awt.MouseInfo;
@@ -20,29 +21,6 @@ import processing.awt.PSurfaceAWT;
 import processing.awt.PSurfaceAWT.SmoothCanvas;
 import processing.sound.*;
 import controlP5.*;
-
-/////////////////////////////////////////////////////////////////
-
-// Constantes
-
-int CONSTANTE_DE_STOCKFISH = 3;
-float TOTAL_DEPART = 3200.0;
-
-int ROI_INDEX = 0;
-int DAME_INDEX = 1;
-int TOUR_INDEX = 2;
-int FOU_INDEX = 3;
-int CAVALIER_INDEX = 4;
-int PION_INDEX = 5;
-
-int CHESSCOM = 0;
-int LICHESS = 1;
-
-int MENU = 0;
-int GAME = 1;
-int EDITOR = 2;
-
-int INITIAL_TOTAL_MAIRE_MATERIAL = 0;
 
 /////////////////////////////////////////////////////////////////
 
@@ -182,7 +160,8 @@ boolean showSearchController = false;
 boolean showParameters = false;
 boolean blockPlaying = false;
 boolean useTime = false;
-int gameState = MENU;
+boolean pointDeVue = true;
+int gameState;
 int winner = -1;
 int timeAtEnd = 0;
 int rewindCount = 0;
@@ -190,6 +169,7 @@ String endReason = "";
 String alert = "";
 int alertTime = 0;
 long alertStarted = 0;
+int addPiecesColor = 0;
 
 // Les Moutons !
 String messageMouton = "";
@@ -200,6 +180,9 @@ int missclickCount = 0, appearCount = 0, timeCount = 0, messagesCount = 0;
 Point alertPos = new Point();
 boolean missclickDragNextMove = false;
 float lastMissclick = 0;
+
+int CHESSCOM = 0;
+int LICHESS = 1;
 
 // En mémoire du vecteur vitesse
 int slider;
@@ -291,7 +274,7 @@ void setup() {
   println("---------------------");
   println(name + ", Antoine Mechulam");
   println("(https://github.com/toitouine/ChessAI)");
-  println(" ");
+  println();
   println("IAs disponibles :");
   println(" - LeMaire : Bon en ouverture et en finale, problème de sécurité du roi en milieu de jeu");
   println(" - Loic : Plutôt mauvais, préfère pater que mater");
@@ -300,9 +283,9 @@ void setup() {
   println(" - LesMoutons : Voleur, arnaqueur, tricheur, menaces en un !");
   println(" ");
   println("Profondeur (recherche classique et quiet) et temps (Iterative Deepening) ajustables avec les sliders du menu.");
-  println("Voir fichier configs.pde pour les options, et notamment activer le jeu au temps ou non.");
+  println("Voir fichier configs.pde pour les options / paramètres");
   println("Appuyer sur H pour afficher l'aide (raccourcis claviers)");
-  println(" ");
+  println();
   println("/!\\ La direction rejette toute responsabilité en cas de CPU détruit par ce programme ou d'ordinateur brulé.");
   println("---------------------");
 
@@ -315,6 +298,9 @@ void setup() {
 
   // Place les pièces
   setPieces();
+
+  // Démarre le menu
+  gameState = MENU;
 }
 
 void draw() {
@@ -385,8 +371,11 @@ void draw() {
 
     // Écran de fin de partie
     if (!disableEndScreen && gameEnded && millis() - timeAtEnd > timeBeforeEndDisplay) {
-      float dy = targetEndScreenY - yEndScreen;
-      yEndScreen += dy * endScreenEasing;
+      if (yEndScreen < targetEndScreenY) {
+        float dy = targetEndScreenY - yEndScreen;
+        dy = max(dy, 5);
+        yEndScreen += dy * endScreenEasing;
+      }
 
       float rectX = 1.75*w + offsetX, rectW = 4.5*w, rectH = 3*w;
       if (targetEndScreenY - yEndScreen <= 1 && mousePressed && (mouseX < rectX || mouseX >= rectX+rectW || mouseY < yEndScreen || mouseY >= yEndScreen+rectH)) disableEndScreen = true;

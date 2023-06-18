@@ -2,6 +2,16 @@
 
 // Pièces
 
+int ROI_INDEX = 0;
+int DAME_INDEX = 1;
+int TOUR_INDEX = 2;
+int FOU_INDEX = 3;
+int CAVALIER_INDEX = 4;
+int PION_INDEX = 5;
+
+String codeArrayB[] = {"K", "Q", "R", "B", "N", "P"};
+String codeArrayN[] = {"k", "q", "r", "b", "n", "p"};
+
 class Piece {
   int i, j, c; //0 = blanc; 1 = noir
   int pieceIndex, zobristIndex = 0;

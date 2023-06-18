@@ -137,7 +137,7 @@ static final javax.swing.JFrame getJFrame(final PSurface surf) {
 
 void error(String function, String message) {
   println();
-  println(">>> !! ERREUR " + message.toUpperCase() + " DANS " + function.toUpperCase() + " !! <<<");
+  println("[ERREUR] Erreur : " + message + " dans " + function);
   println();
 }
 
@@ -316,7 +316,12 @@ void initGUI() {
 
   // Icones de la partie
   Condition iconCondition = new Condition() { public boolean c() { return gameState == GAME; } };
+  int iconSize = 40 * w/75;
+  int edgeSpacing = (int)(offsetX - w) / 2 + 1;
+  int distanceFromTop = (int)(offsetY - iconSize) / 2 + 1;
+  int spacingBetweenIcons = ((cols * w + offsetX) - (edgeSpacing*2 + icons.length*iconSize)) / (icons.length-1);
   int[] numSc1 = {0, 1, 2, 3, 4, 5, 6, 7, 16, 10};
+
   for (int i = 0; i < icons.length; i++) {
     iconButtons.add(new ShortcutButton(edgeSpacing + i*iconSize + i*spacingBetweenIcons, distanceFromTop, iconSize, icons[i], pause, iconCondition));
     iconButtons.get(i).setNumShortcut(numSc1[i]);
@@ -325,7 +330,11 @@ void initGUI() {
 
   // Icones de l'éditeur
   Condition editorCondition = new Condition() { public boolean c() { return gameState == EDITOR; } };
+  int editorIconSize = 40 * w/75;
+  int editorEdgeSpacing = (int)(offsetX - w) / 2 + 10;
+  int spacingBetweenEditorIcons = ((cols * w + offsetX) - (editorEdgeSpacing*2 + editorIcons.length*editorIconSize)) / (editorIcons.length-1);
   int[] numSc2 = {0, 11, 13, 12, 15, 18, 17, 6, 14};
+
   for (int i = 0; i < editorIcons.length; i++) {
     editorIconButtons.add(new ShortcutButton(editorEdgeSpacing + i*editorIconSize + i*spacingBetweenEditorIcons, distanceFromTop, editorIconSize, editorIcons[i], editorIcons[i], editorCondition));
     editorIconButtons.get(i).setNumShortcut(numSc2[i]);
@@ -574,6 +583,7 @@ void drawPlayersInfos() {
   }
 }
 
+float yEndScreen = defaultEndScreenY;
 void drawEndScreen(float y) {
   noStroke();
   int gris = color(#666463);
@@ -784,7 +794,7 @@ void setPieces() {
 
   calcEndGameWeight();
   zobrist.initHash();
-  // println("Hash de la position : " + zobrist.hash);
+  // println("[PARTIE] Hash de la position : " + zobrist.hash);
 }
 
 int getGridI() {
@@ -959,7 +969,7 @@ void HTMLtoBoard(String str) {
     }
   }
 
-  println(">>> Plateau importé");
+  println("[EDITOR] Plateau importé");
 
   piecesToDisplay.clear();
   piecesToDisplay.addAll(pieces[0]);
