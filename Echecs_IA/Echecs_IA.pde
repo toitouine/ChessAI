@@ -5,6 +5,8 @@
 // Editeur de position : Trait et roques
 // La brebis
 // Hacker : anti-annulation Lichess
+// Auto calibration
+// Programme d'aide à la configuration
 
 /////////////////////////////////////////////////////////////////
 

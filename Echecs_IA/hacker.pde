@@ -13,7 +13,6 @@
 Point upLeftCorner, downRightCorner, newgameLocation;
 Point saveUpLeftCorner, saveDownRightCorner, saveNewgameLocation;
 Color hackerWhitePieceColor, hackerBlackPieceColor;
-Color saveWhitePieceColor, saveBlackPieceColor;
 
 Color colorOfRematch = null;
 boolean hackerWaitingToRestart = false;
@@ -119,8 +118,6 @@ void saveHackerData() {
   saveUpLeftCorner = upLeftCorner;
   saveDownRightCorner = downRightCorner;
   saveHackerCoords = copyCoords(hackerCoords);
-  saveWhitePieceColor = hackerWhitePieceColor;
-  saveBlackPieceColor = hackerBlackPieceColor;
   saveNewgameLocation = newgameLocation;
   println("[HACKER] Données du hacker sauvegardées");
 }
@@ -129,14 +126,12 @@ void loadHackerSaves() {
   upLeftCorner = copyPoint(saveUpLeftCorner);
   downRightCorner = copyPoint(saveDownRightCorner);
   newgameLocation = copyPoint(saveNewgameLocation);
-  hackerWhitePieceColor = copyColor(saveWhitePieceColor);
-  hackerBlackPieceColor = copyColor(saveBlackPieceColor);
   hackerCoords = copyCoords(saveHackerCoords);
   currentHackerPOV = 0;
 }
 
 boolean noHackerSaves() {
-  if (saveUpLeftCorner == null || saveDownRightCorner == null || saveNewgameLocation == null || saveWhitePieceColor == null || saveBlackPieceColor == null) {
+  if (saveUpLeftCorner == null || saveDownRightCorner == null || saveNewgameLocation == null) {
     alert("Aucune sauvegarde", 2500);
     return true;
   }

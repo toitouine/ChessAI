@@ -12,7 +12,7 @@ boolean MODE_PROBLEME = true; // Activer le mode résolution de problèmes (ou p
 
 /////////////////////////////////////////////////////////////////
 
-// Configurations du hacker
+// Configurations du hacker (voir hacker config helper)
 
 boolean hackerSansFin = true; // Activer le hacker sans fin (ou pas)
 int hackerSite = CHESSCOM; // Hacker sur chess.com (CHESSCOM) ou lichess (LICHESS)
@@ -22,11 +22,16 @@ int waitsBetweenStartRetry = 25; // Nombre d'essais de relance de partie avant d
 int timeBeforeHackerRestart = 3500; // Temps d'attente avant de redémarrer une partie
 int timeCopycatSize = 3; // Taille du tableau des deltaTimes de time copycat
 
-Color endColorLichess = new Color(67, 107, 27); // Couleur du bouton de nouvelle partie de Lichess quand la souris est dessus
-Color coupLichessWhite = new Color(194, 202, 87); // Couleur de surlignage de case blanche sur Lichess
-Color coupLichessBlack = new Color(153, 147, 45); // Couleur de surlignage de case noire sur Lichess
-Color coupChesscomWhite = new Color(246, 249, 87); // Couleur de surlignage de case blanche sur chess.com
-Color coupChesscomBlack = new Color(174, 195, 34); // Couleur de surlignage de case noire sur chess.com
+Color coupChesscomWhite = new Color(246, 249, 87); // Couleur de surlignage des cases blanches sur chess.com [voir config helper]
+Color coupChesscomBlack = new Color(174, 195, 34); // Couleur de surlignage des cases noires sur chess.com [voir config helper]
+Color expectChesscomWhitePieceColor = new Color(234, 184, 99); // Couleur des pièces blanches de chess.com (pour l'auto calibration) [voir config helper]
+Color expectChesscomBlackPieceColor = new Color(42, 42, 42); // Couleur des pièces noires de chess.com (pour l'auto calibration) [voir config helper]
+
+Color coupLichessWhite = new Color(194, 202, 87); // Couleur de surlignage des cases blanches sur Lichess [voir config helper]
+Color coupLichessBlack = new Color(153, 147, 45); // Couleur de surlignage des cases noires sur Lichess [voir config helper]
+Color expectLichessWhitePieceColor = new Color(254, 254, 254); // Couleur des pièces blanches de Lichess (pour l'auto calibration) [voir config helper]
+Color expectLichessBlackPieceColor = new Color(42, 42, 42); // Couleur des pièces noires de Lichess (pour l'auto calibration) [voir config helper]
+Color endColorLichess = new Color(67, 107, 27); // Couleur du bouton de nouvelle partie de Lichess (quand la souris est dessus) [voir config helper]
 
 int HACKER_RATE = 5; // FPS du hacker (correspond entre autres au nombre de scans par seconde)
 boolean MODE_SANS_AFFICHAGE = false; // Afficher (ou pas) l'échiquier pendant le hacker

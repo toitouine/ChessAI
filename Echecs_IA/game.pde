@@ -249,8 +249,6 @@ void resetSettingsToDefault() {
   upLeftCorner = null;
   downRightCorner = null;
   newgameLocation = null;
-  hackerWhitePieceColor = null;
-  hackerBlackPieceColor = null;
   colorOfRematch = null;
   hackerPret = false;
   timeAtHackerEnd = 0;
