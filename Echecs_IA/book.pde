@@ -95,8 +95,8 @@ void clearBookHighlight() {
   bookArrows.clear();
   for (int i = 0; i < cols; i++) {
     for (int j = 0; j < rows; j++) {
-      grid[i][j].bookFrom = false;
-      grid[i][j].bookTarget = false;
+      grid[i][j].yellow = false;
+      grid[i][j].red = false;
       grid[i][j].moveMark = false;
     }
   }
@@ -107,8 +107,8 @@ void highlightBook() {
 
   for (int i = 0; i < cols; i++) {
     for (int j = 0; j < rows; j++) {
-      grid[i][j].bookFrom = false;
-      grid[i][j].bookTarget = false;
+      grid[i][j].yellow = false;
+      grid[i][j].red = false;
       grid[i][j].moveMark = false;
     }
   }

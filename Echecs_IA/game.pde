@@ -30,14 +30,14 @@ void startGame() {
   else if (j1 == "LeMaire") { j1Img = loadImage("joueurs/lemaireImg.jpg"); j1ImgEnd = loadImage("joueurs/lemaireImgEnd.jpg"); }
   else if (j1 == "Antoine") { j1Img = loadImage("joueurs/antoineImg.jpg"); j1ImgEnd = loadImage("joueurs/antoineImgEnd.jpg"); }
   else if (j1 == "Stockfish") { j1Img = loadImage("joueurs/stockfishImg.png"); j1ImgEnd = loadImage("joueurs/stockfishImgEnd.png"); }
-  else if (j1 == "Humain") { j1Img = loadImage("joueurs/humanImg.png"); j1ImgEnd = loadImage("joueurs/humanImgEnd.png"); }
+  else if (j1 == "Humain") { j1Img = loadImage("joueurs/humainImg.png"); j1ImgEnd = loadImage("joueurs/humainImgEnd.png"); }
 
   if (j2 == "Loic") { j2Img = loadImage("joueurs/loicImg.jpeg"); j2ImgEnd = loadImage("joueurs/loicImgEnd.jpeg"); }
   else if (j2 == "LesMoutons") { j2Img = loadImage("joueurs/lesmoutonsImg.jpg"); j2ImgEnd = loadImage("joueurs/lesmoutonsImgEnd.jpg"); }
   else if (j2 == "LeMaire") { j2Img = loadImage("joueurs/lemaireImg.jpg"); j2ImgEnd = loadImage("joueurs/lemaireImgEnd.jpg"); }
   else if (j2 == "Antoine") { j2Img = loadImage("joueurs/antoineImg.jpg"); j2ImgEnd = loadImage("joueurs/antoineImgEnd.jpg"); }
   else if (j2 == "Stockfish") { j2Img = loadImage("joueurs/stockfishImg.png"); j2ImgEnd = loadImage("joueurs/stockfishImgEnd.png"); }
-  else if (j2 == "Humain") { j2Img = loadImage("joueurs/humanImg.png"); j2ImgEnd = loadImage("joueurs/humanImgEnd.png"); }
+  else if (j2 == "Humain") { j2Img = loadImage("joueurs/humainImg.png"); j2ImgEnd = loadImage("joueurs/humainImgEnd.png"); }
 
   if (attach) infos = "Épinglé";
 
@@ -219,8 +219,8 @@ void resetSettingsToDefault() {
       grid[i][j].selected = false;
       grid[i][j].moveMark = false;
       grid[i][j].possibleMove = null;
-      grid[i][j].bookFrom = false;
-      grid[i][j].bookTarget = false;
+      grid[i][j].red = false;
+      grid[i][j].yellow = false;
     }
   }
 

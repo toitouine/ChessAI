@@ -1,0 +1,3 @@
+[nom].jpg --> 300 * 300 (ou pas)
+[nom]Img.jpg --> 75 * 75
+[nom]ImgEnd.jpg --> 100 * 100

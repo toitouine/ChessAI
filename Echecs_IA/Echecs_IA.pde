@@ -6,7 +6,11 @@
 // La brebis
 // Hacker : anti-annulation Lichess
 // Auto calibration
-// Programme d'aide à la configuration
+// Meilleur code hacker
+// Meilleur code de gestion d'IAs
+// Ajouter des flèches en glissant clique droit + Meilleure gestion des flèches
+
+// --> 16 occurences significatives attendues (13 significatives pour Humain)
 
 /////////////////////////////////////////////////////////////////
 
@@ -53,7 +57,7 @@ PImage antoine;
 PImage stockfish;
 PImage lemaire;
 PImage lesmoutons;
-PImage human;
+PImage humain;
 
 PImage leftArrow;
 PImage rightArrow;
@@ -75,7 +79,7 @@ PImage botLarge;
 PImage idIcon;
 PImage idIconOff;
 PImage warning;
-PImage mouton;
+PImage moutonAlertImg;
 PImage chesscomLogo;
 PImage lichessLogo;
 

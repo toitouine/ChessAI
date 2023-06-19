@@ -8,7 +8,7 @@ String startFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq"; // Posit
 // String startFEN = "7k/1pp3qp/3p3r/pQb1pr2/PP6/2P3B1/5PPP/3R1R1K b"; // Problème difficile
 // String startFEN = "7K/P1p1p1p1/2P1P1Pk/6pP/3p2P1/1P6/3P4/8 w"; // Sous-promotion
 
-boolean MODE_PROBLEME = true; // Activer le mode résolution de problèmes (ou pas)
+boolean MODE_PROBLEME = false; // Activer le mode résolution de problèmes (ou pas)
 
 /////////////////////////////////////////////////////////////////
 

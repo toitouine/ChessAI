@@ -65,7 +65,7 @@ void mousePressed() {
     }
   }
 
-  if (gameState == GAME && joueurs.get(tourDeQui).name == "Humain" && !blockPlaying) {
+  if (gameState == GAME && mouseButton == LEFT && joueurs.get(tourDeQui).name == "Humain" && !blockPlaying) {
     int i = getGridI();
     int j = getGridJ();
 
@@ -147,13 +147,23 @@ void mouseReleased() {
     return;
   }
 
-  if (gameState == GAME && pieceSelectionne != null && enPromotion == null) {
+  if (gameState == GAME && enPromotion == null) {
     int i = getGridI();
     int j = getGridJ();
 
     if (i >= 0 && i < cols && j >= 0 && j < rows) {
-      if (i == pieceSelectionne.i &&  j == pieceSelectionne.j) { pieceSelectionne.dragging = false; return; }
-      if (grid[i][j].possibleMove != null) grid[i][j].possibleMove.play();
+      if (mouseButton == LEFT && pieceSelectionne != null) {
+        if (i == pieceSelectionne.i &&  j == pieceSelectionne.j) {
+          pieceSelectionne.dragging = false;
+          return;
+        }
+        if (grid[i][j].possibleMove != null) grid[i][j].possibleMove.play();
+      }
+      else if (mouseButton == RIGHT) {
+        if (keyPressed && keyCode == CONTROL) grid[i][j].toggleYellow();
+        else grid[i][j].toggleRed();
+        return;
+      }
     }
 
     deselectAll();

@@ -68,6 +68,8 @@ class Joueur {
       this.elo = "???";
       this.index = 4;
       this.victoryTitle = (this.c == 0) ? "Victoire des blancs" : "Victoire des noirs";
+    } else {
+      error("Joueur()", "aucun joueur ou joueur inconnu demandé");
     }
   }
 

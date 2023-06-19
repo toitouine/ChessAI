@@ -183,7 +183,7 @@ void copyFEN() {
   Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
   clipboard.setContents(data, data);
 
-  println("Fen copiée (" + generateFEN() + ")");
+  println("[MENU] Fen copiée (" + generateFEN() + ")");
 }
 
 void goToSelectScreen() {

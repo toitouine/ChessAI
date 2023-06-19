@@ -223,7 +223,7 @@ void initGUI() {
   allButtons.addAll(promoButtons);
 
   // Selecteurs
-  PImage[] imgs = {human, lemaire, lesmoutons, loic, antoine, stockfish};
+  PImage[] imgs = {humain, lemaire, lesmoutons, loic, antoine, stockfish};
   String[] strs = {"Humain", "LeMaire", "LesMoutons", "Loic", "Antoine", "Stockfish"};
   selectors.add(new ImageSelector(230, 80, 165, imgs, strs, 0, hubCondition));
   selectors.add(new ImageSelector(selectWidth - 395, 80, 165, imgs, strs, 1, hubCondition));
@@ -402,7 +402,7 @@ void initImages() {
   bot = loadImage("icons/hacker.png");
   botLarge = loadImage("icons/hacker-large.png");
   warning = loadImage("icons/warning.png");
-  mouton = loadImage("joueurs/lesmoutonsImgEnd.jpg");
+  moutonAlertImg = loadImage("joueurs/lesmoutonsImgEnd.jpg");
   chesscomLogo = loadImage("icons/chesscom.png");
   lichessLogo = loadImage("icons/lichess.png");
 
@@ -411,7 +411,7 @@ void initImages() {
   stockfish = loadImage("joueurs/stockfish.png");
   lemaire = loadImage("joueurs/lemaire.jpg");
   lesmoutons = loadImage("joueurs/lesmoutons.jpg");
-  human = loadImage("joueurs/human.png");
+  humain = loadImage("joueurs/humain.png");
 
   leftArrow = loadImage("icons/leftArrow.png");
   rightArrow = loadImage("icons/rightArrow.png");
@@ -451,7 +451,7 @@ void displayMoutonAlert() {
   rect(alertPos.x, alertPos.y, 6*w, 2*w, 5, 5, 5, 5);
 
   imageMode(CORNER);
-  image(mouton, alertPos.x + 0.125*w, alertPos.y + 0.125*w, 1.75*w, 1.75*w);
+  image(moutonAlertImg, alertPos.x + 0.125*w, alertPos.y + 0.125*w, 1.75*w, 1.75*w);
 
   textAlign(CENTER, CENTER);
   textSize(28 * w/75);
@@ -678,6 +678,8 @@ void deselectAll() {
       grid[i][j].selected = false;
       grid[i][j].possibleMove = null;
       grid[i][j].freeMove = false;
+      grid[i][j].yellow = false;
+      grid[i][j].red = false;
     }
   }
 }
@@ -982,7 +984,7 @@ void HTMLtoBoard(String str) {
 void pasteFEN() {
   startFEN = GetTextFromClipboard();
   setPieces();
-  println (">>> Fen importée");
+  println ("[MENU] Fen importée");
 }
 
 void addFenToHistory(String f) {

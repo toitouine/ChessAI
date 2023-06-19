@@ -12,8 +12,8 @@ class Cell {
   boolean noir = false, blanc = false;
   boolean selected = false; //Pièce sur la case sélectionnée
   boolean moveMark = false; //Dernier déplacement de pièce
-  boolean bookFrom = false;
-  boolean bookTarget = false;
+  boolean yellow = false; // Coloration de la case en jaune
+  boolean red = false; // Coloration de la case en rouge
   boolean freeMove = false; //Mouvement n'importe où (ou presque)
   Piece piece = null;
   Move possibleMove = null;
@@ -52,20 +52,20 @@ class Cell {
     rectMode(CORNER);
     rect(this.x, this.y, w, w);
 
-    if (this.moveMark) {
-      fill(209, 206, 25, 100);
+    if (this.red) {
+      fill(224, 76, 56, 200);
       rect(this.x, this.y, w, w);
     }
-    if (this.selected) {
-      fill(189, 186, 34, 100);
-      rect(this.x, this.y, w, w);
-    }
-    if (this.bookFrom) {
+    else if (this.yellow) {
       fill(237, 217, 36, 150);
       rect(this.x, this.y, w, w);
     }
-    if (this.bookTarget) {
-      fill(224, 76, 56, 200);
+    else if (this.moveMark) {
+      fill(209, 206, 25, 100);
+      rect(this.x, this.y, w, w);
+    }
+    else if (this.selected) {
+      fill(189, 186, 34, 100);
       rect(this.x, this.y, w, w);
     }
 
@@ -90,5 +90,13 @@ class Cell {
 
   void removePiece() {
     this.piece = null;
+  }
+
+  void toggleRed() {
+    this.red =! this.red;
+  }
+
+  void toggleYellow() {
+    this.yellow =! this.yellow;
   }
 }
