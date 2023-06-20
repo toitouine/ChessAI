@@ -18,10 +18,12 @@ void test() {
   // }
   //
   // int temps = millis() - before;
-  // println("---------------");
+  // println("———————————————");
   // println(formatInt((int)count) + " itérations");
   // println(temps + " ms");
   // println(formatInt((int)(1000*count/temps)) + " par seconde");
+
+  highlightBook();
 }
 
 void mouseMoved() {
@@ -65,12 +67,13 @@ void mousePressed() {
     }
   }
 
-  if (gameState == GAME && mouseButton == LEFT && joueurs.get(tourDeQui).name == "Humain" && !blockPlaying) {
+  if (gameState == GAME && joueurs.get(tourDeQui).name == "Humain" && !blockPlaying) {
     int i = getGridI();
     int j = getGridJ();
 
     if (i >= 0 && i < cols && j >= 0 && j < rows) {
-      clickedOnBoard(i, j);
+      if (mouseButton == LEFT) clickedOnBoard(i, j);
+      else if (mouseButton == RIGHT) lastCellRightClicked = grid[i][j];
     }
     return;
   }
@@ -160,14 +163,23 @@ void mouseReleased() {
         if (grid[i][j].possibleMove != null) grid[i][j].possibleMove.play();
       }
       else if (mouseButton == RIGHT) {
-        if (keyPressed && keyCode == CONTROL) grid[i][j].toggleYellow();
-        else grid[i][j].toggleRed();
+        if (lastCellRightClicked == null || lastCellRightClicked == grid[i][j]) {
+          if (keyPressed && keyCode == CONTROL) grid[i][j].toggleYellow();
+          else grid[i][j].toggleRed();
+        }
+        else {
+          allArrows.remove(lastArrowDrawn);
+          drawArrow(lastCellRightClicked.i, lastCellRightClicked.j, i, j);
+          lastArrowDrawn = null;
+          lastCellRightClicked = null;
+        }
         return;
       }
+
+      deselectAll();
+      pieceSelectionne = null;
     }
 
-    deselectAll();
-    pieceSelectionne = null;
     return;
   }
 
@@ -214,6 +226,16 @@ void mouseDragged() {
       if (p == null) return;
       removePieceToDisplay(p);
       removePiece(p);
+    }
+  }
+
+  if (gameState == GAME && mouseButton == RIGHT) {
+    int i = getGridI();
+    int j = getGridJ();
+
+    if (i >= 0 && i < cols && j >= 0 && j < rows && lastCellRightClicked != grid[i][j]) {
+      if (lastArrowDrawn != null && lastArrowDrawn.ti == i && lastArrowDrawn.tj == j) return;
+      updateDraggedArrow(i, j);
     }
   }
 

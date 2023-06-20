@@ -6,9 +6,10 @@
 // La brebis
 // Hacker : anti-annulation Lichess
 // Auto calibration
-// Meilleur code hacker
+// Meilleur code hacker calibration
 // Meilleur code de gestion d'IAs
-// Ajouter des flèches en glissant clique droit + Meilleure gestion des flèches
+// Bouton combinaison d'IAs random
+// Revoir le code des flèches
 
 // --> 16 occurences significatives attendues (13 significatives pour Humain)
 
@@ -72,7 +73,6 @@ PImage[] editorIcons = new PImage[9];
 PImage[] saveFENSimage = new PImage[7];
 PImage upArrow;
 PImage downArrow;
-PImage pause;
 PImage chess;
 PImage bot;
 PImage botLarge;
@@ -120,9 +120,8 @@ ArrayList<ImageButton> presetButtons = new ArrayList<ImageButton>();
 ArrayList<ImageButton> humanButton = new ArrayList<ImageButton>();
 
 ArrayList<String> book = new ArrayList<String>();
-ArrayList<Arrow> bookArrows = new ArrayList<Arrow>();
 ArrayList<Arrow> varianteArrows = new ArrayList<Arrow>();
-Arrow bestMoveArrow;
+ArrayList<Arrow> allArrows = new ArrayList<Arrow>();
 
 ArrayList<String> positionHistory = new ArrayList<String>();
 ArrayList<Move> movesHistory = new ArrayList<Move>();
@@ -138,6 +137,8 @@ TextButton rematchButton;
 TextButton newGameButton;
 DragAndDrop enAjoutPiece = null;
 Slider s1, s2, t1, t2;
+Cell lastCellRightClicked;
+Arrow lastArrowDrawn;
 
 Shortcut sc = new Shortcut();
 
@@ -277,7 +278,7 @@ void setup() {
   initGUI();
 
   // Texte de départ
-  println("---------------------");
+  println("—————————————————————");
   println(name + ", Antoine Mechulam");
   println("(https://github.com/toitouine/ChessAI)");
   println();
@@ -293,7 +294,7 @@ void setup() {
   println("Appuyer sur H pour afficher l'aide (raccourcis claviers)");
   println();
   println("/!\\ La direction rejette toute responsabilité en cas de CPU détruit par ce programme ou d'ordinateur brulé.");
-  println("---------------------");
+  println("—————————————————————");
 
   // Initialise les pièces
   pieces[0] = new ArrayList<Piece>();
@@ -349,11 +350,7 @@ void draw() {
     surface.setTitle(name + " - " + j1 + " (" + ((joueurs.get(0).useIterativeDeepening) ? "ID" : j1depth) +  ") contre " + j2 + " (" + ((joueurs.get(1).useIterativeDeepening) ? "ID" : j2depth) + ")" + ((infos == "") ? "" : " - ") + infos);
 
     // Icones
-    for (int i = 0; i < iconButtons.size(); i++) {
-      ShortcutButton b = iconButtons.get(i);
-      if (i == 7) b.show(play ? 0 : 1); // Play / Pause
-      else b.show(0);
-    }
+    for (ShortcutButton b : iconButtons) b.show();
     for (int i = 0; i < humanButton.size(); i++) {
       if (humanButton.get(i).isEnabled()) humanButton.get(i).show();
     }
@@ -361,11 +358,7 @@ void draw() {
     // Plateau
     drawPlayersInfos();
     updateBoard();
-    for (Arrow b : bookArrows) b.show();
-    if (showVariante) {
-      for (Arrow arrow : varianteArrows) arrow.show();
-    }
-    if (bestMoveArrow != null) bestMoveArrow.show();
+    for (Arrow arrow : allArrows) arrow.show();
 
     // Promotion
     if (enPromotion != null) {
@@ -461,9 +454,7 @@ void draw() {
 
     updateBoard();
 
-    for (int i = 0; i < editorIconButtons.size(); i++) {
-      editorIconButtons.get(i).show(0);
-    }
+    for (ShortcutButton sb : editorIconButtons) sb.show();
 
     if (infoBox != "") drawInfoBox(infoBox);
     if (showSavedPositions) drawSavedPosition();

@@ -53,11 +53,11 @@ class Cell {
     rect(this.x, this.y, w, w);
 
     if (this.red) {
-      fill(224, 76, 56, 200);
+      fill(224, 76, 56, 230);
       rect(this.x, this.y, w, w);
     }
     else if (this.yellow) {
-      fill(237, 217, 36, 150);
+      fill(237, 217, 36, 230);
       rect(this.x, this.y, w, w);
     }
     else if (this.moveMark) {

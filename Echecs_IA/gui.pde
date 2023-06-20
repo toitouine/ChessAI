@@ -61,6 +61,7 @@ class ShortcutButton extends Button {
   float x, y, w;
   PImage i1, i2;
   int numShortcut = -1;
+  int imgState = 0;
 
   ShortcutButton(float x, float y, float w, PImage i1, PImage i2, Condition c) {
     super("", c);
@@ -85,11 +86,19 @@ class ShortcutButton extends Button {
     return sc.getDescription(this.numShortcut);
   }
 
-  void show(int c) {
+  void resetState() {
+    this.imgState = 0;
+  }
+
+  void setState(int newState) {
+    this.imgState = newState;
+  }
+
+  void show() {
     fill(0);
     imageMode(CENTER);
-    if (c == 0) image(this.i1, this.x+w/2, this.y+w/2, this.w/1.1, this.w/1.1);
-    else if (c == 1) image(this.i2, this.x+w/2, this.y+w/2, this.w/1.1, this.w/1.1);
+    if (this.imgState == 0) image(this.i1, this.x+w/2, this.y+w/2, this.w/1.1, this.w/1.1);
+    else if (this.imgState == 1) image(this.i2, this.x+w/2, this.y+w/2, this.w/1.1, this.w/1.1);
   }
 
   boolean contains(int x, int y) {

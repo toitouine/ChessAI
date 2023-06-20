@@ -146,7 +146,7 @@ void helpMoveWhite() {
   cursor(WAIT);
   LeMaire cmaire = new LeMaire(0, 7, 30, true);
   Move bestMove = cmaire.getBestMove(2000);
-  bestMoveArrow = new Arrow(bestMove.fromI, bestMove.fromJ, bestMove.i, bestMove.j);
+  allArrows.add(new Arrow(bestMove.fromI, bestMove.fromJ, bestMove.i, bestMove.j));
   cursor(HAND);
 }
 
@@ -155,7 +155,7 @@ void helpMoveBlack() {
   cursor(WAIT);
   LeMaire cmaire = new LeMaire(1, 7, 30, true);
   Move bestMove = cmaire.getBestMove(2000);
-  bestMoveArrow = new Arrow(bestMove.fromI, bestMove.fromJ, bestMove.i, bestMove.j);
+  allArrows.add(new Arrow(bestMove.fromI, bestMove.fromJ, bestMove.i, bestMove.j));
   cursor(HAND);
 }
 
@@ -321,9 +321,13 @@ void initGUI() {
   int distanceFromTop = (int)(offsetY - iconSize) / 2 + 1;
   int spacingBetweenIcons = ((cols * w + offsetX) - (edgeSpacing*2 + icons.length*iconSize)) / (icons.length-1);
   int[] numSc1 = {0, 1, 2, 3, 4, 5, 6, 7, 16, 10};
+  PImage sbImg2;
 
   for (int i = 0; i < icons.length; i++) {
-    iconButtons.add(new ShortcutButton(edgeSpacing + i*iconSize + i*spacingBetweenIcons, distanceFromTop, iconSize, icons[i], pause, iconCondition));
+    if (i == 1) sbImg2 = loadImage("icons/variante.png");
+    else if (i == 7) sbImg2 = loadImage("icons/pause.png");
+    else sbImg2 = null;
+    iconButtons.add(new ShortcutButton(edgeSpacing + i*iconSize + i*spacingBetweenIcons, distanceFromTop, iconSize, icons[i], sbImg2, iconCondition));
     iconButtons.get(i).setNumShortcut(numSc1[i]);
   }
   allButtons.addAll(iconButtons);
@@ -377,7 +381,7 @@ void initImages() {
   imageArrayN[3] = loadImage("pieces/fou_n.png");
 
   icons[0] = loadImage("icons/pin.png");
-  icons[1] = loadImage("icons/variante.png");
+  icons[1] = loadImage("icons/varianteGris.png");
   icons[2] = loadImage("icons/analysis.png");
   icons[3] = loadImage("icons/info.png");
   icons[4] = loadImage("icons/pgn.png");
@@ -397,7 +401,6 @@ void initImages() {
   editorIcons[7] = loadImage("icons/rotate.png");
   editorIcons[8] = loadImage("icons/quit.png");
 
-  pause = loadImage("icons/pause.png");
   chess = loadImage("icons/chess.png");
   bot = loadImage("icons/hacker.png");
   botLarge = loadImage("icons/hacker-large.png");
@@ -583,6 +586,24 @@ void drawPlayersInfos() {
   }
 }
 
+void drawArrow(int fromI, int fromJ, int i, int j) {
+  Arrow arrow = new Arrow(fromI, fromJ, i, j);
+  for (Arrow a : allArrows) {
+    if (a.equals(arrow)) {
+      allArrows.remove(a);
+      return;
+    }
+  }
+  allArrows.add(arrow);
+}
+
+void updateDraggedArrow(int i, int j) {
+  Arrow newArrow = new Arrow(lastCellRightClicked.i, lastCellRightClicked.j, i, j);
+  allArrows.remove(lastArrowDrawn);
+  allArrows.add(newArrow);
+  lastArrowDrawn = newArrow;
+}
+
 float yEndScreen = defaultEndScreenY;
 void drawEndScreen(float y) {
   noStroke();
@@ -682,6 +703,8 @@ void deselectAll() {
       grid[i][j].red = false;
     }
   }
+
+  allArrows.clear();
 }
 
 void playerPromote(int numButton) {

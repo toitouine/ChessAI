@@ -413,6 +413,8 @@ class IA {
       actualMove = actualMove.bestChild;
     }
 
+    if (showVariante) allArrows.addAll(varianteArrows);
+
     // Affichage des statistiques de la console
     if (stats) {
       print("[BOT] " + joueurs.get(this.c).name + " : "

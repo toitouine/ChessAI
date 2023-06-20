@@ -163,7 +163,6 @@ class Move {
     updatePGN(this);
     checkGameState();
     playSound(this);
-    clearBookHighlight();
 
     // Move marks
     setMoveMarks(grid[this.fromI][this.fromJ], grid[this.i][this.j]);
@@ -175,7 +174,6 @@ class Move {
     // Divers et variés
     if (useTime && !gameEnded) ta.switchTimers(tourDeQui);
     if (showGraph) updateGraph();
-    bestMoveArrow = null;
 
     // Hacker
     if (useHacker && hackerPret && !hackerAPImode && !isNextMoveRestranscrit) {
@@ -207,7 +205,6 @@ class Move {
     //Fonctions très utiles (ou pas)
     deselectAll();
     playSound(this);
-    clearBookHighlight();
 
     //Move marks
     setMoveMarks(grid[this.fromI][this.fromJ], grid[this.i][this.j]);
@@ -222,7 +219,6 @@ class Move {
 
     deselectAll();
     playSound(this);
-    clearBookHighlight();
 
     clearMoveMarks();
   }

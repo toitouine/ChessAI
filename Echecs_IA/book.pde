@@ -20,9 +20,10 @@ class Arrow {
   boolean verticalDir; //true = haut, false = bas
   boolean horizontalDir; //true = gauche, false = droit
   float progressionDegrade = 0;
+  float opacity = 255;
 
-  Color colorDepart = new Color(255, 192, 67);
-  Color colorArrivee = new Color(255, 0, 0);
+  Color colorDepart = new Color(255, 192, 67); // Jaune
+  Color colorArrivee = new Color(255, 0, 0); // Rouge
   Color currentColor = new Color(255, 192, 67);;
 
   Arrow(int i, int j, int ti, int tj) {
@@ -43,6 +44,10 @@ class Arrow {
     else if (!this.verticalDir && this.horizontalDir) this.angle = PI + atan(deltaI/deltaJ);
   }
 
+  boolean equals(Arrow other) {
+    return (this.i == other.i && this.j == other.j && this.ti == other.ti && this.tj == other.tj);
+  }
+
   void setDegradeProgression(float newP) {
     this.progressionDegrade = newP;
     int red = (int)(this.colorDepart.getRed() * (1 - pow(this.progressionDegrade, 0.4)) + this.colorArrivee.getRed() * pow(this.progressionDegrade, 0.4));
@@ -51,9 +56,13 @@ class Arrow {
     this.currentColor = new Color(red, green, blue);
   }
 
+  void setOpacity(float newOp) {
+    this.opacity = newOp;
+  }
+
   void show() {
     strokeWeight(5);
-    stroke(this.currentColor.getRed(), this.currentColor.getGreen(), this.currentColor.getBlue());
+    stroke(this.currentColor.getRed(), this.currentColor.getGreen(), this.currentColor.getBlue(), this.opacity);
     float xDraw, yDraw, txDraw, tyDraw, angleDraw;
     if (pointDeVue) {
       xDraw = this.x; yDraw = this.y; txDraw = this.tx; tyDraw = this.ty;
@@ -91,27 +100,16 @@ void printMaxEffectif() {
   println(effectifMax);
 }
 
-void clearBookHighlight() {
-  bookArrows.clear();
-  for (int i = 0; i < cols; i++) {
-    for (int j = 0; j < rows; j++) {
-      grid[i][j].yellow = false;
-      grid[i][j].red = false;
-      grid[i][j].moveMark = false;
-    }
-  }
-}
-
 void highlightBook() {
-  bookArrows.clear();
-
-  for (int i = 0; i < cols; i++) {
-    for (int j = 0; j < rows; j++) {
-      grid[i][j].yellow = false;
-      grid[i][j].red = false;
-      grid[i][j].moveMark = false;
-    }
-  }
+  // allArrows.clear();
+  //
+  // for (int i = 0; i < cols; i++) {
+  //   for (int j = 0; j < rows; j++) {
+  //     grid[i][j].yellow = false;
+  //     grid[i][j].red = false;
+  //     grid[i][j].moveMark = false;
+  //   }
+  // }
 
   String[] moves = getMoveStringFromFEN(generateFEN());
   for (int i = 0; i < moves.length; i+=2) {
@@ -122,17 +120,17 @@ void highlightBook() {
     int targetJ = Integer.valueOf(String.valueOf(moves[i].charAt(3)));
 
     if (fromI != 8 && fromI != 9) {
-      bookArrows.add(new Arrow(fromI, fromJ, targetI, targetJ));
+      allArrows.add(new Arrow(fromI, fromJ, targetI, targetJ));
     } else {
       // Roques
-      if (fromI == 8 && targetI == 8) { bookArrows.add(new Arrow(4, 7, 6, 7)); }
-      else if (fromI == 8 && targetI == 9) { bookArrows.add(new Arrow(4, 0, 6, 0)); }
-      else if (fromI == 9 && targetI == 8) { bookArrows.add(new Arrow(4, 7, 2, 7)); }
-      else if (fromI == 9 && targetI == 9) { bookArrows.add(new Arrow(4, 0, 2, 0)); }
+      if (fromI == 8 && targetI == 8) { allArrows.add(new Arrow(4, 7, 6, 7)); }
+      else if (fromI == 8 && targetI == 9) { allArrows.add(new Arrow(4, 0, 6, 0)); }
+      else if (fromI == 9 && targetI == 8) { allArrows.add(new Arrow(4, 7, 2, 7)); }
+      else if (fromI == 9 && targetI == 9) { allArrows.add(new Arrow(4, 0, 2, 0)); }
     }
 
     // Couleur
-    bookArrows.get(bookArrows.size()-1).setDegradeProgression(map(effectif, 1, 3497, 0, 1));
+    allArrows.get(allArrows.size()-1).setDegradeProgression(map(effectif, 1, 3497, 0, 1));
   }
 }
 

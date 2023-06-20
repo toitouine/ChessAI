@@ -110,6 +110,14 @@ void flipBoard() {
 
 void toggleVariantes() {
   showVariante =! showVariante;
+
+  if (showVariante == true) {
+    for (Arrow arrow : varianteArrows) {
+      if (!allArrows.contains(arrow)) allArrows.add(arrow);
+    }
+  }
+
+  iconButtons.get(1).setState(showVariante ? 1 : 0);
 }
 
 void importSavedFEN(int number) {
@@ -215,6 +223,8 @@ void playPause() {
       if (useTime) ta.stopTimers();
     }
   }
+
+  iconButtons.get(7).setState(play ? 0 : 1);
 }
 
 void printPGN() {
@@ -270,7 +280,7 @@ void savePGN() {
 void printHelpMenu() {
   println(" ");
   println("  Touche  |       Endroit       |     Description     ");
-  println("----------+---------------------+---------------------");
+  println("——————————+—————————————————————+—————————————————————");
   println(" B        | En partie           | Afficher les coups du livre d'ouverture");
   println(" C        | En partie           | Sauvegarder la PGN");
   println(" C        | Éditeur             | Copier la FEN");

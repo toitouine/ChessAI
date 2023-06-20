@@ -58,7 +58,7 @@ void startGame() {
   println("[PARTIE] Nouvelle partie : " + j1 + " (aux blancs) contre " + j2 + " (aux noirs)");
   println(" ");
 
-  pgn =       "[Event \"Chess AI Tournament\"]\n";
+  pgn =       "[Event \"Chess AI\"]\n";
   if (!startFEN.equals("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq")) pgn = pgn + "[FEN \"" + startFEN + "\"]\n";
   pgn = pgn + "[Date \"" + year() + "." + month() + "." + day() + "\"]\n";
   pgn = pgn + "[White \"" + j1 + "\"]\n";
@@ -200,17 +200,20 @@ void resetSettingsToDefault() {
   rois[1] = null;
   currentEnPassantable[0] = null;
   currentEnPassantable[1] = null;
-  bestMoveArrow = null;
+  lastCellRightClicked = null;
+  lastArrowDrawn = null;
   deltaTimeHistory.clear();
   piecesToDisplay.clear();
   positionHistory.clear();
   zobristHistory.clear();
   movesHistory.clear();
   joueurs.clear();
-  varianteArrows.clear();
   hackerMoves.clear();
   tt.clear();
   sa.reset();
+  allArrows.clear();
+  varianteArrows.clear();
+  for (ShortcutButton sb : iconButtons) sb.resetState();
 
   // Reset la grille
   for (int i = 0; i < cols; i++) {
