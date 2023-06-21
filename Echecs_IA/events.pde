@@ -182,6 +182,7 @@ void mouseReleased() {
       pieceSelectionne = null;
     }
 
+    lastCellRightClicked = null;
     return;
   }
 

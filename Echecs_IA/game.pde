@@ -73,6 +73,7 @@ void startGame() {
     println("[ERREUR] INITIALISATION FEN : generateFEN() != startFEN");
     println("--> EXPECTED : " + generateFEN() + " AND GOT : " + startFEN);
     println();
+    alert("Erreur d'initialisation de la fen", 2500);
   }
 
   addFenToHistory(fen);
