@@ -124,7 +124,7 @@ class IA {
     this.bestMoveFound.play();
 
     // Affichage des statistiques dans la console et l'interface
-    this.updateStats(posEval);
+    if (!MODE_SANS_AFFICHAGE) this.updateStats(posEval);
 
     // Reset les statistiques pour la prochaine recherche
     this.resetStats();

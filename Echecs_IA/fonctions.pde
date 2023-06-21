@@ -598,6 +598,7 @@ void drawArrow(int fromI, int fromJ, int i, int j) {
 }
 
 void updateDraggedArrow(int i, int j) {
+  // Thread.dumpStack();
   Arrow newArrow = new Arrow(lastCellRightClicked.i, lastCellRightClicked.j, i, j);
   allArrows.remove(lastArrowDrawn);
   allArrows.add(newArrow);

@@ -312,9 +312,6 @@ void setup() {
 
 void draw() {
 
-  // Point p = MouseInfo.getPointerInfo().getLocation();
-  // println(hacker.getPixelColor(p.x, p.y));
-
   if (gameState == GAME) {
     background(49, 46, 43);
 

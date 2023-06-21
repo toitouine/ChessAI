@@ -67,12 +67,14 @@ void mousePressed() {
     }
   }
 
-  if (gameState == GAME && joueurs.get(tourDeQui).name == "Humain" && !blockPlaying) {
+  if (gameState == GAME) {
     int i = getGridI();
     int j = getGridJ();
 
     if (i >= 0 && i < cols && j >= 0 && j < rows) {
-      if (mouseButton == LEFT) clickedOnBoard(i, j);
+      if (mouseButton == LEFT) {
+        if (lastCellRightClicked == null && joueurs.get(tourDeQui).name == "Humain" && !blockPlaying) clickedOnBoard(i, j);
+      }
       else if (mouseButton == RIGHT) lastCellRightClicked = grid[i][j];
     }
     return;
@@ -171,8 +173,8 @@ void mouseReleased() {
           allArrows.remove(lastArrowDrawn);
           drawArrow(lastCellRightClicked.i, lastCellRightClicked.j, i, j);
           lastArrowDrawn = null;
-          lastCellRightClicked = null;
         }
+        lastCellRightClicked = null;
         return;
       }
 
@@ -239,7 +241,7 @@ void mouseDragged() {
     }
   }
 
-  if (pieceSelectionne != null) {
+  if (pieceSelectionne != null && lastCellRightClicked == null) {
     pieceSelectionne.dragging = true;
 
     int i = getGridI();
