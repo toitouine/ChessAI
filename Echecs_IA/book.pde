@@ -3,7 +3,7 @@
 // Livre d'ouverture
 
 // Format :
-// fen:XXXXYYY_XXXXYYY_XXXXYYY
+// fen:XXXX_YYY_XXXX_YYY_XXXX_YYY
 
 // XXXX représente le coup dans le format (i1 j1 i2 j2)
 // YYY représente le nombre de fois que ce coup apparait
@@ -13,82 +13,74 @@
 /////////////////////////////////////////////////////////////////
 
 class Arrow {
-  float x, y, tx, ty;
-  int i, j, ti, tj;
-  int arrowSpace = 15, arrowLength = 15;
+  int i, j, di, dj;
+  float x, y;
+  float length;
   float angle = 0;
-  boolean verticalDir; //true = haut, false = bas
-  boolean horizontalDir; //true = gauche, false = droit
-  float progressionDegrade = 0;
-  float opacity = 255;
+  float degrade = 0;
+  PShape shape;
 
-  Color colorDepart = new Color(255, 192, 67); // Jaune
-  Color colorArrivee = new Color(255, 0, 0); // Rouge
-  Color currentColor = new Color(255, 192, 67);;
+  Color currentColor = new Color(arrowDefaultColor.getRed(), arrowDefaultColor.getGreen(), arrowDefaultColor.getBlue());
 
   Arrow(int i, int j, int ti, int tj) {
-    this.i = i; this.j = j; this.ti = ti; this.tj = tj;
-    this.x = grid[i][j].x + w/2;
-    this.y = grid[i][j].y + w/2;
-    this.tx = grid[ti][tj].x + w/2;
-    this.ty = grid[ti][tj].y + w/2;
-    this.verticalDir = (this.tj < this.j);
-    this.horizontalDir = (this.i > this.ti);
+    this.i = i;
+    this.j = j;
+    this.di = ti - i;
+    this.dj = tj - j;
+    this.x = (grid[this.i][this.j].x + grid[this.i + this.di][this.j + this.dj].x)/2 + w/2;
+    this.y = (grid[this.i][this.j].y + grid[this.i + this.di][this.j + this.dj].y)/2 + w/2;
 
-    float deltaI = abs(this.ti - this.i);
-    float deltaJ = abs(this.tj - this.j);
-    if (deltaJ == 0) this.angle = horizontalDir ? -PI/2.1 : PI/2.1;
-    else if (this.verticalDir && this.horizontalDir) this.angle = -atan(deltaI/deltaJ);
-    else if (this.verticalDir && !this.horizontalDir) this.angle = atan(deltaI/deltaJ);
-    else if (!this.verticalDir && !this.horizontalDir) this.angle = PI - atan(deltaI/deltaJ);
-    else if (!this.verticalDir && this.horizontalDir) this.angle = PI + atan(deltaI/deltaJ);
+    createArrow();
+    this.angle = (this.dj >= 0 ? 1 : -1) * acos((float)this.di*w/this.length);
+  }
+
+  void createArrow() {
+    this.length = sqrt(pow((di*w), 2) + pow((dj*w), 2));
+
+    this.shape = null;
+    this.shape = createShape(GROUP);
+
+    strokeWeight(5);
+    stroke(color(currentColor.getRed(), currentColor.getGreen(), currentColor.getBlue()));
+    PShape line = createShape(LINE, -this.length/2, 0, this.length/2, 0);
+    PShape left = createShape(LINE, this.length/2, 0, this.length/2-15, -15);
+    PShape right = createShape(LINE, this.length/2, 0, this.length/2-15, 15);
+
+    this.shape.addChild(line);
+    this.shape.addChild(left);
+    this.shape.addChild(right);
   }
 
   boolean equals(Arrow other) {
-    return (this.i == other.i && this.j == other.j && this.ti == other.ti && this.tj == other.tj);
+    return (this.i == other.i && this.j == other.j && this.di == other.di && this.dj == other.dj);
   }
 
   void setDegradeProgression(float newP) {
-    this.progressionDegrade = newP;
-    int red = (int)(this.colorDepart.getRed() * (1 - pow(this.progressionDegrade, 0.4)) + this.colorArrivee.getRed() * pow(this.progressionDegrade, 0.4));
-    int green = (int)(this.colorDepart.getGreen() * (1 - pow(this.progressionDegrade, 0.4)) + this.colorArrivee.getGreen() * pow(this.progressionDegrade, 0.4));
-    int blue = (int)(this.colorDepart.getBlue() * (1 - pow(this.progressionDegrade, 0.4)) + this.colorArrivee.getBlue() * pow(this.progressionDegrade, 0.4));
+    this.degrade = newP;
+    int red = (int)(arrowDefaultColor.getRed() * (1 - pow(this.degrade, 0.4)) + arrowFinalColor.getRed() * pow(this.degrade, 0.4));
+    int green = (int)(arrowDefaultColor.getGreen() * (1 - pow(this.degrade, 0.4)) + arrowFinalColor.getGreen() * pow(this.degrade, 0.4));
+    int blue = (int)(arrowDefaultColor.getBlue() * (1 - pow(this.degrade, 0.4)) + arrowFinalColor.getBlue() * pow(this.degrade, 0.4));
     this.currentColor = new Color(red, green, blue);
-  }
-
-  void setOpacity(float newOp) {
-    this.opacity = newOp;
+    createArrow();
   }
 
   void show() {
-    strokeWeight(5);
-    stroke(this.currentColor.getRed(), this.currentColor.getGreen(), this.currentColor.getBlue(), this.opacity);
-    float xDraw, yDraw, txDraw, tyDraw, angleDraw;
-    if (pointDeVue) {
-      xDraw = this.x; yDraw = this.y; txDraw = this.tx; tyDraw = this.ty;
-      angleDraw = this.angle;
-    } else {
-      xDraw = grid[this.i][this.j].x + w/2; yDraw = grid[this.i][this.j].y + w/2;
-      txDraw = grid[this.ti][this.tj].x + w/2; tyDraw = grid[this.ti][this.tj].y + w/2;
-      angleDraw = PI + this.angle;
-    }
-    line(xDraw, yDraw, txDraw, tyDraw);
-
     push();
-    translate(txDraw, tyDraw);
-    rotate(angleDraw);
-    line(0, 0, -this.arrowSpace, this.arrowLength);
-    line(0, 0, this.arrowSpace, this.arrowLength);
+    translate(this.x, this.y);
+    rotate(this.angle);
+    shape(this.shape);
     pop();
   }
 }
 
+// Affiche tous le livre d'ouverture (ligne par ligne)
 void printBook() {
   for (int i = 0; i < book.size(); i++) {
     println("[" + i + "] " + book.get(i));
   }
 }
 
+// Affiche le nombre maximum de fois qu'un coup a été joué dans le livre d'ouverture
 void printMaxEffectif() {
   int effectifMax = 0;
   String[] moves = getMoveStringFromFEN(generateFEN());
@@ -100,17 +92,8 @@ void printMaxEffectif() {
   println(effectifMax);
 }
 
+// Indique tous les coups du livre d'ouverture dans la position
 void highlightBook() {
-  // allArrows.clear();
-  //
-  // for (int i = 0; i < cols; i++) {
-  //   for (int j = 0; j < rows; j++) {
-  //     grid[i][j].yellow = false;
-  //     grid[i][j].red = false;
-  //     grid[i][j].moveMark = false;
-  //   }
-  // }
-
   String[] moves = getMoveStringFromFEN(generateFEN());
   for (int i = 0; i < moves.length; i+=2) {
     int effectif = Integer.valueOf(moves[i+1]);
@@ -210,7 +193,7 @@ ArrayList<String> getMovesFromIndex(int index) {
   return moves;
 }
 
-// Renvoie la liste des coups complètes (avec les effectifs) correspondant à l'index de la fen
+// Renvoie la liste des coups complètes (avec les effectifs) correspondant à la fen
 String[] getMoveStringFromFEN(String fen) {
   String movesString = "";
 
@@ -305,7 +288,7 @@ void addMoveToBook(String fen, Move m) {
   }
 }
 
-// Sauvegarde le livre d'ouverture en écrivant les données dans le fichier book.txt OK
+// Sauvegarde le livre d'ouverture en écrivant les données dans le fichier book.txt
 void saveBook() {
   String[] savedBook = new String[book.size()];
   for (int i = 0; i < book.size(); i++) savedBook[i] = book.get(i);

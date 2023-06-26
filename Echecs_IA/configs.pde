@@ -71,6 +71,9 @@ float endScreenEasing = 0.04; // Vitesse de descente de l'écran de fin de parti
 Point whiteTimePosition = new Point(30, 283); // Position du sélecteur de temps des blancs
 Point blackTimePosition = new Point(selectWidth - 184, 283); // Position du sélecteur de temps des noirs
 
+Color arrowDefaultColor = new Color(255, 192, 67); // Couleur des flèches (niveau 0 du dégradé)
+Color arrowFinalColor = new Color(255, 0, 0); // Couleur des flèches (niveau 1 du dégradé)
+
 /////////////////////////////////////////////////////////////////
 
 // Gestionnaire de fens pour l'éditeur de position

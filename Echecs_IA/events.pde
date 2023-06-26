@@ -24,6 +24,8 @@ void test() {
   // println(formatInt((int)(1000*count/temps)) + " par seconde");
 
   highlightBook();
+  // Arrow a = new Arrow(2, 2, 3, 5);
+  // allArrows.add(a);
 }
 
 void mouseMoved() {
@@ -237,7 +239,7 @@ void mouseDragged() {
     int j = getGridJ();
 
     if (i >= 0 && i < cols && j >= 0 && j < rows && lastCellRightClicked != grid[i][j]) {
-      if (lastArrowDrawn != null && lastArrowDrawn.ti == i && lastArrowDrawn.tj == j) return;
+      if (lastArrowDrawn != null && lastArrowDrawn.i + lastArrowDrawn.di == i && lastArrowDrawn.j + lastArrowDrawn.dj == j) return;
       updateDraggedArrow(i, j);
     }
   }

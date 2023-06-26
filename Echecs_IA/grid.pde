@@ -94,9 +94,11 @@ class Cell {
 
   void toggleRed() {
     this.red =! this.red;
+    this.yellow = false;
   }
 
   void toggleYellow() {
     this.yellow =! this.yellow;
+    this.red = false;
   }
 }

@@ -2,14 +2,13 @@
 
 // TODO :
 
+// Meilleur code de gestion d'IAs
+// Meilleur code hacker calibration
+// Bouton combinaison d'IAs random
 // Editeur de position : Trait et roques
-// La brebis
 // Hacker : anti-annulation Lichess
 // Auto calibration
-// Meilleur code hacker calibration
-// Meilleur code de gestion d'IAs
-// Bouton combinaison d'IAs random
-// Revoir le code des flèches
+// La brebis / Statistiques bot
 
 // --> 16 occurences significatives attendues (13 significatives pour Humain)
 
