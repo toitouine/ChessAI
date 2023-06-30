@@ -422,17 +422,22 @@ class ImageSelector extends Button {
     if (isLeft(mouseX, mouseY)) add = -1;
     else add = 1;
 
-    this.number += add;
-    if (this.number == -1) this.number = this.names.length-1;
-    else if (this.number == this.names.length) this.number = 0;
+    int newNumber = this.number + add;
+    if (newNumber == -1) newNumber = this.names.length-1;
+    else if (newNumber == this.names.length) newNumber = 0;
 
-    if (c == 0) j1 = this.names[this.number];
-    else if (c == 1) j2 = this.names[this.number];
+    this.setNumber(newNumber);
   }
 
   @Override
   boolean contains(int mx, int my) {
     return (isLeft(mx, my) || isRight(mx, my));
+  }
+
+  void setNumber(int num) {
+    this.number = num;
+    if (c == 0) j1 = this.names[this.number];
+    else if (c == 1) j2 = this.names[this.number];
   }
 
   boolean isLeft(int mx, int my) {

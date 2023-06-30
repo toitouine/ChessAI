@@ -14,7 +14,6 @@
 
 class Arrow {
   int i, j, di, dj;
-  float x, y;
   float length;
   float angle = 0;
   float degrade = 0;
@@ -27,8 +26,6 @@ class Arrow {
     this.j = j;
     this.di = ti - i;
     this.dj = tj - j;
-    this.x = (grid[this.i][this.j].x + grid[this.i + this.di][this.j + this.dj].x)/2 + w/2;
-    this.y = (grid[this.i][this.j].y + grid[this.i + this.di][this.j + this.dj].y)/2 + w/2;
 
     createArrow();
     this.angle = (this.dj >= 0 ? 1 : -1) * acos((float)this.di*w/this.length);
@@ -65,9 +62,13 @@ class Arrow {
   }
 
   void show() {
+    float x = (grid[this.i][this.j].x + grid[this.i + this.di][this.j + this.dj].x)/2 + w/2;
+    float y = (grid[this.i][this.j].y + grid[this.i + this.di][this.j + this.dj].y)/2 + w/2;
+
     push();
-    translate(this.x, this.y);
+    translate(x, y);
     rotate(this.angle);
+    if (!pointDeVue) rotate(PI);
     shape(this.shape);
     pop();
   }

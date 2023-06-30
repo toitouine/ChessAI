@@ -102,10 +102,10 @@ void toggleSavedPos() {
 void flipBoard() {
   pointDeVue = !pointDeVue;
 
-  humanButton.get(0).y = humanButton.get(1).y;
-  humanButton.get(1).y = humanButton.get(2).y;
-  humanButton.get(2).y = humanButton.get(0).y;
-  humanButton.get(3).y = humanButton.get(1).y;
+  humainButton.get(0).y = humainButton.get(1).y;
+  humainButton.get(1).y = humainButton.get(2).y;
+  humainButton.get(2).y = humainButton.get(0).y;
+  humainButton.get(3).y = humainButton.get(1).y;
 }
 
 void toggleVariantes() {
@@ -139,7 +139,7 @@ void toggleGraph() {
   showGraph = !showGraph;
 
   if (showGraph) {
-    if (joueurs.get(0).name == "LesMoutons" || joueurs.get(1).name == "LesMoutons") {
+    if (isMouton(0) || isMouton(1)) {
       println();
       println("!! Les Moutons !!");
       println("Arnaques au temps : " + timeCount);
@@ -215,7 +215,7 @@ void playPause() {
     if (play) {
       infos = "Play";
       if (soundControl >= 2 && !pachamama.isPlaying()) pachamama.play();
-      if (joueurs.get(tourDeQui).name != "Humain" && !gameEnded && !rewind && (!useHacker || hackerPret)) joueurs.get(tourDeQui).play();
+      if (!isHumainTurn() && !gameEnded && !rewind && (!useHacker || hackerPret)) joueurs.get(tourDeQui).play();
       if (useTime) ta.switchTimers(tourDeQui);
     } else {
       infos = "Pause";

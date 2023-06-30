@@ -9,10 +9,9 @@ int j2Quiet = 30;
 int j1Time = 1000;
 int j2Time = 1000;
 
-int[] totalScores = {0, 0, 0, 0, 0, 0};
-float[] scores = {0, 0, 0, 0, 0, 0};
+int[] totalScores = new int[AI_NUMBER];
+float[] scores = new float[AI_NUMBER];
 
-int CONSTANTE_DE_STOCKFISH = 3;
 float TOTAL_DEPART = 3200.0;
 
 class Joueur {
@@ -30,51 +29,24 @@ class Joueur {
     this.maxDepth = md;
     this.useIterativeDeepening = useID;
 
-    if (name == "Antoine") {
-      player = new Antoine(this.c);
-      this.elo = "100";
-      this.index = 1;
-      this.victoryTitle = "Tu t'es fait mater !";
+    this.index = getIAIndex(this.name);
+    this.title = AI_TITLE[this.index];
+    this.victoryTitle = AI_VICTORY[this.index];
+    this.elo = AI_ELO[this.index];
 
-    } else if (name == "LeMaire") {
-      player = new LeMaire(this.c, this.depth, this.maxDepth, this.useIterativeDeepening);
-      this.elo = "3845";
-      this.title = "GM";
-      this.index = 3;
-      this.victoryTitle = "Cmaire";
+    if (name.equals(AI_NAME[LESMOUTONS_INDEX])) this.elo = str(int(random(stringToInt(this.elo) - 100, stringToInt(this.elo) + 100)));
+    if (name.equals(AI_NAME[HUMAIN_INDEX])) this.victoryTitle = (this.c == 0) ? "Victoire des blancs" : "Victoire des noirs";
 
-    } else if (name == "LesMoutons") {
-      player = new LesMoutons(this.c, this.depth, this.maxDepth, this.useIterativeDeepening);
-      this.elo = str(int(random(1300, 1500)));
-      this.title = "Mouton";
-      this.index = 5;
-      this.victoryTitle = "YOU LOUSE";
-
-    } else if (name == "Stockfish") {
-      player = new Stockfish(this.c, this.depth, this.useIterativeDeepening);
-      this.elo = "284";
-      this.title = "Noob";
-      this.index = 0;
-      this.victoryTitle = "??!?";
-
-    } else if (name == "Loic") {
-      player = new Loic(this.c, this.depth, this.useIterativeDeepening);
-      this.elo = "-142";
-      this.title = "IM";
-      this.index = 2;
-      this.victoryTitle = "Tu t'es fait mater !";
-
-    } else if (name == "Humain") {
-      this.elo = "???";
-      this.index = 4;
-      this.victoryTitle = (this.c == 0) ? "Victoire des blancs" : "Victoire des noirs";
-    } else {
-      error("Joueur()", "aucun joueur ou joueur inconnu demandé");
-    }
+    if       (name.equals(AI_NAME[ANTOINE_INDEX]))    player = new Antoine(this.c);
+    else if  (name.equals(AI_NAME[LEMAIRE_INDEX]))    player = new LeMaire(this.c, this.depth, this.maxDepth, this.useIterativeDeepening);
+    else if  (name.equals(AI_NAME[LESMOUTONS_INDEX])) player = new LesMoutons(this.c, this.depth, this.maxDepth, this.useIterativeDeepening);
+    else if  (name.equals(AI_NAME[STOCKFISH_INDEX]))  player = new Stockfish(this.c, this.depth, this.useIterativeDeepening);
+    else if  (name.equals(AI_NAME[LOIC_INDEX]))       player = new Loic(this.c, this.depth, this.useIterativeDeepening);
+    else if (!name.equals(AI_NAME[HUMAIN_INDEX]))     error("Joueur()", "aucun joueur ou joueur inconnu demandé");
   }
 
   void play() {
-    if (name == "Humain") return;
+    if (name.equals(AI_NAME[HUMAIN_INDEX])) return;
     player.play();
   }
 
@@ -114,6 +86,10 @@ class IA {
   void play() {
     if (gameEnded || stopSearch) return;
     if (!(MODE_SANS_AFFICHAGE && useHacker && hackerPret)) cursor(WAIT);
+
+    if (nbTour <= AI_OUVERTURE[joueurs.get(this.c).index]) {
+     if (this.tryPlayingBookMove()) return;
+    }
 
     // Recherche du meilleur coup
     float posEval;
@@ -186,7 +162,7 @@ class IA {
     deltaTime /= 1000;
 
     if (deltaTimeHistory.size() < timeCopycatSize) {
-      time = sa.savedTimes[this.c] - (int)random(sa.savedTimes[this.c]/1.5, sa.savedTimes[this.c]/3);
+      time = sa.savedTimes[this.c] - floor(random(sa.savedTimes[this.c]/1.5, sa.savedTimes[this.c]/3));
     }
     else {
       int index = floor(random(0, timeCopycatSize));
@@ -486,25 +462,33 @@ class Antoine extends IA {
 
   @Override
   void play() {
+    if (nbTour <= AI_OUVERTURE[joueurs.get(this.c).index]) {
+     if (this.tryPlayingBookMove()) return;
+    }
+
     // Génération des coups légaux
     ArrayList<Move> moves = new ArrayList<Move>();
     moves = generateAllLegalMoves(this.c, true, true);
 
     // Recherche du MEILLEUR coup
-    if (moves.size() != 0) moves.get(floor(random(0, moves.size()))).play();
+    int moveIndex = floor(random(0, moves.size()));
+    if (moves.size() != 0) moves.get(moveIndex).play();
 
     // Stats
     float eval = random(-10, 10);
 
     sa.setEvals(evalToStringMaire(eval), this.c);
-    sa.setDepths(str((int)random(-10, 10)), this.c);
-    sa.setPositions(formatInt((int)random(10, 10000)), this.c);
+    sa.setDepths(str(floor(random(-10, 10))), this.c);
+    sa.setPositions(formatInt(floor(random(10, 10000))), this.c);
     sa.setTris(roundNumber(random(0, 1), 2), this.c);
-    sa.setTranspositions(formatInt((int)random(0, 10000)), this.c);
-    sa.setTimeDisplays(str((int)random(10, 3000)) + " ms", this.c);
+    sa.setTranspositions(formatInt(floor(random(0, 10000))), this.c);
+    sa.setTimeDisplays(str(floor(random(10, 3000))) + " ms", this.c);
 
     joueurs.get(this.c).lastEval = roundNumber(eval, 3);
     joueurs.get(this.c).evals.add(eval);
+
+    println("[BOT] " + joueurs.get(this.c).name + " : " + getPGNString(moves.get(moveIndex)));
+    println();
   }
 }
 
@@ -517,16 +501,6 @@ class LeMaire extends IA {
     this.depth = d;
     this.maxQuietDepth = md;
     this.useIterativeDeepening = useID;
-  }
-
-  @Override
-  void play() {
-    if (!(MODE_SANS_AFFICHAGE && useHacker && hackerPret)) cursor(WAIT);
-
-    if (nbTour < 9) {
-     if (this.tryPlayingBookMove()) return;
-    }
-    super.play();
   }
 
   @Override
@@ -612,8 +586,11 @@ class LeMaire extends IA {
 
     // Détection des répétitions
     // On ne regarde que si la position est arrivée une fois, pour la rapidité (et éviter des bugs de transpositions)
-    if (plyFromRoot != 0 && checkFastRepetition(zobrist.hash)) {
+    if (plyFromRoot > 1 && checkFastRepetition(zobrist.hash)) {
       // tt.Store(zobrist.hash, 0, null, depth, plyFromRoot, EXACT);
+      return 0;
+    }
+    if (plyFromRoot <= 1 && checkRepetition(zobrist.hash)) {
       return 0;
     }
 
@@ -716,15 +693,6 @@ class LesMoutons extends IA {
     this.depth = d;
     this.maxQuietDepth = md;
     this.useIterativeDeepening = useID;
-  }
-
-  @Override
-  void play() {
-    if (!(MODE_SANS_AFFICHAGE && useHacker && hackerPret)) cursor(WAIT);
-    if (nbTour < 5) {
-     if (this.tryPlayingBookMove()) return;
-    }
-    super.play();
   }
 
   @Override
@@ -872,7 +840,7 @@ void arnaques() {
   int opponent = (int)pow(tourDeQui-1, 2);
 
   // Arnaque au temps
-  if (joueurs.get(opponent).name == "LesMoutons") {
+  if (isMouton(opponent)) {
     if (ta.timers[tourDeQui].currentTime >= 45000 && random(1) <= 0.4) {
       timeCount++;
       ta.timers[tourDeQui].removeTime(5000);
@@ -880,7 +848,7 @@ void arnaques() {
   }
 
   // Apparition
-  if (joueurs.get(opponent).name == "LesMoutons" && (int)nbTour == tourPourApparition && endGameWeight <= 0.5) {
+  if (isMouton(opponent) && (int)nbTour == tourPourApparition && endGameWeight <= 0.5) {
     int knights = 0;
     int cblanc_bishops = 0;
     int cnoir_bishops = 0;
@@ -903,26 +871,74 @@ void arnaques() {
     messagesCount++;
 
     if (knights < 2) {
-      if (grid[1][j].piece == null) { sendMoutonMessage(moutonMessages[(int)random(0, moutonMessages.length)], offsetX, cacheY, 1500); pieces[opponent].add(new Cavalier(1, j, opponent)); materials[opponent] += 320; tourPourApparition += tourAdd; return; }
-      if (grid[6][j].piece == null) { sendMoutonMessage(moutonMessages[(int)random(0, moutonMessages.length)], offsetX+2*w, cacheY, 1500); pieces[opponent].add(new Cavalier(6, j, opponent)); materials[opponent] += 320; tourPourApparition += tourAdd; return; }
+      if (grid[1][j].piece == null) {
+        sendMoutonMessage(moutonMessages[floor(random(0, moutonMessages.length))], offsetX, cacheY, 1500);
+        pieces[opponent].add(new Cavalier(1, j, opponent));
+        materials[opponent] += 320;
+        tourPourApparition += tourAdd;
+        return;
+      }
+      if (grid[6][j].piece == null) {
+        sendMoutonMessage(moutonMessages[floor(random(0, moutonMessages.length))], offsetX+2*w, cacheY, 1500);
+        pieces[opponent].add(new Cavalier(6, j, opponent));
+        materials[opponent] += 320;
+        tourPourApparition += tourAdd;
+        return;
+      }
     }
     if (cblanc_bishops < 1) {
       if (opponent == 0) {
-        if (grid[5][j].piece == null) { sendMoutonMessage(moutonMessages[(int)random(0, moutonMessages.length)], offsetX, cacheY, 1500); pieces[opponent].add(new Fou(5, j, opponent)); materials[opponent] += 330; tourPourApparition += tourAdd; return; }
+        if (grid[5][j].piece == null) {
+          sendMoutonMessage(moutonMessages[floor(random(0, moutonMessages.length))], offsetX, cacheY, 1500);
+          pieces[opponent].add(new Fou(5, j, opponent));
+          materials[opponent] += 330;
+          tourPourApparition += tourAdd;
+          return;
+        }
       } else {
-        if (grid[2][j].piece == null) { sendMoutonMessage(moutonMessages[(int)random(0, moutonMessages.length)], offsetX, cacheY, 1500); pieces[opponent].add(new Fou(2, j, opponent)); materials[opponent] += 330; tourPourApparition += tourAdd; return; }
+        if (grid[2][j].piece == null) {
+          sendMoutonMessage(moutonMessages[floor(random(0, moutonMessages.length))], offsetX, cacheY, 1500);
+          pieces[opponent].add(new Fou(2, j, opponent));
+          materials[opponent] += 330;
+          tourPourApparition += tourAdd;
+          return;
+        }
       }
     }
     if (cnoir_bishops < 1) {
       if (opponent == 0) {
-        if (grid[2][j].piece == null) { sendMoutonMessage(moutonMessages[(int)random(0, moutonMessages.length)], offsetX, cacheY, 1500); pieces[opponent].add(new Fou(2, j, opponent)); materials[opponent] += 330; tourPourApparition += tourAdd; return; }
+        if (grid[2][j].piece == null) {
+          sendMoutonMessage(moutonMessages[floor(random(0, moutonMessages.length))], offsetX, cacheY, 1500);
+          pieces[opponent].add(new Fou(2, j, opponent));
+          materials[opponent] += 330;
+          tourPourApparition += tourAdd;
+          return;
+        }
       } else {
-        if (grid[5][j].piece == null) { sendMoutonMessage(moutonMessages[(int)random(0, moutonMessages.length)], offsetX, cacheY, 1500); pieces[opponent].add(new Fou(5, j, opponent)); materials[opponent] += 330; tourPourApparition += tourAdd; return; }
+        if (grid[5][j].piece == null) {
+          sendMoutonMessage(moutonMessages[floor(random(0, moutonMessages.length))], offsetX, cacheY, 1500);
+          pieces[opponent].add(new Fou(5, j, opponent));
+          materials[opponent] += 330;
+          tourPourApparition += tourAdd;
+          return;
+        }
       }
     }
     if (rois[opponent].roquable == 1 && rooks < 2) {
-      if (grid[0][j].piece == null) { sendMoutonMessage(moutonMessages[(int)random(0, moutonMessages.length)], offsetX, cacheY, 1500); pieces[opponent].add(new Tour(0, j, opponent)); materials[opponent] += 500; tourPourApparition += tourAdd; return; }
-      if (grid[7][j].piece == null) { sendMoutonMessage(moutonMessages[(int)random(0, moutonMessages.length)], offsetX+2*w, cacheY, 1500); pieces[opponent].add(new Tour(7, j, opponent)); materials[opponent] += 500; tourPourApparition += tourAdd; return; }
+      if (grid[0][j].piece == null) {
+        sendMoutonMessage(moutonMessages[floor(random(0, moutonMessages.length))], offsetX, cacheY, 1500);
+        pieces[opponent].add(new Tour(0, j, opponent));
+        materials[opponent] += 500;
+        tourPourApparition += tourAdd;
+        return;
+      }
+      if (grid[7][j].piece == null) {
+        sendMoutonMessage(moutonMessages[floor(random(0, moutonMessages.length))], offsetX+2*w, cacheY, 1500);
+        pieces[opponent].add(new Tour(7, j, opponent));
+        materials[opponent] += 500;
+        tourPourApparition += tourAdd;
+        return;
+      }
     }
 
     messagesCount--;
@@ -935,7 +951,7 @@ void arnaques() {
   if (random(1) <= 0.2) {
     float msgX = offsetX + random(0, 2)*w;
     float msgY = offsetX + random(0, 6)*w;
-    sendMoutonMessage(moutonMessages[(int)random(0, moutonMessages.length)], msgX, msgY, 1500);
+    sendMoutonMessage(moutonMessages[floor(random(0, moutonMessages.length))], msgX, msgY, 1500);
     messagesCount++;
   }
 
@@ -1027,6 +1043,7 @@ class Loic extends IA {
 
     ArrayList<Move> moves = generateAllLegalMoves(tourDeQui, true, true);
     moves = this.OrderMoves(moves);
+    this.numMoves += moves.size();
     if (plyFromRoot == 0) this.firstPlyMoves += moves.size();
     if (plyFromRoot == 1 && !this.inFastSearch) sa.incrementSearchTracker(this.c);
 
@@ -1110,6 +1127,7 @@ class Stockfish extends IA {
 
     ArrayList<Move> moves = generateAllLegalMoves(tourDeQui, true, true);
     moves = this.OrderMoves(moves);
+    this.numMoves += moves.size();
     if (plyFromRoot == 0) this.firstPlyMoves += moves.size();
     if (plyFromRoot == 1 && !this.inFastSearch) sa.incrementSearchTracker(this.c);
 
@@ -1158,6 +1176,7 @@ class Stockfish extends IA {
 /////////////////////////////////////////////////////////////////
 
 //Fonctions test perft
+
 int searchMoves(int depth) {
 
   if (depth == 0) {

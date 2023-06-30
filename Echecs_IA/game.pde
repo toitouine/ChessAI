@@ -10,7 +10,7 @@ int EDITOR = 2;
 
 /////////////////////////////////////////////////////////////////
 
-// Démarrage d'une nouvelle partie
+// Démarrage d'une nouvelle partie / Sélection de joueurs
 
 void startGame() {
   joueurs.add(new Joueur(j1, 0, j1depth, j1Quiet, (j1Time == 0) ? false : true));
@@ -25,21 +25,14 @@ void startGame() {
     useTime = false;
   }
 
-  if (j1 == "Loic") { j1Img = loadImage("joueurs/loicImg.jpeg"); j1ImgEnd = loadImage("joueurs/loicImgEnd.jpeg"); }
-  else if (j1 == "LesMoutons") { j1Img = loadImage("joueurs/lesmoutonsImg.jpg"); j1ImgEnd = loadImage("joueurs/lesmoutonsImgEnd.jpg"); }
-  else if (j1 == "LeMaire") { j1Img = loadImage("joueurs/lemaireImg.jpg"); j1ImgEnd = loadImage("joueurs/lemaireImgEnd.jpg"); }
-  else if (j1 == "Antoine") { j1Img = loadImage("joueurs/antoineImg.jpg"); j1ImgEnd = loadImage("joueurs/antoineImgEnd.jpg"); }
-  else if (j1 == "Stockfish") { j1Img = loadImage("joueurs/stockfishImg.png"); j1ImgEnd = loadImage("joueurs/stockfishImgEnd.png"); }
-  else if (j1 == "Humain") { j1Img = loadImage("joueurs/humainImg.png"); j1ImgEnd = loadImage("joueurs/humainImgEnd.png"); }
+  int iaIndex1 = getIAIndex(j1);
+  int iaIndex2 = getIAIndex(j2);
+  j1Img = loadImage("joueurs/" + AI_CODE[iaIndex1] + "Img.jpg");
+  j1ImgEnd = loadImage("joueurs/" + AI_CODE[iaIndex1] + "ImgEnd.jpg");
+  j2Img = loadImage("joueurs/" + AI_CODE[iaIndex2] + "Img.jpg");
+  j2ImgEnd = loadImage("joueurs/" + AI_CODE[iaIndex2] + "ImgEnd.jpg");
 
-  if (j2 == "Loic") { j2Img = loadImage("joueurs/loicImg.jpeg"); j2ImgEnd = loadImage("joueurs/loicImgEnd.jpeg"); }
-  else if (j2 == "LesMoutons") { j2Img = loadImage("joueurs/lesmoutonsImg.jpg"); j2ImgEnd = loadImage("joueurs/lesmoutonsImgEnd.jpg"); }
-  else if (j2 == "LeMaire") { j2Img = loadImage("joueurs/lemaireImg.jpg"); j2ImgEnd = loadImage("joueurs/lemaireImgEnd.jpg"); }
-  else if (j2 == "Antoine") { j2Img = loadImage("joueurs/antoineImg.jpg"); j2ImgEnd = loadImage("joueurs/antoineImgEnd.jpg"); }
-  else if (j2 == "Stockfish") { j2Img = loadImage("joueurs/stockfishImg.png"); j2ImgEnd = loadImage("joueurs/stockfishImgEnd.png"); }
-  else if (j2 == "Humain") { j2Img = loadImage("joueurs/humainImg.png"); j2ImgEnd = loadImage("joueurs/humainImgEnd.png"); }
-
-  if (attach) infos = "Épinglé";
+  // if (attach) infos = "Épinglé";
 
   s1.hide();
   s2.hide();
@@ -87,9 +80,9 @@ void startGame() {
     ta.show();
 
     // Les Moutons !
-    if (joueurs.get(0).name == "LesMoutons") { ta.timers[0].setDurationOfSecond(900); ta.timers[1].setDurationOfSecond(1100); ta.timers[0].increment = times[0][2]*1200; ta.timers[1].increment = times[1][2]*800; }
-    if (joueurs.get(1).name == "LesMoutons") { ta.timers[1].setDurationOfSecond(900); ta.timers[0].setDurationOfSecond(1100); ta.timers[0].increment = times[0][2]*800; ta.timers[1].increment = times[1][2]*1200; }
-    if (joueurs.get(0).name == "LesMoutons" && joueurs.get(1).name == "LesMoutons") { ta.timers[0].setDurationOfSecond(1000); ta.timers[1].setDurationOfSecond(1000); ta.timers[0].increment = times[0][2]*1000; ta.timers[1].increment = times[1][2]*1000; }
+    if (isMouton(0)) { ta.timers[0].setDurationOfSecond(900); ta.timers[1].setDurationOfSecond(1100); ta.timers[0].increment = times[0][2]*1200; ta.timers[1].increment = times[1][2]*800; }
+    if (isMouton(1)) { ta.timers[1].setDurationOfSecond(900); ta.timers[0].setDurationOfSecond(1100); ta.timers[0].increment = times[0][2]*800; ta.timers[1].increment = times[1][2]*1200; }
+    if (isMouton(0) && isMouton(1)) { ta.timers[0].setDurationOfSecond(1000); ta.timers[1].setDurationOfSecond(1000); ta.timers[0].increment = times[0][2]*1000; ta.timers[1].increment = times[1][2]*1000; }
 
     if (useHacker) ta.goToHackerPosition();
   }
@@ -146,13 +139,20 @@ void rematch() {
 
 void newAIGame(int ia, String type) {
   resetGame(false);
-  j1 = (ia == 0 ? type : "Humain");
-  j2 = (ia == 0 ? "Humain" : type);
+  j1 = (ia == 0 ? type : AI_NAME[HUMAIN_INDEX]);
+  j2 = (ia == 0 ? AI_NAME[HUMAIN_INDEX] : type);
   startGame();
 }
 
 void newGame() {
   resetGame(true);
+}
+
+void setRandomPlayers() {
+  int num1 = floor(random(0, AI_NUMBER));
+  int num2 = floor(random(0, AI_NUMBER));
+  selectors.get(0).setNumber(num1);
+  selectors.get(1).setNumber(num2);
 }
 
 /////////////////////////////////////////////////////////////////

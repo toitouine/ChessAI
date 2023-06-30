@@ -2,15 +2,13 @@
 
 // TODO :
 
-// Meilleur code de gestion d'IAs
 // Meilleur code hacker calibration
-// Bouton combinaison d'IAs random
 // Editeur de position : Trait et roques
 // Hacker : anti-annulation Lichess
 // Auto calibration
 // La brebis / Statistiques bot
-
-// --> 16 occurences significatives attendues (13 significatives pour Humain)
+// Mode tournoi
+// Tester améliorations (killer moves...)
 
 /////////////////////////////////////////////////////////////////
 
@@ -51,13 +49,6 @@ SearchApplet sa;
 
 PImage[] imageArrayB;
 PImage[] imageArrayN;
-
-PImage loic;
-PImage antoine;
-PImage stockfish;
-PImage lemaire;
-PImage lesmoutons;
-PImage humain;
 
 PImage leftArrow;
 PImage rightArrow;
@@ -116,7 +107,7 @@ ArrayList<ButtonFEN> savedFENSbuttons = new ArrayList<ButtonFEN>();
 ArrayList<DragAndDrop>[] addPiecesButtons = new ArrayList[2];
 ArrayList<TimeButton>[] timeButtons = new ArrayList[2];
 ArrayList<ImageButton> presetButtons = new ArrayList<ImageButton>();
-ArrayList<ImageButton> humanButton = new ArrayList<ImageButton>();
+ArrayList<ImageButton> humainButton = new ArrayList<ImageButton>();
 
 ArrayList<String> book = new ArrayList<String>();
 ArrayList<Arrow> varianteArrows = new ArrayList<Arrow>();
@@ -229,8 +220,8 @@ void setup() {
   surface.setTitle(name + " - Selection des joueurs");
   surface.setLocation(displayWidth/2 - width/2, 23);
 
-  j1 = "Humain";
-  j2 = "Humain";
+  j1 = AI_NAME[HUMAIN_INDEX];
+  j2 = AI_NAME[HUMAIN_INDEX];
 
   // Initialise le hacker
   try {
@@ -282,11 +273,9 @@ void setup() {
   println("(https://github.com/toitouine/ChessAI)");
   println();
   println("IAs disponibles :");
-  println(" - LeMaire : Bon en ouverture et en finale, problème de sécurité du roi en milieu de jeu");
-  println(" - Loic : Plutôt mauvais, préfère pater que mater");
-  println(" - Stockfish : Extrêmement difficile de perdre contre lui");
-  println(" - Antoine : Un jeu aléatoire de qualité");
-  println(" - LesMoutons : Voleur, arnaqueur, tricheur, menaces en un !");
+  for (int i = 1; i < AI_NUMBER; i++) {
+    println(" - " + AI_NAME[i] + " : " + AI_DESCRIPTION[i]);
+  }
   println(" ");
   println("Profondeur (recherche classique et quiet) et temps (Iterative Deepening) ajustables avec les sliders du menu.");
   println("Voir fichier configs.pde pour les options / paramètres");
@@ -318,14 +307,15 @@ void draw() {
     updateBlockPlaying();
 
     // Bot vs humain
-    if (engineToPlay) { joueurs.get(tourDeQui).play(); engineToPlay = false; }
-    if (!blockPlaying && ((joueurs.get(0).name == "Humain" && joueurs.get(1).name != "Humain") || (joueurs.get(0).name != "Humain" && joueurs.get(1).name == "Humain"))) {
-      if (joueurs.get(tourDeQui).name != "Humain") engineToPlay = true;
+    if (engineToPlay) {
+      joueurs.get(tourDeQui).play();
+      engineToPlay = false;
     }
+    if (!blockPlaying && isAIvsHumain() && !isHumainTurn()) engineToPlay = true;
 
     // Bot vs bot
     if (!gameEnded && play && (!useHacker || hackerPret)) {
-      if (joueurs.get(0).name != "Humain" && joueurs.get(1).name != "Humain") {
+      if (!isHumain(0) && !isHumain(1)) {
         if (speed == 0) joueurs.get(tourDeQui).play();
         else if (frameCount % speed == 0) joueurs.get(tourDeQui).play();
       }
@@ -347,8 +337,8 @@ void draw() {
 
     // Icones
     for (ShortcutButton b : iconButtons) b.show();
-    for (int i = 0; i < humanButton.size(); i++) {
-      if (humanButton.get(i).isEnabled()) humanButton.get(i).show();
+    for (int i = 0; i < humainButton.size(); i++) {
+      if (humainButton.get(i).isEnabled()) humainButton.get(i).show();
     }
 
     // Plateau

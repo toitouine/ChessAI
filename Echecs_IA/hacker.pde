@@ -139,10 +139,8 @@ boolean noHackerSaves() {
 }
 
 void prepareEngine() {
-  if (play && !gameEnded && !rewind) {
-    if ((joueurs.get(0).name == "Humain" && joueurs.get(1).name != "Humain") || (joueurs.get(0).name != "Humain" && joueurs.get(1).name == "Humain")) {
-      if (joueurs.get(tourDeQui).name != "Humain") engineToPlay = true;
-    }
+  if (play && !gameEnded && !rewind && isAIvsHumain() && !isHumainTurn()) {
+    engineToPlay = true;
   }
 }
 
@@ -226,14 +224,14 @@ boolean verifyCalibration(int tolerance, boolean confondu) {
 
 void manualRestoreSaves() {
   restoreCalibrationSaves();
-  if (joueurs.get(0).name == "Humain" && joueurs.get(1).name != "Humain") {
+  if (isHumain(0) && !isHumain(1)) {
     setHackerPOV(1);
   }
 }
 
 void manualForceSaves() {
   forceCalibrationRestore();
-  if (joueurs.get(0).name == "Humain" && joueurs.get(1).name != "Humain") {
+  if (isHumain(0) && !isHumain(1)) {
     setHackerPOV(1);
   }
 }
@@ -321,17 +319,13 @@ void scanMoveOnBoard() {
     }
   }
 
-  if (joueurs.get(tourDeQui).name != "Humain") return;
+  if (!isHumainTurn()) return;
 
   Move sm = getMoveOnBoard();
   if (sm != null) {
     isNextMoveRestranscrit = true;
     sm.play();
-    if (!blockPlaying) {
-      if ((joueurs.get(0).name == "Humain" && joueurs.get(1).name != "Humain") || (joueurs.get(0).name != "Humain" && joueurs.get(1).name == "Humain")) {
-        if (joueurs.get(tourDeQui).name != "Humain") engineToPlay = true;
-      }
-    }
+    if (!blockPlaying && isAIvsHumain() && !isHumainTurn()) engineToPlay = true;
   }
 }
 
@@ -401,7 +395,7 @@ void handleWaitForRestart() {
     }
 
     // Protection anti-annulation
-    // if (isSameColor(colorOfRematch, hacker.getPixelColor(newgameLocation.x, newgameLocation.y))) return;
+    if (isSameColor(colorOfRematch, hacker.getPixelColor(newgameLocation.x, newgameLocation.y))) return;
   }
 
   boolean isGameStarted = verifyCalibration(2, true);
@@ -412,8 +406,7 @@ void handleWaitForRestart() {
     else botColor = isSimilarColor(hacker.getPixelColor(hackerCoords[0][0].x, hackerCoords[0][0].y), hackerWhitePieceColor) ? 0 : 1;
 
     delay(500);
-    String iaType = ((joueurs.get(0).name == "Humain") ? joueurs.get(1).name : joueurs.get(0).name);
-    // La pov change quelque part !!! ATTENTION ANTI ANNULATION DESACTIVÉE
+    String iaType = (isHumain(0) ? joueurs.get(1).name : joueurs.get(0).name);
     newAIGame(botColor, iaType);
     forceCalibrationRestore();
     setHackerPOV(botColor);
@@ -450,7 +443,7 @@ void cheat(int c, int fromI, int fromJ, int i, int j, int special) {
 
   // Joue le coup
   click(hackerCoords[fromJ][fromI].x, hackerCoords[fromJ][fromI].y);
-  int delay = (int)random(80, 100);
+  int delay = floor(random(80, 100));
   delay(delay);
   click(hackerCoords[j][i].x, hackerCoords[j][i].y);
 
@@ -489,7 +482,7 @@ Point[][] reverseCoords(Point[][] arr) {
 
 void updateHackerMoves() {
   hackerMoves.clear();
-  int player = (joueurs.get(0).name == "Humain" ? 0 : 1);
+  int player = (isHumain(0) ? 0 : 1);
   ArrayList<Move> movesGenerated = generateAllLegalMoves(player, true, false);
   for (int i = 0; i < movesGenerated.size(); i++) {
     if (movesGenerated.get(i).special == 4) movesGenerated.get(i).special = 5;

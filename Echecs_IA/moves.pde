@@ -104,8 +104,11 @@ class Move {
     }
 
     // Variables
-    if (really) { if (enPromotion == null) tourDeQui = (tourDeQui == 0) ? 1 : 0; }
-    else { tourDeQui = (tourDeQui == 0) ? 1 : 0; }
+    if (really) {
+      if (enPromotion == null) tourDeQui = (tourDeQui == 0) ? 1 : 0;
+    } else {
+      tourDeQui = (tourDeQui == 0) ? 1 : 0;
+    }
     nbTour += 0.5;
     if (this.capture != null) { calcEndGameWeight(); materials[this.capture.c] -= this.capture.maireEval; }
 
@@ -183,15 +186,13 @@ class Move {
     isNextMoveRestranscrit = false;
 
     // Les Moutons !
-    if (ENABLE_ARNAQUES && !useHacker && (joueurs.get(0).name == "LesMoutons" || joueurs.get(1).name == "LesMoutons")) {
+    if (ENABLE_ARNAQUES && !useHacker && (isMouton(0) || isMouton(1))) {
       arnaques();
     }
 
     // Efface la table de transposition
-    // On le fait à chaque coup (ou presque) pour éviter des conflits à propos de la table quand deux maires jouent ensemble, ou quand les moutons interviennent...
-    //if (!((joueurs.get(0).name == "LeMaire" && joueurs.get(1).name == "Humain") || (joueurs.get(0).name == "Humain" && joueurs.get(1).name == "LeMaire"))) {
+    // On le fait à chaque coup pour éviter des conflits à propos de la table quand deux maires jouent ensemble, ou quand les moutons interviennent...
     tt.clear();
-    //}
   }
 
   void replay() {

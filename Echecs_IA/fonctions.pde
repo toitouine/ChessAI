@@ -135,6 +135,17 @@ static final javax.swing.JFrame getJFrame(final PSurface surf) {
     surf.getNative()).getFrame();
 }
 
+int getIAIndex(String ia) {
+  for (int i = 0; i < AI_NUMBER; i++) {
+    if (ia.equals(AI_NAME[i])) {
+      return i;
+    }
+  }
+
+  error("getIAIndex()", "Nom d'IA non trouvée dans la configuration");
+  return -1;
+}
+
 void error(String function, String message) {
   println();
   println("[ERREUR] Erreur : " + message + " dans " + function);
@@ -157,6 +168,22 @@ void helpMoveBlack() {
   Move bestMove = cmaire.getBestMove(2000);
   allArrows.add(new Arrow(bestMove.fromI, bestMove.fromJ, bestMove.i, bestMove.j));
   cursor(HAND);
+}
+
+boolean isAIvsHumain() {
+  return ( (isHumain(0) && !isHumain(1)) || (!isHumain(0) && isHumain(1)) );
+}
+
+boolean isHumain(int qui) {
+  return (joueurs.get(qui).name.equals(AI_NAME[HUMAIN_INDEX]));
+}
+
+boolean isHumainTurn() {
+  return isHumain(tourDeQui);
+}
+
+boolean isMouton(int qui) {
+  return (joueurs.get(qui).name.equals(AI_NAME[LESMOUTONS_INDEX]));
 }
 
 /////////////////////////////////////////////////////////////////
@@ -207,15 +234,16 @@ void initGUI() {
       .setColorActive(#d6d46f)
       .setColorBackground(#827e40);
 
-  // Boutons de FEN et nouvelle partie
+  // Boutons de FEN / Nouvelle partie / Random
   Condition hubCondition = new Condition() { public boolean c() { return gameState == MENU; } };
-  hubButtons.add(new TextButton(width/2 - 190, height-125, 380, 75, "Nouvelle partie", 30, 10, "verifStartGame", hubCondition));
-  hubButtons.add(new TextButton(width-110, height-40, 100, 30, "Coller FEN", 18, 8, "pasteFEN", hubCondition)); hubButtons.get(1).setColors(#1d1c1a, #ffffff);
-  hubButtons.add(new TextButton(width-220, height-40, 100, 30, "Copier FEN", 18, 8, "copyFEN", hubCondition)); hubButtons.get(2).setColors(#1d1c1a, #ffffff);
+  hubButtons.add(new TextButton(selectWidth/2 - 190, selectHeight-125, 380, 75, "Nouvelle partie", 30, 10, "verifStartGame", hubCondition));
+  hubButtons.add(new TextButton(selectWidth-110, selectHeight-40, 100, 30, "Coller FEN", 18, 8, "pasteFEN", hubCondition)); hubButtons.get(1).setColors(#1d1c1a, #ffffff);
+  hubButtons.add(new TextButton(selectWidth-220, selectHeight-40, 100, 30, "Copier FEN", 18, 8, "copyFEN", hubCondition)); hubButtons.get(2).setColors(#1d1c1a, #ffffff);
+  hubButtons.add(new TextButton(200, 317, 90, 30, "Aléatoire", 18, 8, "setRandomPlayers", hubCondition));  hubButtons.get(3).setColors(#1d1c1a, #ffffff);
   allButtons.addAll(hubButtons);
 
   // Boutons de promotion
-  Condition promoCondition = new Condition() { public boolean c() { return (gameState == GAME && !blockPlaying && enPromotion != null && joueurs.get(tourDeQui).name == "Humain"); } };
+  Condition promoCondition = new Condition() { public boolean c() { return (gameState == GAME && !blockPlaying && enPromotion != null && isHumainTurn()); } };
   promoButtons.add(new PromotionButton(0.25*w + offsetX, 3.25*w + offsetY, 1.5*w, imageArrayB[1], imageArrayN[1], 0, promoCondition));
   promoButtons.add(new PromotionButton(2.25*w + offsetX, 3.25*w + offsetY, 1.5*w, imageArrayB[2], imageArrayN[2], 1, promoCondition));
   promoButtons.add(new PromotionButton(4.25*w + offsetX, 3.25*w + offsetY, 1.5*w, imageArrayB[3], imageArrayN[3], 2, promoCondition));
@@ -223,10 +251,12 @@ void initGUI() {
   allButtons.addAll(promoButtons);
 
   // Selecteurs
-  PImage[] imgs = {humain, lemaire, lesmoutons, loic, antoine, stockfish};
-  String[] strs = {"Humain", "LeMaire", "LesMoutons", "Loic", "Antoine", "Stockfish"};
-  selectors.add(new ImageSelector(230, 80, 165, imgs, strs, 0, hubCondition));
-  selectors.add(new ImageSelector(selectWidth - 395, 80, 165, imgs, strs, 1, hubCondition));
+  PImage[] imgs = new PImage[AI_NUMBER];
+  for (int i = 0; i < imgs.length; i++) {
+    imgs[i] = loadImage("joueurs/" + AI_CODE[i] + ".jpg");
+  }
+  selectors.add(new ImageSelector(230, 80, 165, imgs, AI_NAME, 0, hubCondition));
+  selectors.add(new ImageSelector(selectWidth - 395, 80, 165, imgs, AI_NAME, 1, hubCondition));
   allButtons.addAll(selectors);
 
   // Hacker et éditeur de position
@@ -287,13 +317,13 @@ void initGUI() {
   allButtons.addAll(presetButtons);
 
   // Aide et abandon
-  Condition humanWCondition = new Condition() { public boolean c() { return(gameState == GAME && !useHacker && !gameEnded && joueurs.get(0).name == "Humain"); } };
-  Condition humanBCondition = new Condition() { public boolean c() { return(gameState == GAME && !useHacker && !gameEnded && joueurs.get(1).name == "Humain"); } };
-  humanButton.add(new ImageButton(6, offsetY + 7*w - 127, 38, 38, 10, #272522, loadImage("icons/resign.png"), false, "resignWhite", humanWCondition));
-  humanButton.add(new ImageButton(6, offsetY + w + 80, 38, 38, 10, #272522, loadImage("icons/resign.png"), false, "resignBlack", humanBCondition));
-  humanButton.add(new ImageButton(offsetX-44, offsetY + 7*w - 127, 38, 38, 10, #272522, loadImage("icons/helpMove.png"), false, "helpMoveWhite", humanWCondition));
-  humanButton.add(new ImageButton(offsetX-44, offsetY + w + 80, 38, 38, 10, #272522, loadImage("icons/helpMove.png"), false, "helpMoveBlack", humanBCondition));
-  allButtons.addAll(humanButton);
+  Condition humainWCondition = new Condition() { public boolean c() { return(gameState == GAME && !useHacker && !gameEnded && isHumain(0)); } };
+  Condition humainBCondition = new Condition() { public boolean c() { return(gameState == GAME && !useHacker && !gameEnded && isHumain(1)); } };
+  humainButton.add(new ImageButton(6, offsetY + 7*w - 127, 38, 38, 10, #272522, loadImage("icons/resign.png"), false, "resignWhite", humainWCondition));
+  humainButton.add(new ImageButton(6, offsetY + w + 80, 38, 38, 10, #272522, loadImage("icons/resign.png"), false, "resignBlack", humainBCondition));
+  humainButton.add(new ImageButton(offsetX-44, offsetY + 7*w - 127, 38, 38, 10, #272522, loadImage("icons/helpMove.png"), false, "helpMoveWhite", humainWCondition));
+  humainButton.add(new ImageButton(offsetX-44, offsetY + w + 80, 38, 38, 10, #272522, loadImage("icons/helpMove.png"), false, "helpMoveBlack", humainBCondition));
+  allButtons.addAll(humainButton);
 
   // Drag and drops
   Condition dragAndDropWCondition = new Condition() { public boolean c() { return (gameState == EDITOR && !showParameters && !showSavedPositions && addPiecesColor == 0); } };
@@ -408,13 +438,6 @@ void initImages() {
   moutonAlertImg = loadImage("joueurs/lesmoutonsImgEnd.jpg");
   chesscomLogo = loadImage("icons/chesscom.png");
   lichessLogo = loadImage("icons/lichess.png");
-
-  loic = loadImage("joueurs/loic.jpeg");
-  antoine = loadImage("joueurs/antoine.jpg");
-  stockfish = loadImage("joueurs/stockfish.png");
-  lemaire = loadImage("joueurs/lemaire.jpg");
-  lesmoutons = loadImage("joueurs/lesmoutons.jpg");
-  humain = loadImage("joueurs/humain.png");
 
   leftArrow = loadImage("icons/leftArrow.png");
   rightArrow = loadImage("icons/rightArrow.png");
@@ -560,13 +583,15 @@ void drawPlayersInfos() {
   textSize(13 * w/75);
   fill(255);
   noStroke();
+  String playerName1 = (isMouton(0) ? "Mouton" : j1.name);
+  String playerName2 = (isMouton(1) ? "Mouton" : j2.name);
 
   if (pointDeVue) {
     image(j1Img, space, height-(space+w), w, w);
     image(j2Img, space, offsetY + ( (offsetY<=10) ? space : 0), w, w);
 
-    text( (j1.name == "LesMoutons" ? "Mouton" : j1.name)  + " (" + j1.elo + ")", space+w/2, height-(space+w)-space-5);
-    text( (j2.name == "LesMoutons" ? "Mouton" : j2.name) + " (" + j2.elo + ")", space+w/2, (offsetY + ( (offsetY<=10) ? space : 0))+space+w);
+    text(playerName1 + " (" + j1.elo + ")", space+w/2, height-(space+w)-space-5);
+    text(playerName2 + " (" + j2.elo + ")", space+w/2, (offsetY + ( (offsetY<=10) ? space : 0))+space+w);
 
     text(roundedString(j1.getScore()) + "/" + j1.getTotalScore(), space+w/2, height-(space+w)-space-40);
     text(roundedString(j2.getScore()) + "/" + j2.getTotalScore(), space+w/2, (offsetY + ( (offsetY<=10) ? space : 0))+space+w+40);
@@ -576,8 +601,8 @@ void drawPlayersInfos() {
     image(j1Img, space, offsetY + ( (offsetY<=10) ? space : 0), w, w);
     image(j2Img, space, height-(space+w), w, w);
 
-    text( (j1.name == "LesMoutons" ? "Mouton" : j1.name) + " (" + j1.elo + ")", space+w/2, (offsetY + ( (offsetY<=10) ? space : 0))+space+w);
-    text( (j2.name == "LesMoutons" ? "Mouton" : j2.name) + " (" + j2.elo + ")", space+w/2, height-(space+w)-space-5);
+    text(playerName1 + " (" + j1.elo + ")", space+w/2, (offsetY + ( (offsetY<=10) ? space : 0))+space+w);
+    text(playerName2 + " (" + j2.elo + ")", space+w/2, height-(space+w)-space-5);
 
     text(roundedString(j1.getScore()) + "/" + j1.getTotalScore(), space+w/2, (offsetY + ( (offsetY<=10) ? space : 0))+space+w+40);
     text(roundedString(j2.getScore()) + "/" + j2.getTotalScore(), space+w/2, height-(space+w)-space-40);
@@ -651,11 +676,11 @@ void drawEndScreen(float y) {
     fill(gris);
     title = "Nulle";
   }
-  else if (joueurs.get(0).name == "Humain" && joueurs.get(1).name != "Humain") { //humain contre machine
+  else if (isHumain(0) && !isHumain(1)) { //humain contre machine
     if (winner == 0) { fill(vert); title = "Vous avez gagné !"; }
     else { fill(gris); title = joueurs.get(1).victoryTitle; }
   }
-  else if (joueurs.get(0).name != "Humain" && joueurs.get(1).name == "Humain") { //machine contre humain
+  else if (!isHumain(0) && isHumain(1)) { //machine contre humain
     if (winner == 1) { fill(vert); title = "Vous avez gagné !"; }
     else { fill(gris); title = joueurs.get(0).victoryTitle; }
   }

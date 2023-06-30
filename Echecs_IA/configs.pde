@@ -40,14 +40,57 @@ boolean MODE_SANS_AFFICHAGE = false; // Afficher (ou pas) l'échiquier pendant l
 
 int soundControl = 0; // 0 = aucun, 1 = partie, 2 = musique
 
-boolean attach = true; // Épingle la fenêtre par défaut
+boolean attach = true; // Épingler la fenêtre par défaut (ou pas)
 boolean stats = true; // Afficher les statistiques et informations pendant le programme
 boolean details = true; // Afficher les statistiques détaillées
 
 boolean timeControl = true; // Activer le temps (ou pas)
 int[][] times = { // Temps par défaut
-  {0, 0, 0}, //blancs : minutes, secondes, incrément
-  {0, 0, 0}  //noirs : minutes, secondes, incrément
+  {0, 0, 0}, // blancs : minutes, secondes, incrément
+  {0, 0, 0}  // noirs : minutes, secondes, incrément
+};
+
+/////////////////////////////////////////////////////////////////
+
+// Configuration des IAs
+
+// Pour ajouter une IA, créer toutes les configurations nécessaires en étendant les tableaux et en spécifiant l'index (ajouter 1 au nombre d'IAs)
+// Créer la classe de la nouvelle IA dans joueurs.pde en héritant de la classe IA (respecter les noms de fonctions de Cmère)
+// Référencer dans le constructeur de la classe Joueur la classe correspondant à la nouvelle IA
+
+// Index des différentes IAs (ou humain) dans les tableaux de configurations (ne pas mélanger !)
+int HUMAIN_INDEX = 0;
+int LEMAIRE_INDEX = 1;
+int LESMOUTONS_INDEX = 2;
+int LOIC_INDEX = 3;
+int ANTOINE_INDEX = 4;
+int STOCKFISH_INDEX = 5;
+
+int CONSTANTE_DE_STOCKFISH = 3; // On ne sait pas
+
+int AI_NUMBER = 6; // Nombre d'IAs et humain différents
+String[] AI_NAME = {"Humain", "LeMaire", "LesMoutons", "Loic", "Antoine", "Stockfish"}; // Nom complet des joueurs
+String[] AI_CODE = {"humain", "lemaire", "lesmoutons", "loic", "antoine", "stockfish"}; // Nom des joueurs (utilisé notamment pour les images)
+
+String[] AI_ELO = {"???", "3845", "1400", "-142", "100", "284"}; // Élo des différentes IAs
+String[] AI_TITLE = {"", "GM", "Mouton", "IM", "", "Noob"}; // Titre des différentes IAs
+int[] AI_OUVERTURE = {0, 10, 5, 0, 0, 0}; // Nombre maximum de coups du livre d'ouverture
+
+String[] AI_DESCRIPTION = { // Description de chaque IA
+  "",
+  "Très bon en ouverture et en finale",
+  "Voleur, arnaqueur, tricheur, menaces en un !!",
+  "Plutôt mauvais, préfère pater que mater",
+  "Un jeu aléatoire de qualité",
+  "Extrêmement difficile de perdre contre lui"
+};
+String[] AI_VICTORY = { // Texte de victoire de chaque IA
+  "",
+  "Cmaire",
+  "YOU LOUSE",
+  "Tu t'es fait mater !",
+  "Tu t'es fait mater !",
+  "??!?"
 };
 
 /////////////////////////////////////////////////////////////////
@@ -68,6 +111,7 @@ float targetEndScreenY = 2.5*w + offsetY; // Position (hauteur) de fin de l'écr
 float defaultEndScreenY = -210; // Position (hauteur) de départ de l'écran de fin de partie
 float endScreenEasing = 0.04; // Vitesse de descente de l'écran de fin de partie
 
+// 346
 Point whiteTimePosition = new Point(30, 283); // Position du sélecteur de temps des blancs
 Point blackTimePosition = new Point(selectWidth - 184, 283); // Position du sélecteur de temps des noirs
 

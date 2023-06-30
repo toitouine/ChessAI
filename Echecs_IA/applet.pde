@@ -69,11 +69,11 @@ public class SearchApplet extends PApplet {
     textSize(23);
     textAlign(CENTER, CENTER);
     if (joueurs == null || joueurs.size() < 2) return;
-    if (!joueurs.get(0).name.equals("Humain")) text(joueurs.get(0).name + " (blancs)", width/4, 27);
+    if (!isHumain(0)) text(joueurs.get(0).name + " (blancs)", width/4, 27);
     else text(joueurs.get(0).name + " (blancs)", width/4, height/2);
 
     if (joueurs == null || joueurs.size() < 2) return;
-    if (!joueurs.get(1).name.equals("Humain")) text(joueurs.get(1).name + " (noirs)", (3*width)/4, 27);
+    if (!isHumain(1)) text(joueurs.get(1).name + " (noirs)", (3*width)/4, 27);
     else text(joueurs.get(1).name + " (noirs)", (3*width)/4, height/2);
 
     // Stats
@@ -82,7 +82,7 @@ public class SearchApplet extends PApplet {
 
     for (int i = 0; i < 2; i++) {
       if (joueurs != null && joueurs.size() < 2) break;
-      if (!gameEnded && !joueurs.get(i).name.equals("Humain")) {
+      if (!gameEnded && !isHumain(i)) {
         fill(#fbd156);
         if (bestMoves[i] != "") text("Evaluation : " + evals[i] + " (" + bestMoves[i] + ")", i*width/2 + 8, 65);
         else text("Evaluation : " + evals[i], i*width/2 + 8, 65);

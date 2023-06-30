@@ -5,27 +5,23 @@ void test() {
   // Move move = new Move(grid[5][5].piece, 5, 2, grid[5][2].piece, 0);
   // LeMaire m = new LeMaire(1, 2, 3, true);
 
-  // long count = 0;
-  // long numTest = 2000;
-  // long pas = numTest/10;
-  //
-  // int before = millis();
-  //
-  // for (int i = 0; i < numTest; i++) {
-  //   hackerEndDetected();
-  //   count++;
-  //   if (i % pas == 0) println(i);
-  // }
-  //
-  // int temps = millis() - before;
-  // println("———————————————");
-  // println(formatInt((int)count) + " itérations");
-  // println(temps + " ms");
-  // println(formatInt((int)(1000*count/temps)) + " par seconde");
+  long count = 0;
+  long numTest = 2000;
+  long pas = numTest/10;
 
-  highlightBook();
-  // Arrow a = new Arrow(2, 2, 3, 5);
-  // allArrows.add(a);
+  int before = millis();
+
+  for (int i = 0; i < numTest; i++) {
+    generateAllMoves(tourDeQui, true, true);
+    count++;
+    if (i % pas == 0) println(i);
+  }
+
+  int temps = millis() - before;
+  println("———————————————");
+  println(formatInt((int)count) + " itérations");
+  println(temps + " ms");
+  println(formatInt((int)(1000*count/temps)) + " par seconde");
 }
 
 void mouseMoved() {
@@ -75,7 +71,7 @@ void mousePressed() {
 
     if (i >= 0 && i < cols && j >= 0 && j < rows) {
       if (mouseButton == LEFT) {
-        if (lastCellRightClicked == null && joueurs.get(tourDeQui).name == "Humain" && !blockPlaying) clickedOnBoard(i, j);
+        if (lastCellRightClicked == null && isHumainTurn() && !blockPlaying) clickedOnBoard(i, j);
       }
       else if (mouseButton == RIGHT) lastCellRightClicked = grid[i][j];
     }
@@ -253,6 +249,6 @@ void mouseDragged() {
     else cursor(ARROW);
 
     // Missclicks :(
-    if (gameState == GAME && joueurs.get((int)pow(tourDeQui-1, 2)).name == "LesMoutons") missclick(i, j);
+    if (gameState == GAME && isMouton((int)pow(tourDeQui-1, 2))) missclick(i, j);
   }
 }
