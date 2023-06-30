@@ -14,7 +14,7 @@ You can adjust the settings using the sliders in the menu : one is for the time 
  
 Home page :
 
-<img width="1099" alt="ChessAI1" src="https://user-images.githubusercontent.com/107322964/236176632-4b1a5ed3-8349-4ad4-a968-8928c9ce39ae.png">
+<img width="1100" alt="ChessAI1" src="https://github.com/toitouine/ChessAI/assets/107322964/74efeee2-3ba1-473a-8094-e186dbca3e9e">
 
 Game between two AIs :
 
