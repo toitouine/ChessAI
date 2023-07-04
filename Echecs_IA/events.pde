@@ -71,7 +71,7 @@ void mousePressed() {
 
     if (i >= 0 && i < cols && j >= 0 && j < rows) {
       if (mouseButton == LEFT) {
-        if (lastCellRightClicked == null && isHumainTurn() && !blockPlaying) clickedOnBoard(i, j);
+        if (lastCellRightClicked == null && isHumainTurn() && !blockPlaying()) clickedOnBoard(i, j);
       }
       else if (mouseButton == RIGHT) lastCellRightClicked = grid[i][j];
     }
@@ -95,7 +95,7 @@ void keyPressed() {
 
   if (gameState == GAME) {
 
-    if (useHacker && !hackerPret && !hackerAPImode) {
+    if (useHacker && !hackerPret) {
       if (keyCode == ENTER) addPointToCalibration();
       if (keyCode == BACKSPACE) manualRestoreSaves();
       if (keyCode == SHIFT) manualForceSaves();

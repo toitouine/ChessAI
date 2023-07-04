@@ -6,7 +6,7 @@
 // 2) Calibration
 // 3) Scans
 // 4) Hacker sans fin
-// 5) Fonctins très utiles
+// 5) Fonctions très utiles
 
 /////////////////////////////////////////////////////////////////
 
@@ -14,18 +14,24 @@ Point upLeftCorner, downRightCorner, newgameLocation;
 Point saveUpLeftCorner, saveDownRightCorner, saveNewgameLocation;
 Color hackerWhitePieceColor, hackerBlackPieceColor;
 
-Color colorOfRematch = null;
-boolean hackerWaitingToRestart = false;
-int timeAtLastRestartTry = 0;
+int CALIBRATION = 0; // Phase de calibration du hacker
+int INGAME = 1; // Partie en cours
+int END = 2; // Fin de partie détectée
+int WAITING_TO_RESTART = 3; // Demande de nouvelle partie effectuée, en attente d'une partie
+
+boolean hackerPret = false; // ?
+boolean hackerWaitingToRestart = false; // ?
+
+int hackerState = CALIBRATION;
+boolean useHacker = false;
 int currentHackerPOV = 0;
+int timeAtLastRestartTry = 0;
 int timeAtHackerEnd = 0;
 int lastMoveTime = 0;
 int numberOfScan = 0;
 int numberOfRestartWait = 0;
+Color colorOfRematch = null;
 boolean isNextMoveRestranscrit = false;
-boolean useHacker = false;
-boolean hackerPret = false;
-boolean hackerAPImode = false;
 Point[][] hackerCoords = new Point[8][8];
 Point[][] saveHackerCoords = new Point[8][8];
 ArrayList<Move> hackerMoves = new ArrayList<Move>();
@@ -325,7 +331,7 @@ void scanMoveOnBoard() {
   if (sm != null) {
     isNextMoveRestranscrit = true;
     sm.play();
-    if (!blockPlaying && isAIvsHumain() && !isHumainTurn()) engineToPlay = true;
+    if (!blockPlaying() && isAIvsHumain() && !isHumainTurn()) engineToPlay = true;
   }
 }
 
@@ -383,8 +389,12 @@ void hackStartGame() {
 }
 
 void handleWaitForRestart() {
+  if (millis() - timeAtLastRestartTry < hackerTestRestartCooldown) return;
+
   timeAtLastRestartTry = millis();
   numberOfRestartWait++;
+
+  println("Hacker is waiting...");
 
   if (hackerSite == CHESSCOM) {
     // Protection anti-revanche

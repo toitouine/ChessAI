@@ -95,8 +95,8 @@ String evalToStringLoic(float eval) {
   return "PAT EN " + ply;
 }
 
-void updateBlockPlaying() {
-  blockPlaying = !play || gameEnded || rewind || (useHacker && !hackerPret);
+boolean blockPlaying() {
+  return (!play || gameEnded || rewind || (useHacker && !hackerPret));
 }
 
 Object GetFromClipboard(DataFlavor flavor) {
@@ -243,7 +243,7 @@ void initGUI() {
   allButtons.addAll(hubButtons);
 
   // Boutons de promotion
-  Condition promoCondition = new Condition() { public boolean c() { return (gameState == GAME && !blockPlaying && enPromotion != null && isHumainTurn()); } };
+  Condition promoCondition = new Condition() { public boolean c() { return (gameState == GAME && !blockPlaying() && enPromotion != null && isHumainTurn()); } };
   promoButtons.add(new PromotionButton(0.25*w + offsetX, 3.25*w + offsetY, 1.5*w, imageArrayB[1], imageArrayN[1], 0, promoCondition));
   promoButtons.add(new PromotionButton(2.25*w + offsetX, 3.25*w + offsetY, 1.5*w, imageArrayB[2], imageArrayN[2], 1, promoCondition));
   promoButtons.add(new PromotionButton(4.25*w + offsetX, 3.25*w + offsetY, 1.5*w, imageArrayB[3], imageArrayN[3], 2, promoCondition));
@@ -387,7 +387,7 @@ void initGUI() {
     for (int j = 0; j < 3; j++) {
       int index = 3*i + j;
       if (index >= savedFENS.length) break;
-      savedFENSbuttons.add(new ButtonFEN(startX + size/2 + j*(size + espacementX), startY + size/2 + i*(size + espacementY), size, saveFENSimage[index], savedFENSname[index], index, fenCondition));
+      savedFENSbuttons.add(new ButtonFEN(startX + size/2 + j*(size + espacementX), startY + size/2 + i*(size + espacementY), size, savedFENSimage[index], savedFENSname[index], index, fenCondition));
     }
   }
   allButtons.addAll(savedFENSbuttons);
@@ -418,7 +418,7 @@ void initImages() {
   icons[5] = loadImage("icons/save.png");
   icons[6] = loadImage("icons/rotate.png");
   icons[7] = loadImage("icons/play.png");
-  icons[8] = loadImage("icons/parameter.png");
+  icons[8] = loadImage("icons/computer.png");
   icons[9] = loadImage("icons/quit.png");
 
   editorIcons[0] = loadImage("icons/pin.png");
@@ -442,8 +442,8 @@ void initImages() {
   leftArrow = loadImage("icons/leftArrow.png");
   rightArrow = loadImage("icons/rightArrow.png");
 
-  for (int i = 0; i < saveFENSimage.length; i++) {
-    saveFENSimage[i] = loadImage("positions/position_" + i + ".png");
+  for (int i = 0; i < savedFENSimage.length; i++) {
+    savedFENSimage[i] = loadImage("positions/position_" + i + ".png");
   }
 }
 
@@ -520,29 +520,22 @@ void drawHackerPage() {
   fill(color(#b33430));
   textAlign(CENTER, CENTER);
   textSize(35 * w/75);
-  text("Hacker " + (hackerAPImode ? "API " : "") + "mode activé", rectX + (100*w/75)/2, rectY - rectH/2 + 55*w/75);
+  text("Hacker mode activé", rectX + (100*w/75)/2, rectY - rectH/2 + 55*w/75);
 
   // Texte de configuration
-  if (!hackerAPImode) {
-    String hackerText;
-    if (upLeftCorner == null) hackerText = "Calibrer le coin haut-gauche";
-    else if (downRightCorner == null) hackerText = "Calibrer le coin bas-droite";
-    else hackerText = "Calibrer la nouvelle partie";
-    fill(0);
-    noStroke();
-    textSize(27 * w/75);
-    text(hackerText, (width-offsetX)/2 + offsetX, rectY + (100*w/75)/3);
+  String hackerText;
+  if (upLeftCorner == null) hackerText = "Calibrer le coin haut-gauche";
+  else if (downRightCorner == null) hackerText = "Calibrer le coin bas-droite";
+  else hackerText = "Calibrer la nouvelle partie";
+  fill(0);
+  noStroke();
+  textSize(27 * w/75);
+  text(hackerText, (width-offsetX)/2 + offsetX, rectY + (100*w/75)/3);
 
-    String hg = (upLeftCorner == null) ? "___" : str(upLeftCorner.x) + " ; " + str(upLeftCorner.y);
-    String bd = (downRightCorner == null) ? "___" : str(downRightCorner.x) + " ; " + str(downRightCorner.y);
-    textSize(20 * w/75);
-    text("HG : " + hg + "     " + "BD : " + bd, (width-offsetX)/2 + offsetX, rectY + (100*w/75)/1.15);
-  } else {
-    fill(0);
-    noStroke();
-    textSize(27 * w/75);
-    text("En attente de l'API...", (width-offsetX)/2 + offsetX, rectY + (100*w/75)/2);
-  }
+  String hg = (upLeftCorner == null) ? "___" : str(upLeftCorner.x) + " ; " + str(upLeftCorner.y);
+  String bd = (downRightCorner == null) ? "___" : str(downRightCorner.x) + " ; " + str(downRightCorner.y);
+  textSize(20 * w/75);
+  text("HG : " + hg + "     " + "BD : " + bd, (width-offsetX)/2 + offsetX, rectY + (100*w/75)/1.15);
 }
 
 void drawSavedPosition() {

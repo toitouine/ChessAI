@@ -5,7 +5,7 @@ class Shortcut {
     switch(n) {
       case 0: return "Épingler / Désépingler (L)";
       case 1: return "Afficher / Masquer les variantes (V)";
-      case 2: return "Afficher / Masquer l'analyse (G)";
+      case 2: return "Afficher / Masquer le graphique (G)";
       case 3: return "Afficher les informations (F)";
       case 4: return "Voir la PGN (P)";
       case 5: return "Sauvegarder la PGN (C)";
@@ -252,19 +252,19 @@ void printMaireEval() {
 }
 
 void delayUp() {
-  speed += 6;
-  speed = constrain(speed, 0, 1200);
-  printNewSpeed();
+  playDelay += 6;
+  playDelay = constrain(playDelay, 0, 1200);
+  printNewDelay();
 }
 
 void delayDown() {
-  speed -= 6;
-  speed = constrain(speed, 0, 1200);
-  printNewSpeed();
+  playDelay -= 6;
+  playDelay = constrain(playDelay, 0, 1200);
+  printNewDelay();
 }
 
-void printNewSpeed() {
-  println("[PARTIE] Délai par coups : " + (float)speed/60 + " s");
+void printNewDelay() {
+  println("[PARTIE] Délai par coups : " + (float)playDelay/60 + " s");
 }
 
 void savePGN() {
@@ -286,7 +286,7 @@ void printHelpMenu() {
   println(" C        | Éditeur             | Copier la FEN");
   println(" D        | En partie           | Ouvrir Search Controller");
   println(" F        | En partie / Editeur | Informations sur la position");
-  println(" G        | En partie           | Afficher l'analyse");
+  println(" G        | En partie           | Afficher / Masquer le graphique");
   println(" H        | Partout             | Raccourcis clavier");
   println(" J        | En partie           | Evaluation statique du maire");
   println(" K        | En partie / Editeur | Retourner l'échiquier");

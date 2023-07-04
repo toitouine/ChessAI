@@ -2,13 +2,19 @@
 
 // TODO :
 
-// Meilleur code hacker calibration
+// Meilleur code hacker
 // Editeur de position : Trait et roques
 // Hacker : anti-annulation Lichess
 // Auto calibration
 // La brebis / Statistiques bot
 // Mode tournoi
 // Tester améliorations (killer moves...)
+
+// Variables états du hacker :
+// hackerPret,
+// (in game),
+// gameEnded && !hackerWaitingToRestart,
+// gameEnded && hackerWaitingToRestart
 
 /////////////////////////////////////////////////////////////////
 
@@ -60,14 +66,10 @@ PImage j2ImgEnd;
 
 PImage[] icons = new PImage[10];
 PImage[] editorIcons = new PImage[9];
-PImage[] saveFENSimage = new PImage[7];
-PImage upArrow;
-PImage downArrow;
+PImage[] savedFENSimage = new PImage[7];
 PImage chess;
 PImage bot;
 PImage botLarge;
-PImage idIcon;
-PImage idIconOff;
 PImage warning;
 PImage moutonAlertImg;
 PImage chesscomLogo;
@@ -91,7 +93,7 @@ int[] materials = new int[2];
 
 // Interfaces, boutons et arraylist
 
-ArrayList<Button> allButtons = new ArrayList<Button>(); // ArrayList de tous les boutons (et toggles) de l'interface
+ArrayList<Button> allButtons = new ArrayList<Button>(); // ArrayList de tous les boutons de l'interface
 
 ArrayList<Piece> piecesToDisplay = new ArrayList<Piece>();
 ArrayList<Piece>[] pieces = new ArrayList[2];
@@ -137,7 +139,9 @@ Shortcut sc = new Shortcut();
 // Variables pour la partie
 int cols = 8;
 int rows = 8;
-int tourDeQui = 0; //dakin
+int tourDeQui = 0; // Dakin
+int playDelay = 0;
+
 float nbTour = 0.5;
 float endGameWeight = 0;
 boolean gameEnded = false;
@@ -155,7 +159,6 @@ boolean showVariante = false;
 boolean showSavedPositions = false;
 boolean showSearchController = false;
 boolean showParameters = false;
-boolean blockPlaying = false;
 boolean useTime = false;
 boolean pointDeVue = true;
 int gameState;
@@ -180,10 +183,6 @@ float lastMissclick = 0;
 
 int CHESSCOM = 0;
 int LICHESS = 1;
-
-// En mémoire du vecteur vitesse
-int slider;
-int speed = 0;
 
 /////////////////////////////////////////////////////////////////
 
@@ -303,30 +302,27 @@ void draw() {
   if (gameState == GAME) {
     background(49, 46, 43);
 
-    // Actualise blockPlaying
-    updateBlockPlaying();
-
     // Bot vs humain
     if (engineToPlay) {
       joueurs.get(tourDeQui).play();
       engineToPlay = false;
     }
-    if (!blockPlaying && isAIvsHumain() && !isHumainTurn()) engineToPlay = true;
+    if (!blockPlaying() && isAIvsHumain() && !isHumainTurn()) engineToPlay = true;
 
     // Bot vs bot
     if (!gameEnded && play && (!useHacker || hackerPret)) {
       if (!isHumain(0) && !isHumain(1)) {
-        if (speed == 0) joueurs.get(tourDeQui).play();
-        else if (frameCount % speed == 0) joueurs.get(tourDeQui).play();
+        if (playDelay == 0) joueurs.get(tourDeQui).play();
+        else if (frameCount % playDelay == 0) joueurs.get(tourDeQui).play();
       }
     }
 
     // Hacker
-    if (useHacker && hackerPret  && !hackerAPImode) {
+    if (useHacker && hackerPret) {
       if (play && !gameEnded && enPromotion == null) scanMoveOnBoard();
 
       if (gameEnded && !hackerWaitingToRestart && millis() - timeAtHackerEnd >= timeBeforeHackerRestart) hackStartGame();
-      if (hackerWaitingToRestart && millis() - timeAtLastRestartTry >= hackerTestRestartCooldown) handleWaitForRestart();
+      if (hackerWaitingToRestart) handleWaitForRestart();
     }
 
     // Affichages / Interface

@@ -229,6 +229,7 @@ void resetSettingsToDefault() {
   }
 
   // Variables
+  hackerState = CALIBRATION;
   numberOfRestartWait = 0;
   numberOfScan = 0;
   hackerWaitingToRestart = false;
