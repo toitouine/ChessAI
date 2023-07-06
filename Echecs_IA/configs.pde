@@ -12,7 +12,7 @@ boolean MODE_PROBLEME = false; // Activer le mode résolution de problèmes (ou 
 
 /////////////////////////////////////////////////////////////////
 
-// Configurations du hacker (voir hacker config helper)
+// Configurations du hacker [voir hacker config helper]
 
 int hackerSite = CHESSCOM; // Hacker sur chess.com (CHESSCOM) ou lichess (LICHESS)
 boolean hackerSansFin = true; // Activer le hacker sans fin (ou pas), permet de relancer automatiquement les parties

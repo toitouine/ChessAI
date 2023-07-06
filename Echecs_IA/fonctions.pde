@@ -265,7 +265,7 @@ void initGUI() {
 
   // Hacker et éditeur de position
   positionEditor = new ImageButton(selectWidth-55, 10, 55, 55, 0, #ffffff, chess, true, "startEditor", hubCondition);
-  hackerButton = new ImageButton(selectWidth-105, 11, 44, 44, 0, #ffffff, bot, true, "toggleUseHacker", hubCondition);
+  hackerButton = new ImageButton(selectWidth-105, 11, 44, 44, 0, #ffffff, bot, true, "toggleHacker", hubCondition);
   hackerButton.display = false;
   allButtons.add(positionEditor);
   allButtons.add(hackerButton);
@@ -527,17 +527,22 @@ void drawHackerPage() {
   text("Hacker mode activé", rectX + (100*w/75)/2, rectY - rectH/2 + 55*w/75);
 
   // Texte de configuration
-  String hackerText;
-  if (upLeftCorner == null) hackerText = "Calibrer le coin haut-gauche";
-  else if (downRightCorner == null) hackerText = "Calibrer le coin bas-droite";
-  else hackerText = "Calibrer la nouvelle partie";
+  String hackerText = "";
+
+  for (int i = 0; i < CALIBRATION_NUMBER; i++) {
+    if (hackerPoints[i] == null) {
+      hackerText = "Calibrer [" + calibrationDesc[i].toUpperCase() + "]";
+      break;
+    }
+  }
+
   fill(0);
   noStroke();
   textSize(27 * w/75);
   text(hackerText, (width-offsetX)/2 + offsetX, rectY + (100*w/75)/3);
 
-  String hg = (upLeftCorner == null) ? "___" : str(upLeftCorner.x) + " ; " + str(upLeftCorner.y);
-  String bd = (downRightCorner == null) ? "___" : str(downRightCorner.x) + " ; " + str(downRightCorner.y);
+  String hg = (hackerPoints[UPLEFT] == null) ? "___" : str(hackerPoints[UPLEFT].x) + " ; " + str(hackerPoints[UPLEFT].y);
+  String bd = (hackerPoints[DOWNRIGHT] == null) ? "___" : str(hackerPoints[DOWNRIGHT].x) + " ; " + str(hackerPoints[DOWNRIGHT].y);
   textSize(20 * w/75);
   text("HG : " + hg + "     " + "BD : " + bd, (width-offsetX)/2 + offsetX, rectY + (100*w/75)/1.15);
 }
@@ -608,6 +613,32 @@ void drawPlayersInfos() {
   }
 }
 
+void drawTimeButtons() {
+  fill(#f0f0f0);
+  stroke(#f0f0f0);
+  rect(whiteTimePosition.x, whiteTimePosition.y, 98, 55);
+  rect(whiteTimePosition.x + 105, whiteTimePosition.y, 49, 55);
+  fill(#26211b);
+  textSize(30);
+  textAlign(CENTER, CENTER);
+  text(nf(times[0][0], 2) + ":" + nf(times[0][1], 2), whiteTimePosition.x + 50, whiteTimePosition.y + 24);
+  text(nf(times[0][2], 2), whiteTimePosition.x + 130, whiteTimePosition.y + 24);
+
+  fill(#26211b);
+  stroke(#26211b);
+  rect(blackTimePosition.x, blackTimePosition.y, 98, 55);
+  rect(blackTimePosition.x + 105, blackTimePosition.y, 49, 55);
+  fill(#f0f0f0);
+  text(nf(times[1][0], 2) + ":" + nf(times[1][1], 2), blackTimePosition.x + 50, blackTimePosition.y + 24);
+  text(nf(times[1][2], 2), blackTimePosition.x + 130, blackTimePosition.y + 24);
+  for (int i = 0; i < timeButtons.length; i++) {
+    for (int j = 0; j < timeButtons[i].size(); j++) {
+      timeButtons[i].get(j).update();
+      timeButtons[i].get(j).show();
+    }
+  }
+}
+
 void drawArrow(int fromI, int fromJ, int i, int j) {
   Arrow arrow = new Arrow(fromI, fromJ, i, j);
   for (Arrow a : allArrows) {
@@ -624,6 +655,19 @@ void updateDraggedArrow(int i, int j) {
   allArrows.remove(lastArrowDrawn);
   allArrows.add(newArrow);
   lastArrowDrawn = newArrow;
+}
+
+void handleEndScreen() {
+  if (yEndScreen < targetEndScreenY) {
+    float dy = targetEndScreenY - yEndScreen;
+    dy = max(dy, 5);
+    yEndScreen += dy * endScreenEasing;
+  }
+
+  float rectX = 1.75*w + offsetX, rectW = 4.5*w, rectH = 3*w;
+  if (targetEndScreenY - yEndScreen <= 1 && mousePressed && (mouseX < rectX || mouseX >= rectX+rectW || mouseY < yEndScreen || mouseY >= yEndScreen+rectH)) disableEndScreen = true;
+
+  drawEndScreen(yEndScreen);
 }
 
 float yEndScreen = defaultEndScreenY;
@@ -697,7 +741,7 @@ void drawEndScreen(float y) {
 
 // Plateau et presets
 
-void updateBoard() {
+void drawBoard() {
   for (int i = 0; i < cols; i++) {
     for (int j = 0; j < rows; j++) {
       grid[i][j].show();

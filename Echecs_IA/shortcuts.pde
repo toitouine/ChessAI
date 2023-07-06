@@ -59,10 +59,11 @@ class Shortcut {
 
 // Fonctions de shortcuts
 
-void toggleUseHacker() {
+void toggleHacker() {
   useHacker =! useHacker;
   hackerButton.display = !hackerButton.display;
-  if (!useHacker) frameRate(60);
+  if (useHacker) noTimePreset();
+  else frameRate(60);
 }
 
 void pasteHTMLtoBoard() {

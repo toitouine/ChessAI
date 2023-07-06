@@ -5,22 +5,24 @@ void test() {
   // Move move = new Move(grid[5][5].piece, 5, 2, grid[5][2].piece, 0);
   // LeMaire m = new LeMaire(1, 2, 3, true);
 
+  println("———————————————");
   long count = 0;
-  long numTest = 2000;
+  long numTest = 1000000;
   long pas = numTest/10;
-
   int before = millis();
 
   for (int i = 0; i < numTest; i++) {
+    generateAllLegalMoves(tourDeQui, true, true);
     count++;
     if (i % pas == 0) println(i);
   }
 
   int temps = millis() - before;
   println("———————————————");
+  println("Résultats :");
   println(formatInt((int)count) + " itérations");
   println(temps + " ms");
-  println(formatInt((int)(1000*count/temps)) + " par seconde");
+  println("-->", formatInt((int)(1000*count/temps)) + " itérations par seconde");
 }
 
 void mouseMoved() {

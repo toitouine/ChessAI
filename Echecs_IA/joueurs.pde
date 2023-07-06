@@ -1087,7 +1087,8 @@ class Loic extends IA {
     }
 
     // Répétition
-    if (plyFromRoot == 1 && checkRepetition(zobrist.hash)) {
+    // if (plyFromRoot == 1 && checkRepetition(zobrist.hash)) {
+    if (checkRepetition(zobrist.hash)) {
      return 0;
     }
 

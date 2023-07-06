@@ -217,8 +217,12 @@ void resetSettingsToDefault() {
   for (ShortcutButton sb : iconButtons) sb.resetState();
   if (pointDeVue == false) flipBoard();
 
-  // Hacker en mode calibration
+  // Hacker
   hackerState = CALIBRATION;
+  colorOfRematch = null;
+  for (int i = 0; i < CALIBRATION_NUMBER; i++) {
+    hackerPoints[i] = null;
+  }
 
   // Reset la grille
   for (int i = 0; i < cols; i++) {
@@ -253,10 +257,6 @@ void resetSettingsToDefault() {
   alertTime = 0;
   alertStarted = 0;
   showSavedPositions = false;
-  upLeftCorner = null;
-  downRightCorner = null;
-  newgameLocation = null;
-  colorOfRematch = null;
   timeAtHackerEnd = 0;
   engineToPlay = false;
   showGraph = false;
@@ -427,12 +427,12 @@ void endGame(int winnerTag, Object... b) {
   if (b.length == 2) isMate = (Boolean)b[1];
 
   // Affiche le texte de fin de partie
-  println("");
+  println(" ");
   if (winner == 0)      print("[PARTIE] Victoire des blancs ");
   else if (winner == 1) print("[PARTIE] Victoire des noirs ");
   else if (winner == 2) print("[PARTIE] Nulle ");
   println(endReason);
-  println("");
+  println(" ");
 
   // Actualise les scores
   if (winner == 2) updateScores(0.5);

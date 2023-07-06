@@ -10,14 +10,28 @@
 
 /////////////////////////////////////////////////////////////////
 
-Point upLeftCorner, downRightCorner, newgameLocation;
-Point saveUpLeftCorner, saveDownRightCorner, saveNewgameLocation;
-Color hackerWhitePieceColor, hackerBlackPieceColor;
+// Pour ajouter une donnée de calibration :
+// Augmenter de 1 CALIBRATION_NUMBER, ajouter l'index correspondant et une description dans calibrationDesc
+// Accéder à la donnée par hackerPoints et l'index correspondant
+
+/////////////////////////////////////////////////////////////////
 
 final int CALIBRATION = 0; // Phase de calibration du hacker
 final int INGAME = 1; // Partie en cours
 final int END = 2; // Fin de partie détectée
 final int WAITING_TO_RESTART = 3; // Demande de nouvelle partie effectuée, en attente d'une partie
+
+// Index des calibrations
+final int CALIBRATION_NUMBER = 4;
+final int UPLEFT = 0;
+final int DOWNRIGHT = 1;
+final int NEWGAME = 2;
+final int TEST = 3;
+
+Point[] hackerPoints = new Point[CALIBRATION_NUMBER];
+Point[] saveHackerPoints = new Point[CALIBRATION_NUMBER];
+Color hackerWhitePieceColor, hackerBlackPieceColor;
+String[] calibrationDesc = {"Coin haut-gauche", "Coin bas-droite", "Nouvelle partie", "Test"};
 
 int hackerState = CALIBRATION;
 boolean useHacker = false;
@@ -85,17 +99,17 @@ void forceCalibrationRestore() {
 }
 
 void calculateCalibrationData() {
-  println("[HACKER] Haut-gauche :", upLeftCorner.x, upLeftCorner.y);
-  println("[HACKER] Bas-droite :", downRightCorner.x, downRightCorner.y);
-  println("[HACKER] Nouvelle partie :", newgameLocation.x, newgameLocation.y);
+  for (int i = 0; i < CALIBRATION_NUMBER; i++) {
+    println("[HACKER] " + calibrationDesc[i] + " :"  , hackerPoints[i].x, hackerPoints[i].y);
+  }
 
-  int boardWidth = downRightCorner.x - upLeftCorner.x;
-  int boardHeight = downRightCorner.y - upLeftCorner.y;
+  int boardWidth = hackerPoints[DOWNRIGHT].x - hackerPoints[UPLEFT].x;
+  int boardHeight = hackerPoints[DOWNRIGHT].y - hackerPoints[UPLEFT].y;
 
   for (int i = 0; i < 8; i++) {
     for (int j = 0; j < 8; j++) {
-      hackerCoords[j][i].x = upLeftCorner.x + i*(boardWidth/7);
-      hackerCoords[j][i].y = upLeftCorner.y + j*(boardHeight/7);
+      hackerCoords[j][i].x = hackerPoints[UPLEFT].x + i*(boardWidth/7);
+      hackerCoords[j][i].y = hackerPoints[UPLEFT].y + j*(boardHeight/7);
     }
   }
   currentHackerPOV = 0;
@@ -105,9 +119,9 @@ void calculateCalibrationData() {
 }
 
 void resetCalibrationData() {
-  upLeftCorner = null;
-  downRightCorner = null;
-  newgameLocation = null;
+  for (int i = 0; i < CALIBRATION_NUMBER; i++) {
+    hackerPoints[i] = null;
+  }
   hackerWhitePieceColor = null;
   hackerBlackPieceColor = null;
   for (int i = 0; i < 8; i++) {
@@ -118,25 +132,27 @@ void resetCalibrationData() {
 }
 
 void saveHackerData() {
-  saveUpLeftCorner = upLeftCorner;
-  saveDownRightCorner = downRightCorner;
+  for (int i = 0; i < CALIBRATION_NUMBER; i++) {
+    saveHackerPoints[i] = copyPoint(hackerPoints[i]);
+  }
   saveHackerCoords = copyCoords(hackerCoords);
-  saveNewgameLocation = newgameLocation;
   println("[HACKER] Données du hacker sauvegardées");
 }
 
 void loadHackerSaves() {
-  upLeftCorner = copyPoint(saveUpLeftCorner);
-  downRightCorner = copyPoint(saveDownRightCorner);
-  newgameLocation = copyPoint(saveNewgameLocation);
+  for (int i = 0; i < CALIBRATION_NUMBER; i++) {
+    hackerPoints[i] = copyPoint(saveHackerPoints[i]);
+  }
   hackerCoords = copyCoords(saveHackerCoords);
   currentHackerPOV = 0;
 }
 
 boolean noHackerSaves() {
-  if (saveUpLeftCorner == null || saveDownRightCorner == null || saveNewgameLocation == null) {
-    alert("Aucune sauvegarde", 2500);
-    return true;
+  for (int i = 0; i < CALIBRATION_NUMBER; i++) {
+    if (saveHackerPoints[i] == null) {
+      alert("Sauvegarde manquante", 2500);
+      return true;
+    }
   }
   return false;
 }
@@ -148,7 +164,6 @@ void prepareEngine() {
 }
 
 void setupHacker() {
-  // hackerPret = true;
   hackerState = INGAME;
   if (MODE_SANS_AFFICHAGE) {
     surface.setSize(150, 150);
@@ -164,35 +179,35 @@ void setupHacker() {
 void addPointToCalibration() {
   Point p = MouseInfo.getPointerInfo().getLocation();
 
-  if (upLeftCorner == null) {
-    upLeftCorner = p;
+  for (int i = 0; i < CALIBRATION_NUMBER; i++) {
+    if (hackerPoints[i] == null) {
+      hackerPoints[i] = copyPoint(p);
+      if (i == CALIBRATION_NUMBER-1) calibrerHacker();
+      return;
+    }
   }
-  else if (downRightCorner == null) {
-    downRightCorner = p;
-  }
-  else if (newgameLocation == null) {
-    newgameLocation = p;
-    calibrerHacker();
-  }
-  else println("[HACKER] Hacker déjà calibré");
+
+  alert("Hacker déjà calibré", 2000);
+  println("[HACKER] Hacker déjà calibré");
 }
 
 boolean verifyCalibration(int tolerance, boolean confondu) {
-  // Tolerance représente nombre d'erreurs autorisé et confondu si on confond les deux types de pièce
+  // tolerance représente nombre d'erreurs autorisé et confondu si on confond les deux couleurs de pièce
   Color B = hackerWhitePieceColor;
   Color N = hackerBlackPieceColor;
   Color A = null;
 
   if (isSameColor(B, N)) return false;
 
-  Color[][] expectedBoard = {{N, N, N, N, N, N, N, N},
-                             {N, N, N, N, N, N, N, N},
-                             {A, A, A, A, A, A, A, A},
-                             {A, A, A, A, A, A, A, A},
-                             {A, A, A, A, A, A, A, A},
-                             {A, A, A, A, A, A, A, A},
-                             {B, B, B, B, B, B, B, B},
-                             {B, B, B, B, B, B, B, B}};
+  Color[][] expectedBoard = {
+  {N, N, N, N, N, N, N, N},
+  {N, N, N, N, N, N, N, N},
+  {A, A, A, A, A, A, A, A},
+  {A, A, A, A, A, A, A, A},
+  {A, A, A, A, A, A, A, A},
+  {A, A, A, A, A, A, A, A},
+  {B, B, B, B, B, B, B, B},
+  {B, B, B, B, B, B, B, B}};
 
   boolean debugPrint = (confondu ? false : true);
   Color[][] scannedBoard = scanBoard(debugPrint);
@@ -346,10 +361,10 @@ boolean lichessEndDetected() {
   Point mouse = MouseInfo.getPointerInfo().getLocation();
   click(hackerCoords[0][0].x, hackerCoords[0][0].y);
 
-  hacker.mouseMove(newgameLocation.x, newgameLocation.y);
+  hacker.mouseMove(hackerPoints[NEWGAME].x, hackerPoints[NEWGAME].y);
   delay(200);
 
-  if (isSimilarColor(hacker.getPixelColor(newgameLocation.x, newgameLocation.y), endColorLichess)) {
+  if (isSimilarColor(hacker.getPixelColor(hackerPoints[NEWGAME].x, hackerPoints[NEWGAME].y), endColorLichess)) {
     click(mouse.x, mouse.y);
     return true;
   }
@@ -364,7 +379,7 @@ boolean hackerEndDetected() {
 
 void hackStartGame() {
   if (!hackerSansFin) return;
-  if (newgameLocation == null) {
+  if (hackerPoints[NEWGAME] == null) {
     error("hackStartGame", "Nouvelle partie non calibrée");
     return;
   }
@@ -377,14 +392,13 @@ void hackStartGame() {
 
   click(hackerCoords[0][0].x, hackerCoords[0][0].y);
   delay(1500);
-  click(newgameLocation.x, newgameLocation.y);
+  click(hackerPoints[NEWGAME].x, hackerPoints[NEWGAME].y);
   delay(190);
   click(x, y);
   delay(20);
-  colorOfRematch = hacker.getPixelColor(newgameLocation.x, newgameLocation.y);
+  colorOfRematch = hacker.getPixelColor(hackerPoints[NEWGAME].x, hackerPoints[NEWGAME].y);
 
   deselectAll();
-  // hackerWaitingToRestart = true;
   hackerState = WAITING_TO_RESTART;
 }
 
@@ -393,8 +407,6 @@ void handleWaitForRestart() {
 
   timeAtLastRestartTry = millis();
   numberOfRestartWait++;
-
-  println("Hacker is waiting...");
 
   if (hackerSite == CHESSCOM) {
     // Protection anti-revanche
@@ -405,7 +417,7 @@ void handleWaitForRestart() {
     }
 
     // Protection anti-annulation
-    if (isSameColor(colorOfRematch, hacker.getPixelColor(newgameLocation.x, newgameLocation.y))) return;
+    if (isSameColor(colorOfRematch, hacker.getPixelColor(hackerPoints[NEWGAME].x, hackerPoints[NEWGAME].y))) return;
   }
 
   boolean isGameStarted = verifyCalibration(2, true);

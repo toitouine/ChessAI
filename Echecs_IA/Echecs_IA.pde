@@ -2,14 +2,14 @@
 
 // TODO :
 
-// Meilleur code hacker
+// Nettoyer gameState == GAME et keyPressed (?)
 // Régler problème fenêtre lag au début
 // Editeur de position : Trait et roques
 // Hacker : anti-annulation Lichess
 // Auto calibration
 // La brebis / Statistiques bot
 // Mode tournoi
-// Tester améliorations (killer moves...)
+// Tester améliorations (killer moves, voir taux d'overwrite dans transpositions...)
 
 /////////////////////////////////////////////////////////////////
 
@@ -294,6 +294,8 @@ void setup() {
 
 void draw() {
 
+  /////////////////////////////////////////////////////////////////
+
   if (gameState == GAME) {
     background(49, 46, 43);
 
@@ -333,7 +335,7 @@ void draw() {
 
     // Plateau
     drawPlayersInfos();
-    updateBoard();
+    drawBoard();
     for (Arrow arrow : allArrows) arrow.show();
 
     // Promotion
@@ -344,21 +346,13 @@ void draw() {
       showPromoButtons();
     }
 
-    // Écran de fin de partie
-    if (!disableEndScreen && gameEnded && millis() - timeAtEnd > timeBeforeEndDisplay) {
-      if (yEndScreen < targetEndScreenY) {
-        float dy = targetEndScreenY - yEndScreen;
-        dy = max(dy, 5);
-        yEndScreen += dy * endScreenEasing;
+    // Écran et boutons de fin de partie
+    if (gameEnded) {
+      if (!disableEndScreen && millis() - timeAtEnd > timeBeforeEndDisplay) handleEndScreen();
+      if (!useHacker) {
+        newGameButton.show();
+        rematchButton.show();
       }
-
-      float rectX = 1.75*w + offsetX, rectW = 4.5*w, rectH = 3*w;
-      if (targetEndScreenY - yEndScreen <= 1 && mousePressed && (mouseX < rectX || mouseX >= rectX+rectW || mouseY < yEndScreen || mouseY >= yEndScreen+rectH)) disableEndScreen = true;
-      drawEndScreen(yEndScreen);
-    }
-    if (gameEnded && !useHacker) {
-      newGameButton.show();
-      rematchButton.show();
     }
 
     // Page d'accueil du hacker
@@ -375,8 +369,6 @@ void draw() {
   else if (gameState == MENU) {
     background(49, 46, 43);
 
-    for (TextButton b : hubButtons) b.show();
-
     fill(255);
     textSize(30);
     textAlign(LEFT, LEFT);
@@ -392,33 +384,8 @@ void draw() {
 
     positionEditor.show();
     if (useHacker) hackerButton.show();
-
-    if (timeControl) {
-      fill(#f0f0f0);
-      stroke(#f0f0f0);
-      rect(whiteTimePosition.x, whiteTimePosition.y, 98, 55);
-      rect(whiteTimePosition.x + 105, whiteTimePosition.y, 49, 55);
-      fill(#26211b);
-      textSize(30);
-      textAlign(CENTER, CENTER);
-      text(nf(times[0][0], 2) + ":" + nf(times[0][1], 2), whiteTimePosition.x + 50, whiteTimePosition.y + 24);
-      text(nf(times[0][2], 2), whiteTimePosition.x + 130, whiteTimePosition.y + 24);
-
-      fill(#26211b);
-      stroke(#26211b);
-      rect(blackTimePosition.x, blackTimePosition.y, 98, 55);
-      rect(blackTimePosition.x + 105, blackTimePosition.y, 49, 55);
-      fill(#f0f0f0);
-      text(nf(times[1][0], 2) + ":" + nf(times[1][1], 2), blackTimePosition.x + 50, blackTimePosition.y + 24);
-      text(nf(times[1][2], 2), blackTimePosition.x + 130, blackTimePosition.y + 24);
-      for (int i = 0; i < timeButtons.length; i++) {
-        for (int j = 0; j < timeButtons[i].size(); j++) {
-          timeButtons[i].get(j).update();
-          timeButtons[i].get(j).show();
-        }
-      }
-    }
-
+    if (timeControl) drawTimeButtons();
+    for (TextButton b : hubButtons) b.show();
     for (int i = 0; i < presetButtons.size(); i++) presetButtons.get(i).show();
     for (ImageSelector s : selectors) s.show();
   }
@@ -427,10 +394,7 @@ void draw() {
 
   else if (gameState == EDITOR) {
     background(49, 46, 43);
-
-    updateBoard();
-
-    for (ShortcutButton sb : editorIconButtons) sb.show();
+    drawBoard();
 
     if (infoBox != "") drawInfoBox(infoBox);
     if (showSavedPositions) drawSavedPosition();
@@ -439,7 +403,11 @@ void draw() {
     if (infos != "") surface.setTitle(name + " - Editeur de position - " + infos);
     else surface.setTitle(name + " - Editeur de position");
 
+    for (ShortcutButton sb : editorIconButtons) sb.show();
     for (DragAndDrop d : addPiecesButtons[addPiecesColor]) d.show();
     addPiecesColorSwitch.show();
   }
+
+  /////////////////////////////////////////////////////////////////
+
 }
