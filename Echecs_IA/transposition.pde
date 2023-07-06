@@ -10,9 +10,9 @@
 /////////////////////////////////////////////////////////////////
 
 // Constantes
-byte EXACT = 0;
-byte LOWERBOUND = 1;
-byte UPPERBOUND = 2;
+final byte EXACT = 0;
+final byte LOWERBOUND = 1;
+final byte UPPERBOUND = 2;
 
 class TranspositionTable {
 

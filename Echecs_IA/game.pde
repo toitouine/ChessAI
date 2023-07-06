@@ -4,9 +4,9 @@
 
 /////////////////////////////////////////////////////////////////
 
-int MENU = 0;
-int GAME = 1;
-int EDITOR = 2;
+final int MENU = 0;
+final int GAME = 1;
+final int EDITOR = 2;
 
 /////////////////////////////////////////////////////////////////
 
@@ -215,6 +215,10 @@ void resetSettingsToDefault() {
   allArrows.clear();
   varianteArrows.clear();
   for (ShortcutButton sb : iconButtons) sb.resetState();
+  if (pointDeVue == false) flipBoard();
+
+  // Hacker en mode calibration
+  hackerState = CALIBRATION;
 
   // Reset la grille
   for (int i = 0; i < cols; i++) {
@@ -229,10 +233,8 @@ void resetSettingsToDefault() {
   }
 
   // Variables
-  hackerState = CALIBRATION;
   numberOfRestartWait = 0;
   numberOfScan = 0;
-  hackerWaitingToRestart = false;
   lastMoveTime = 0;
   isNextMoveRestranscrit = false;
   messagesCount = 0;
@@ -255,7 +257,6 @@ void resetSettingsToDefault() {
   downRightCorner = null;
   newgameLocation = null;
   colorOfRematch = null;
-  hackerPret = false;
   timeAtHackerEnd = 0;
   engineToPlay = false;
   showGraph = false;
@@ -263,7 +264,6 @@ void resetSettingsToDefault() {
   showSearchController = false;
   pieceSelectionne = null;
   enPromotion = null;
-  if (pointDeVue == false) flipBoard();
   attach = true;
   tourDeQui = 0;
   nbTour = 0.5;
@@ -313,7 +313,7 @@ boolean checkRepetition(long hash) {
 }
 
 boolean manqueDeMateriel() {
-  int[] materialsWithoutKing = {materials[0]-100000, materials[1]-100000};
+  int[] materialsWithoutKing = {materials[0]-maireEvalArray[ROI_INDEX], materials[1]-maireEvalArray[ROI_INDEX]};
   int[] numPawns = {0, 0};
 
   for (int i = 0; i < pieces.length; i++) {
@@ -330,189 +330,133 @@ boolean manqueDeMateriel() {
   return false;
 }
 
-void checkGameState() {
-  if (useHacker) return;
-
-  //Manque de matériel
-  if (manqueDeMateriel()) {
-    winner = 2;
-    println();
-    println("[PARTIE] Nulle par manque de matériel");
-    println();
-    addPgnDraw();
-    updateScores(0.5);
-    endReason = "par manque de matériel";
-
-    gameEnded = true;
-    timeAtEnd = millis();
-    infos = "Game ended";
-
-    if (soundControl >= 1) nulle_sound.play();
-    if (useTime) ta.stopTimers();
-    return;
-  }
-
-  //Répétition
-  long hash = zobrist.hash;
-  if (checkRepetition(hash)) {
-    winner = 2;
-    println();
-    println("[PARTIE] Nulle par répétition");
-    println();
-    addPgnDraw();
-    updateScores(0.5);
-    endReason = "par répétition";
-
-    gameEnded = true;
-    timeAtEnd = millis();
-    infos = "Game ended";
-
-    if (soundControl >= 1) nulle_sound.play();
-    if (useTime) ta.stopTimers();
-    return;
-  }
-
-  //Mats et pat
-  if (generateAllLegalMoves(tourDeQui, true, false).size() == 0) { //le joueur au trait n'a aucun coup
-    if (playerInCheck(tourDeQui) == tourDeQui) { //Mat, le joueur au trait est en échec
-
-      if (soundControl >= 2) { pachamama.stop(); diagnostic.play(); }
-      if (soundControl >= 1) { mat_sound.play(); }
-
-      winner = (int)pow(tourDeQui-1, 2);
-      println();
-      println("[PARTIE] Victoire des " + (tourDeQui == 0 ? "noirs" : "blancs") + " (" + joueurs.get(winner).name + ") par échec et mat");
-      println();
-      addPgnMate(winner);
-      updateScores(winner);
-      endReason = "par échec et mat";
-
-    } else { //Pat, le joueur au trait n'est pas en échec
-
-      if (soundControl >= 2) { pachamama.stop(); diagnostic.play(); }
-      if (soundControl >= 1) { nulle_sound.play(); }
-
-      winner = 2;
-      println();
-      println("[PARTIE] Nulle par pat");
-      println();
-      addPgnDraw();
-      updateScores(0.5);
-      endReason = "par pat";
-    }
-
-    gameEnded = true;
-    infos = "Game ended";
-    timeAtEnd = millis();
-
-    if (useTime) ta.stopTimers();
-    return;
-  }
-
-  //Echecs
-  if (playerInCheck(2) != -1) {
-    addPgnCheck();
-  }
-}
-
-void loseOnTime(int loser) {
-  if (useHacker && hackerPret) return;
-
-  winner = (int)pow(loser-1, 2);
-  println();
-  println("[PARTIE] Victoire des " + ((winner == 0) ? "blancs" : "noirs") + " au temps");
-  println();
-  addPgnWin(winner);
-  updateScores(winner);
-  endReason = "au temps";
-
-  gameEnded = true;
-  timeAtEnd = millis();
-  infos = "Game ended";
-
-  if (soundControl >= 1) nulle_sound.play();
-  if (useTime) ta.stopTimers();
-}
-
-void resignWhite() {
-  if (useHacker) return;
-
-  winner = 1;
-  println();
-  println("[PARTIE] Victoire des noirs par abandon");
-  println();
-  addPgnWin(winner);
-  updateScores(winner);
-  endReason = "par abandon";
-
-  gameEnded = true;
-  timeAtEnd = millis();
-  infos = "Game ended";
-
-  if (soundControl >= 1) mat_sound.play();
-  if (useTime) ta.stopTimers();
-}
-
-void resignBlack() {
-  if (useHacker) return;
-
-  winner = 0;
-  println();
-  println("[PARTIE] Victoire des blancs par abandon");
-  println();
-  addPgnWin(winner);
-  updateScores(winner);
-  endReason = "par abandon";
-
-  gameEnded = true;
-  timeAtEnd = millis();
-  infos = "Game ended";
-
-  if (soundControl >= 1) mat_sound.play();
-  if (useTime) ta.stopTimers();
-}
-
-void endOnHackerDetect() {
-  timeAtHackerEnd = millis();
-
-  winner = 2;
-  println();
-  println("[PARTIE] Détection de fin de partie (hacker)");
-  println();
-  addPgnDraw();
-  updateScores(0.5);
-  endReason = "détection du hacker";
-  if (hackerSansFin) endReason += " sans fin";
-
-  gameEnded = true;
-  timeAtEnd = millis();
-  infos = "Game ended";
-
-  if (soundControl >= 1) nulle_sound.play();
-  if (useTime) ta.stopTimers();
-}
-
 void updateScores(float num) {
-  if (joueurs.get(0).name != joueurs.get(1).name) {
-
-    if (num == 0.5) { //nulle
+  // Si les deux joueurs sont différents
+  if (!joueurs.get(0).name.equals(joueurs.get(1).name)) {
+    if (num == 0.5) {
       joueurs.get(0).addScore(0.5);
       joueurs.get(1).addScore(0.5);
-    } else { //num = gagnant
+    } else {
+      // Num correspond au gagnant en cas de victoire
       joueurs.get((int)num).addScore(1);
     }
     joueurs.get(0).addTotalScore(1);
     joueurs.get(1).addTotalScore(1);
-
-  } else {
-
-    //si les deux joueurs sont les mêmes
-    if (num == 0.5) {
-      joueurs.get(0).addScore(0.5);
-    } else {
-      joueurs.get((int)num).addScore(1);
-    }
-    joueurs.get(0).addTotalScore(1);
-
   }
+  // Si les deux joueurs sont les mêmes
+  else {
+    if (num == 0.5) joueurs.get(0).addScore(0.5);
+    else joueurs.get((int)num).addScore(1);
+
+    joueurs.get(0).addTotalScore(1);
+  }
+}
+
+void checkGameState() {
+  if (useHacker) return;
+
+  // Manque de matériel
+  if (manqueDeMateriel()) {
+    endGame(2, "par manque de matériel");
+    return;
+  }
+
+  // Répétition
+  if (checkRepetition(zobrist.hash)) {
+    endGame(2, "par répétition");
+    return;
+  }
+
+  // Mat et pat
+  if (generateAllLegalMoves(tourDeQui, true, false).size() == 0) {
+    if (playerInCheck(tourDeQui) == tourDeQui) {
+      endGame(opponent(tourDeQui), "par échec et mat", true);
+    } else {
+      endGame(2, "par pat");
+    }
+    return;
+  }
+
+  // Échecs
+  if (playerInCheck(2) != -1) addPgnCheck();
+}
+
+void loseOnTime(int loser) {
+  if (useHacker) return;
+  endGame(opponent(loser), "au temps");
+}
+
+void resignWhite() {
+  if (useHacker) return;
+  endGame(1, "par abandon");
+}
+
+void resignBlack() {
+  if (useHacker) return;
+  endGame(0, "par abandon");
+}
+
+void endOnHackerDetect() {
+  if (!useHacker) return;
+
+  timeAtHackerEnd = millis();
+  String reason = "par détection du hacker" + (hackerSansFin ? " sans fin" : "");
+  endGame(2, reason);
+
+  hackerState = END;
+}
+
+void endGame(int winnerTag, Object... b) {
+  // Tests sur b (pour argument optionnel)
+  if (b.length != 1 && b.length != 2) {
+    error("endGame()", "2 ou 3 arguments seulement sont attendus");
+    return;
+  }
+  if (b.length == 1 && !(b[0] instanceof String)) {
+    error("endGame()", "Argument 2 doit être de type string");
+    return;
+  }
+  if (b.length == 2 && !(b[0] instanceof String && b[1] instanceof Boolean)) {
+    error("endGame()", "Argument 3 doit être de type booléen");
+    return;
+  }
+
+  endReason = (String)b[0];
+  winner = winnerTag;
+  boolean isMate = false;
+  if (b.length == 2) isMate = (Boolean)b[1];
+
+  // Affiche le texte de fin de partie
+  println("");
+  if (winner == 0)      print("[PARTIE] Victoire des blancs ");
+  else if (winner == 1) print("[PARTIE] Victoire des noirs ");
+  else if (winner == 2) print("[PARTIE] Nulle ");
+  println(endReason);
+  println("");
+
+  // Actualise les scores
+  if (winner == 2) updateScores(0.5);
+  else updateScores(winner);
+
+  // Arrête le temps
+  if (useTime) ta.stopTimers();
+
+  gameEnded = true;
+  timeAtEnd = millis();
+  infos = "Game ended";
+
+  // Sons
+  if (soundControl >= 1) {
+    if (winner == 2) nulle_sound.play();
+    else mat_sound.play();
+  }
+  if (soundControl >= 2) {
+    pachamama.stop();
+    diagnostic.play();
+  }
+
+  // PGN
+  if (winner == 2) addPgnDraw();
+  else if (isMate) addPgnMate(winner);
+  else addPgnWin(winner);
 }

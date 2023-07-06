@@ -66,6 +66,7 @@ class Joueur {
     totalScores[this.index] += add;
   }
 }
+
 /////////////////////////////////////////////////////////////////
 
 class IA {
@@ -85,7 +86,7 @@ class IA {
 
   void play() {
     if (gameEnded || stopSearch) return;
-    if (!(MODE_SANS_AFFICHAGE && useHacker && hackerPret)) cursor(WAIT);
+    if (!(MODE_SANS_AFFICHAGE && useHacker && hackerState != CALIBRATION)) cursor(WAIT);
 
     if (nbTour <= AI_OUVERTURE[joueurs.get(this.c).index]) {
      if (this.tryPlayingBookMove()) return;
@@ -96,6 +97,12 @@ class IA {
     if (this.useIterativeDeepening) posEval = this.iterativeDeepening();
     else posEval = this.findBestMove();
 
+    stopSearch = false;
+    cursor(ARROW);
+
+    // Ne joue pas le coup (et n'affiche pas les statistiques) si la partie est terminée (au temps notamment)
+    if (gameEnded) return;
+
     // Joue le coup
     this.bestMoveFound.play();
 
@@ -104,11 +111,11 @@ class IA {
 
     // Reset les statistiques pour la prochaine recherche
     this.resetStats();
-
-    stopSearch = false;
-    cursor(ARROW);
   }
 
+  /////////////////////////////////////////////////////////////////
+
+  // Recherche rapide (pour les aides notamment)
   Move getBestMove(int time) {
     sa.setTime(this.c, time);
     sa.startSearch(this.c);
@@ -133,6 +140,7 @@ class IA {
     return bestMove;
   }
 
+  // Recherche à une profondeur donnée uniquement
   float findBestMove() {
     this.depthSearched = floor(this.depth + CONSTANTE_DE_STOCKFISH * pow(endGameWeight, 5));
     this.cuts = new int[depthSearched];
@@ -155,26 +163,7 @@ class IA {
     return posEval;
   }
 
-  int getTimeCopycat() {
-    int time; // en millisecondes
-
-    float deltaTime = millis() - lastMoveTime; // en secondes
-    deltaTime /= 1000;
-
-    if (deltaTimeHistory.size() < timeCopycatSize) {
-      time = sa.savedTimes[this.c] - floor(random(sa.savedTimes[this.c]/1.5, sa.savedTimes[this.c]/3));
-    }
-    else {
-      int index = floor(random(0, timeCopycatSize));
-      float prevTime = deltaTimeHistory.remove(index);
-      time = (ceil((((random(1)*10000) % ((prevTime-prevTime/2)*1000)) /1000 + prevTime/2)*1000)) - (int)(exp(-2 * (float)sa.savedTimes[this.c]/1000) * pow(((float)sa.savedTimes[this.c]/1000 + 0.6), 2.7) * 1000);
-    }
-
-    if (useHacker && nbTour > 1) deltaTimeHistory.add(deltaTime);
-
-    return max(time, 20);
-  }
-
+  // Iterative Deepening : Recherche le plus loin jusque plus de temps de réflexion
   float iterativeDeepening() {
     // Sauvegardes des statistiques
     Move lastBestMove = null;
@@ -186,7 +175,7 @@ class IA {
     // Gestion du temps
     int timeToPlay = sa.savedTimes[this.c]; // en millisecondes
 
-    if (useHacker && hackerPret && nbTour > 1) timeToPlay = getTimeCopycat();
+    if (useHacker && hackerState != CALIBRATION && nbTour > 1) timeToPlay = getTimeCopycat();
     else if (MODE_PROBLEME) timeToPlay = 10000000;
 
     if (timeToPlay <= 20) timeToPlay = 20;
@@ -195,8 +184,11 @@ class IA {
     sa.startSearch(this.c);
 
     // Iterative deepening
-    for (int d = 1; d < 1000; d++) {
-      if (!(MODE_SANS_AFFICHAGE && useHacker && hackerPret)) this.resetStats();
+    for (int d = 1; d < 10000; d++) {
+      // Pour éviter de sortir trop vite de la boucle en cas de position "évidente" (répétition immédiate)
+      if (d == 1001) d = 1000;
+
+      if (!(MODE_SANS_AFFICHAGE && useHacker && hackerState != CALIBRATION)) this.resetStats();
       this.cuts = new int[d];
 
       // effectue la recherche à la profondeur
@@ -208,9 +200,10 @@ class IA {
         eval = -this.minimax(d, 0, -Infinity, Infinity, null);
       }
 
-      // si la recherche a été interrompue par search controller
+      // Si la recherche a été interrompue par search controller (ou défaite)
+      if (gameEnded) sa.endSearch();
       if (stopSearch) {
-        if (!(MODE_SANS_AFFICHAGE && useHacker && hackerPret)) {
+        if (!(MODE_SANS_AFFICHAGE && useHacker && hackerState != CALIBRATION)) {
           this.numQuiet = lastNumQuiet;
           this.numPos = lastNumPos;
           this.depthSearched = d-1;
@@ -234,7 +227,7 @@ class IA {
       lastEval = eval;
       lastBestMove = this.bestMoveFound;
 
-      if (!(MODE_SANS_AFFICHAGE && useHacker && hackerPret)) {
+      if (!(MODE_SANS_AFFICHAGE && useHacker && hackerState != CALIBRATION)) {
         lastNumQuiet = this.numQuiet;
         lastNumPos = this.numPos;
         lastCuts = this.cuts;
@@ -273,10 +266,34 @@ class IA {
     return 0;
   }
 
+  // Retourne le temps à jouer en fonction de celui de l'adversaire (avec le hacker)
+  int getTimeCopycat() {
+    int time; // en millisecondes
+
+    float deltaTime = millis() - lastMoveTime; // en secondes
+    deltaTime /= 1000;
+
+    if (deltaTimeHistory.size() < timeCopycatSize) {
+      time = sa.savedTimes[this.c] - floor(random(sa.savedTimes[this.c]/1.5, sa.savedTimes[this.c]/3));
+    }
+    else {
+      int index = floor(random(0, timeCopycatSize));
+      float prevTime = deltaTimeHistory.remove(index);
+      time = (ceil((((random(1)*10000) % ((prevTime-prevTime/2)*1000)) /1000 + prevTime/2)*1000)) - (int)(exp(-2 * (float)sa.savedTimes[this.c]/1000) * pow(((float)sa.savedTimes[this.c]/1000 + 0.6), 2.7) * 1000);
+    }
+
+    if (useHacker && nbTour > 1) deltaTimeHistory.add(deltaTime);
+
+    return max(time, 20);
+  }
+
+  // Fonction de recherche classique
   float minimax(int depth, int plyFromRoot, float alpha, float beta, Move Cpere) { return 0; }
 
+  // Fonction de recherche pour les moutons
   SheepEval moyennemax(int depth, int plyFromRoot, float alpha, float beta, Move Cpere) { return new SheepEval(0, 0); }
 
+  // Essaye de jouer un coup du livre d'ouverture (renvoie true si réussi / false si impossible)
   boolean tryPlayingBookMove() {
     ArrayList<String> moves = getMovesFromFen(generateFEN());
 
@@ -304,9 +321,12 @@ class IA {
     return false;
   }
 
-  // Évaluation
+  /////////////////////////////////////////////////////////////////
+
+  // Évaluation statique de la position
   float Evaluation() { return 0; }
 
+  // Évaluation statique de la position en fonction de tourDeQui
   float EvaluationRelative() {
     float eval = this.Evaluation();
     if (tourDeQui == 0) {
@@ -316,12 +336,14 @@ class IA {
     }
   }
 
+  // Renvoie la distance entre les rois blancs et noirs (sans utiliser les diagonales)
   int getManhattanDistanceBetweenKing() {
     int xDist = abs(rois[1].i - rois[0].i);
     int yDist = abs(rois[1].j - rois[0].j);
     return xDist + yDist;
   }
 
+  // Renvoie une évaluation des positions en finales
   float getEndGameKingEval(int friendlyMaterial, int opponentMaterial, Piece friendlyKing, Piece enemyKing) {
     if (friendlyMaterial > opponentMaterial + 150) {
       // Formule pas du tout copiée d'internet : 4,7 * CMD + 1,6 * (14 - MD)
@@ -332,6 +354,7 @@ class IA {
     }
   }
 
+  // Renvoie une évaluation de la sécurité du roi (ou pas) sous forme de pénalité
   float getKingSafetyEval(int friendly, int opponent) {
     int sign = (friendly == 0) ? -1 : 1;
     float penalite = 0;
@@ -362,14 +385,17 @@ class IA {
     return penalite * (1 - endGameWeight);
   }
 
+  // Trie les coups du meilleur au moins bon (classement heuristique)
   ArrayList OrderMoves(ArrayList<Move> moves) {
     return moves;
   }
 
-  // Statistiques
+  /////////////////////////////////////////////////////////////////
+
+  // Affiche les statistiques et les ajoute aux applets
   void updateStats(float posEval) {
     // Calculs des statistiques
-    if (tourDeQui == 0) posEval = -posEval;
+    if (tourDeQui == 0) posEval = -posEval; // On inverse car le coup a déjà été joué et c'est une évaluation relative
     if (abs(posEval) == 0) posEval = 0;
 
     float totalCuts = 0;
@@ -420,6 +446,7 @@ class IA {
     joueurs.get(this.c).evals.add(posEval/100.0);
   }
 
+  // Ajoute les statistiques à search controller
   void updateSearchController(float posEval, float tri) {
     if (this instanceof Loic) sa.setEvals(evalToStringLoic(posEval), this.c);
     else sa.setEvals(evalToStringMaire(posEval), this.c);
@@ -433,6 +460,7 @@ class IA {
     sa.resetDepthTracker(this.c);
   }
 
+  // Réinitialise les statistiques
   void resetStats() {
     this.numQuiet = 0;
     this.numPos = 0;

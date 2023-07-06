@@ -14,8 +14,8 @@ boolean MODE_PROBLEME = false; // Activer le mode résolution de problèmes (ou 
 
 // Configurations du hacker (voir hacker config helper)
 
-boolean hackerSansFin = true; // Activer le hacker sans fin (ou pas)
 int hackerSite = CHESSCOM; // Hacker sur chess.com (CHESSCOM) ou lichess (LICHESS)
+boolean hackerSansFin = true; // Activer le hacker sans fin (ou pas), permet de relancer automatiquement les parties
 int hackerTestRestartCooldown = 1300; // Temps (ms) entre chaque scan du hacker pour relancer la partie
 int scansBetweenEndDetect = 50; // Nombre de scans entre chaque détection de fin de partie
 int waitsBetweenStartRetry = 25; // Nombre d'essais de relance de partie avant de relancer une nouvelle fois (anti-revanche sur chess.com)

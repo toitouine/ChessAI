@@ -40,8 +40,7 @@ public class SearchApplet extends PApplet {
 
     if (this.inSearch != -1) {
       if (millis() - this.searchStartTime >= this.times[this.inSearch]) {
-        this.inSearch = -1;
-        stopSearch = true;
+        sa.endSearch();
       }
 
       if (inSearch >= 0 && joueurs.get(inSearch).player != null) {
@@ -55,7 +54,7 @@ public class SearchApplet extends PApplet {
       transpositions[inNormalSearch] = formatInt(joueurs.get(inNormalSearch).player.numTranspositions);
     }
 
-    if (!show || (MODE_SANS_AFFICHAGE && useHacker && hackerPret)) return;
+    if (!show || (MODE_SANS_AFFICHAGE && useHacker && hackerState != CALIBRATION)) return;
     surface.setAlwaysOnTop(attach);
 
     background(#272522);
@@ -82,7 +81,7 @@ public class SearchApplet extends PApplet {
 
     for (int i = 0; i < 2; i++) {
       if (joueurs != null && joueurs.size() < 2) break;
-      if (!gameEnded && !isHumain(i)) {
+      if (!isHumain(i)) {
         fill(#fbd156);
         if (bestMoves[i] != "") text("Evaluation : " + evals[i] + " (" + bestMoves[i] + ")", i*width/2 + 8, 65);
         else text("Evaluation : " + evals[i], i*width/2 + 8, 65);

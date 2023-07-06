@@ -179,7 +179,7 @@ class Move {
     if (showGraph) updateGraph();
 
     // Hacker
-    if (useHacker && hackerPret && !isNextMoveRestranscrit) {
+    if (useHacker && hackerState != CALIBRATION && !isNextMoveRestranscrit) {
       cheat(this.piece.c, this.fromI, this.fromJ, this.i, this.j, this.special);
       lastMoveTime = millis();
     }

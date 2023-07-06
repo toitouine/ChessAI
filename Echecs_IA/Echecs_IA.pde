@@ -3,18 +3,13 @@
 // TODO :
 
 // Meilleur code hacker
+// Régler problème fenêtre lag au début
 // Editeur de position : Trait et roques
 // Hacker : anti-annulation Lichess
 // Auto calibration
 // La brebis / Statistiques bot
 // Mode tournoi
 // Tester améliorations (killer moves...)
-
-// Variables états du hacker :
-// hackerPret,
-// (in game),
-// gameEnded && !hackerWaitingToRestart,
-// gameEnded && hackerWaitingToRestart
 
 /////////////////////////////////////////////////////////////////
 
@@ -181,8 +176,8 @@ Point alertPos = new Point();
 boolean missclickDragNextMove = false;
 float lastMissclick = 0;
 
-int CHESSCOM = 0;
-int LICHESS = 1;
+final int CHESSCOM = 0;
+final int LICHESS = 1;
 
 /////////////////////////////////////////////////////////////////
 
@@ -310,7 +305,7 @@ void draw() {
     if (!blockPlaying() && isAIvsHumain() && !isHumainTurn()) engineToPlay = true;
 
     // Bot vs bot
-    if (!gameEnded && play && (!useHacker || hackerPret)) {
+    if (!gameEnded && play && (!useHacker || hackerState != CALIBRATION)) {
       if (!isHumain(0) && !isHumain(1)) {
         if (playDelay == 0) joueurs.get(tourDeQui).play();
         else if (frameCount % playDelay == 0) joueurs.get(tourDeQui).play();
@@ -318,15 +313,14 @@ void draw() {
     }
 
     // Hacker
-    if (useHacker && hackerPret) {
-      if (play && !gameEnded && enPromotion == null) scanMoveOnBoard();
-
-      if (gameEnded && !hackerWaitingToRestart && millis() - timeAtHackerEnd >= timeBeforeHackerRestart) hackStartGame();
-      if (hackerWaitingToRestart) handleWaitForRestart();
+    if (useHacker && hackerState != CALIBRATION) {
+      if (hackerState == WAITING_TO_RESTART) handleWaitForRestart();
+      if (hackerState == END && millis() - timeAtHackerEnd >= timeBeforeHackerRestart) hackStartGame();
+      if (hackerState == INGAME && play) scanMoveOnBoard();
     }
 
     // Affichages / Interface
-    if (MODE_SANS_AFFICHAGE && useHacker && hackerPret) return;
+    if (MODE_SANS_AFFICHAGE && useHacker && hackerState != CALIBRATION) return;
 
     // Titre
     surface.setTitle(name + " - " + j1 + " (" + ((joueurs.get(0).useIterativeDeepening) ? "ID" : j1depth) +  ") contre " + j2 + " (" + ((joueurs.get(1).useIterativeDeepening) ? "ID" : j2depth) + ")" + ((infos == "") ? "" : " - ") + infos);
@@ -362,13 +356,13 @@ void draw() {
       if (targetEndScreenY - yEndScreen <= 1 && mousePressed && (mouseX < rectX || mouseX >= rectX+rectW || mouseY < yEndScreen || mouseY >= yEndScreen+rectH)) disableEndScreen = true;
       drawEndScreen(yEndScreen);
     }
-    if (gameEnded && !useHacker && !hackerPret) {
+    if (gameEnded && !useHacker) {
       newGameButton.show();
       rematchButton.show();
     }
 
     // Page d'accueil du hacker
-    if (useHacker && !hackerPret) drawHackerPage();
+    if (useHacker && hackerState == CALIBRATION) drawHackerPage();
 
     // Messages
     if (alert != "") displayAlert();

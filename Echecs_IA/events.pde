@@ -12,7 +12,6 @@ void test() {
   int before = millis();
 
   for (int i = 0; i < numTest; i++) {
-    generateAllMoves(tourDeQui, true, true);
     count++;
     if (i % pas == 0) println(i);
   }
@@ -25,7 +24,7 @@ void test() {
 }
 
 void mouseMoved() {
-  if (MODE_SANS_AFFICHAGE && useHacker && hackerPret) return;
+  if (MODE_SANS_AFFICHAGE && useHacker && hackerState != CALIBRATION) return;
 
   if ((gameState == GAME || gameState == EDITOR) && enPromotion == null && !gameEnded && !useHacker && !showSavedPositions && !showParameters) {
     int i = getGridI();
@@ -56,7 +55,7 @@ void mouseMoved() {
 }
 
 void mousePressed() {
-  if (MODE_SANS_AFFICHAGE && useHacker && hackerPret) return;
+  if (MODE_SANS_AFFICHAGE && useHacker && hackerState != CALIBRATION) return;
 
   for (Button b : allButtons) {
     if (b.isEnabled() && b.contains(mouseX, mouseY)) {
@@ -95,7 +94,7 @@ void keyPressed() {
 
   if (gameState == GAME) {
 
-    if (useHacker && !hackerPret) {
+    if (useHacker && hackerState == CALIBRATION) {
       if (keyCode == ENTER) addPointToCalibration();
       if (keyCode == BACKSPACE) manualRestoreSaves();
       if (keyCode == SHIFT) manualForceSaves();
@@ -119,7 +118,7 @@ void keyPressed() {
     else if (keyCode == RIGHT)         rewindForward();
     else if (key == 'T')               test();
 
-    else if (useHacker && hackerPret) {
+    else if (useHacker && hackerState != CALIBRATION) {
       if (key == 'r' || key == 'R') endOnHackerDetect();
       else if (key == 'w' || key == 'W') hackStartGame();
     }
@@ -139,7 +138,7 @@ void keyPressed() {
 }
 
 void mouseReleased() {
-  if (MODE_SANS_AFFICHAGE && useHacker && hackerPret) return;
+  if (MODE_SANS_AFFICHAGE && useHacker && hackerState != CALIBRATION) return;
 
   if (gameState == MENU) {
     for (int i = 0; i < timeButtons.length; i++) {
@@ -216,7 +215,7 @@ void mouseReleased() {
 }
 
 void mouseDragged() {
-  if ((MODE_SANS_AFFICHAGE && useHacker && hackerPret) || gameState == MENU) return;
+  if ((MODE_SANS_AFFICHAGE && useHacker && hackerState != CALIBRATION) || gameState == MENU) return;
 
   if (gameState == EDITOR && mouseButton == RIGHT) {
     int i = getGridI();

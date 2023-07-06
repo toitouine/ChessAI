@@ -14,13 +14,10 @@ Point upLeftCorner, downRightCorner, newgameLocation;
 Point saveUpLeftCorner, saveDownRightCorner, saveNewgameLocation;
 Color hackerWhitePieceColor, hackerBlackPieceColor;
 
-int CALIBRATION = 0; // Phase de calibration du hacker
-int INGAME = 1; // Partie en cours
-int END = 2; // Fin de partie détectée
-int WAITING_TO_RESTART = 3; // Demande de nouvelle partie effectuée, en attente d'une partie
-
-boolean hackerPret = false; // ?
-boolean hackerWaitingToRestart = false; // ?
+final int CALIBRATION = 0; // Phase de calibration du hacker
+final int INGAME = 1; // Partie en cours
+final int END = 2; // Fin de partie détectée
+final int WAITING_TO_RESTART = 3; // Demande de nouvelle partie effectuée, en attente d'une partie
 
 int hackerState = CALIBRATION;
 boolean useHacker = false;
@@ -151,7 +148,8 @@ void prepareEngine() {
 }
 
 void setupHacker() {
-  hackerPret = true;
+  // hackerPret = true;
+  hackerState = INGAME;
   if (MODE_SANS_AFFICHAGE) {
     surface.setSize(150, 150);
     surface.setLocation(displayWidth-150, 0);
@@ -316,8 +314,8 @@ Move getMoveOnBoard() {
 void scanMoveOnBoard() {
   numberOfScan++;
 
-  // Détection du hacker sans fin
-  if (hackerSansFin && numberOfScan >= scansBetweenEndDetect) {
+  // Détection du hacker
+  if (numberOfScan >= scansBetweenEndDetect) {
     numberOfScan = 0;
     if (hackerEndDetected()) {
       endOnHackerDetect();
@@ -365,6 +363,7 @@ boolean hackerEndDetected() {
 }
 
 void hackStartGame() {
+  if (!hackerSansFin) return;
   if (newgameLocation == null) {
     error("hackStartGame", "Nouvelle partie non calibrée");
     return;
@@ -385,7 +384,8 @@ void hackStartGame() {
   colorOfRematch = hacker.getPixelColor(newgameLocation.x, newgameLocation.y);
 
   deselectAll();
-  hackerWaitingToRestart = true;
+  // hackerWaitingToRestart = true;
+  hackerState = WAITING_TO_RESTART;
 }
 
 void handleWaitForRestart() {
@@ -437,7 +437,7 @@ void click(int x, int y) {
 void cheat(int c, int fromI, int fromJ, int i, int j, int special) {
 
   // Détection du hacker sans fin sur chess.com
-  if (hackerSansFin && hackerSite == CHESSCOM) {
+  if (hackerSite == CHESSCOM) {
     if (hackerEndDetected()) return;
   }
 

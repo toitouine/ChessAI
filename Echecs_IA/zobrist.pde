@@ -2,7 +2,7 @@
 
 // Zobrist hashing
 
-// Permet d'obtenir une clé presque identique pour chaque position de manière rapide
+// Permet d'obtenir une clé presque unique pour chaque position de manière rapide
 // RNG : XOR-Shift algorithm (avec rngState)
 
 // initZobristKeys : pour initialiser les clés correspondant à chaque données concernant une positin (pas pion en passant)

@@ -215,7 +215,7 @@ void playPause() {
     if (play) {
       infos = "Play";
       if (soundControl >= 2 && !pachamama.isPlaying()) pachamama.play();
-      if (!isHumainTurn() && !gameEnded && !rewind && (!useHacker || hackerPret)) joueurs.get(tourDeQui).play();
+      if (!isHumainTurn() && !gameEnded && !rewind && (!useHacker || hackerState != CALIBRATION)) joueurs.get(tourDeQui).play();
       if (useTime) ta.switchTimers(tourDeQui);
     } else {
       infos = "Pause";

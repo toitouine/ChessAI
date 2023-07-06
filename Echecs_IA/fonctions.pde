@@ -96,7 +96,7 @@ String evalToStringLoic(float eval) {
 }
 
 boolean blockPlaying() {
-  return (!play || gameEnded || rewind || (useHacker && !hackerPret));
+  return (!play || gameEnded || rewind || (useHacker && hackerState == CALIBRATION));
 }
 
 Object GetFromClipboard(DataFlavor flavor) {
@@ -168,6 +168,10 @@ void helpMoveBlack() {
   Move bestMove = cmaire.getBestMove(2000);
   allArrows.add(new Arrow(bestMove.fromI, bestMove.fromJ, bestMove.i, bestMove.j));
   cursor(HAND);
+}
+
+int opponent(int player) {
+  return (player == 1 ? 0 : 1);
 }
 
 boolean isAIvsHumain() {
@@ -273,11 +277,11 @@ void initGUI() {
 
   PImage img1 = (hackerSite == LICHESS ? lichessLogo : chesscomLogo);
   PImage img2 = (hackerSite == LICHESS ? chesscomLogo : lichessLogo);
-  siteButton = new ToggleImage(rectX+rectW/2-25, rectY-rectH/2+25, 35, 35, img1, img2, "switchSite", new Condition() { public boolean c() { return (gameState == GAME && useHacker && !hackerPret);}});
+  siteButton = new ToggleImage(rectX+rectW/2-25, rectY-rectH/2+25, 35, 35, img1, img2, "switchSite", new Condition() { public boolean c() { return (gameState == GAME && useHacker && hackerState == CALIBRATION);}});
   allButtons.add(siteButton);
 
   // Revanche et menu en fin de partie
-  Condition endButtons = new Condition() { public boolean c() { return(gameState == GAME && gameEnded && !useHacker && !hackerPret); } };
+  Condition endButtons = new Condition() { public boolean c() { return(gameState == GAME && gameEnded && !useHacker); } };
   rematchButton = new TextButton(offsetX - offsetX/1.08, offsetY+4*w-29, offsetX-2*(offsetX - offsetX/1.08), 24, "Revanche", 15, 3, "rematch", endButtons);
   rematchButton.setColors(#1d1c1a, #ffffff);
   newGameButton = new TextButton(offsetX - offsetX/1.08, offsetY+4*w+5, offsetX-2*(offsetX - offsetX/1.08), 24, "Menu", 15, 3, "newGame", endButtons);

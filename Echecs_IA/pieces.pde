@@ -2,12 +2,12 @@
 
 // Pièces
 
-int ROI_INDEX = 0;
-int DAME_INDEX = 1;
-int TOUR_INDEX = 2;
-int FOU_INDEX = 3;
-int CAVALIER_INDEX = 4;
-int PION_INDEX = 5;
+final int ROI_INDEX = 0;
+final int DAME_INDEX = 1;
+final int TOUR_INDEX = 2;
+final int FOU_INDEX = 3;
+final int CAVALIER_INDEX = 4;
+final int PION_INDEX = 5;
 
 String codeArrayB[] = {"K", "Q", "R", "B", "N", "P"};
 String codeArrayN[] = {"k", "q", "r", "b", "n", "p"};
