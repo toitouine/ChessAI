@@ -1,6 +1,7 @@
 # Chess AI
 Multiple chess AIs using processing 3. They are based on the negamax algorithm with alpha-beta pruning, transposition table and quiet move search.
 You need to install the libraries ControlP5 and Processing Sound in order to use it.
+
 ([Programs for debugging and configuring](https://github.com/toitouine/ChessAITools))
 
 ## Bots
