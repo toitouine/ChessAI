@@ -1,6 +1,7 @@
 # Chess AI
 Multiple chess AIs using processing 3. They are based on the negamax algorithm with alpha-beta pruning, transposition table and quiet move search.
 You need to install the libraries ControlP5 and Processing Sound in order to use it.
+([Programs for debugging and configuring](https://github.com/toitouine/ChessAITools))
 
 ## Bots
  - LeMaire : the most advanced bot so far : it has positionnal, material, endgame and opening knowledge (using an opening book). It has basic understanding of king safety, but it needs to be improved and it misses the pawn structure knowledge. It is pretty good in endgame thanks to the transposition table.
