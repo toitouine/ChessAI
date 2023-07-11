@@ -16,6 +16,13 @@ void alert(String message, int time) {
   alertStarted = millis();
 }
 
+void clearAlert() {
+  alert = "";
+  alertStarted = 0;
+  alertTime = 0;
+  println("stop");
+}
+
 void sendMoutonMessage(String message, float x, float y, int time) {
   messageMouton = message;
   messageMoutonTime = time;
@@ -30,6 +37,10 @@ boolean isSameColor(Color c1, Color c2) {
 
 boolean isSimilarColor(Color c1, Color c2) {
   return abs(c1.getRed()-c2.getRed()) <= 10 && abs(c1.getGreen()-c2.getGreen()) <= 10 && abs(c1.getBlue()-c2.getBlue()) <= 10;
+}
+
+boolean isVerySimilarColor(Color c1, Color c2) {
+  return abs(c1.getRed()-c2.getRed()) <= 5 && abs(c1.getGreen()-c2.getGreen()) <= 5 && abs(c1.getBlue()-c2.getBlue()) <= 5;
 }
 
 String roundedString(float num) {
@@ -171,7 +182,7 @@ void helpMoveBlack() {
 }
 
 int opponent(int player) {
-  return (player == 1 ? 0 : 1);
+  return (player == 0 ? 1 : 0);
 }
 
 boolean isAIvsHumain() {
@@ -193,6 +204,45 @@ boolean isMouton(int qui) {
 /////////////////////////////////////////////////////////////////
 
 // Affichages
+
+void drawGameInterface() {
+  // Titre
+  surface.setTitle(name + " - "
+                        + j1 + " (" + ((joueurs.get(0).useIterativeDeepening) ? "ID" : j1depth) + ") contre "
+                        + j2 + " (" + ((joueurs.get(1).useIterativeDeepening) ? "ID" : j2depth) + ")"
+                        + ((infos == "") ? "" : " - ") + infos);
+
+  // Icones
+  for (ShortcutButton b : iconButtons) b.show();
+  for (int i = 0; i < humainButton.size(); i++) {
+    if (humainButton.get(i).isEnabled()) humainButton.get(i).show();
+  }
+
+  // Plateau
+  drawPlayersInfos();
+  drawBoard();
+  for (Arrow arrow : allArrows) arrow.show();
+
+  // Promotion
+  if (enPromotion != null) {
+    fill(220, 220, 220, 200);
+    rectMode(CORNER);
+    rect(offsetX, offsetY, cols*w, rows*w);
+    showPromoButtons();
+  }
+
+  // Écran et boutons de fin de partie
+  if (gameEnded) {
+    if (!disableEndScreen && millis() - timeAtEnd > timeBeforeEndDisplay) handleEndScreen();
+    if (!useHacker) {
+      newGameButton.show();
+      rematchButton.show();
+    }
+  }
+
+  // Page d'accueil du hacker
+  if (useHacker && hackerState == CALIBRATION) drawHackerPage();
+}
 
 void initGUI() {
   cp5 = new ControlP5(this);
@@ -290,7 +340,7 @@ void initGUI() {
   allButtons.add(newGameButton);
 
   // Boutons du temps
-  Condition timeCondition = new Condition() { public boolean c() { return (gameState == MENU && timeControl); } };
+  Condition timeCondition = new Condition() { public boolean c() { return (gameState == MENU && TIME_CONTROL); } };
   timeButtons[0] = new ArrayList<TimeButton>();
   timeButtons[1] = new ArrayList<TimeButton>();
   timeButtons[0].add(new TimeButton(whiteTimePosition.x,       whiteTimePosition.y - 8,  48, 11, 5, 0, 0, 0, #f0f0f0, #26211b, #d1cfcf, true, timeCondition));
@@ -453,7 +503,7 @@ void initImages() {
 
 void displayAlert() {
   if (millis() - alertStarted >= alertTime) {
-    alert = ""; alertStarted = 0; alertTime = 0;
+    clearAlert();
     return;
   }
 
@@ -810,7 +860,7 @@ void playerPromote(int numButton) {
 }
 
 void switchAddPieceColor() {
-  addPiecesColor = (addPiecesColor == 1) ? 0 : 1;
+  addPiecesColor = opponent(addPiecesColor);
 }
 
 void clickedOnBoard(int i, int j) {
@@ -930,7 +980,7 @@ void removeAllPieces() {
 }
 
 void playSound(Move m) {
-  if (soundControl < 1 || (gameEnded && !rewind)) return;
+  if (SOUND_CONTROL < 1 || (gameEnded && !rewind)) return;
 
   if (m.special == 3) { enPassant.play(); }
   if (playerInCheck(2) != -1) { check_sound.play(); return; }
@@ -988,7 +1038,7 @@ void addPieceToBoardByDrop(int value, int i, int j) {
 }
 
 void bulletPreset() {
-  if (timeControl && !useHacker) {
+  if (TIME_CONTROL && !useHacker) {
     times[0][0] = 1; times[0][1] = 0; times[0][2] = 0;
     times[1][0] = 1; times[1][1] = 0; times[1][2] = 0;
   }
@@ -997,7 +1047,7 @@ void bulletPreset() {
 }
 
 void blitzPreset() {
-  if (timeControl && !useHacker) {
+  if (TIME_CONTROL && !useHacker) {
     times[0][0] = 3; times[0][1] = 0; times[0][2] = 0;
     times[1][0] = 3; times[1][1] = 0; times[1][2] = 0;
   }
@@ -1006,7 +1056,7 @@ void blitzPreset() {
 }
 
 void rapidPreset() {
-  if (timeControl && !useHacker) {
+  if (TIME_CONTROL && !useHacker) {
     times[0][0] = 10; times[0][1] = 0; times[0][2] = 0;
     times[1][0] = 10; times[1][1] = 0; times[1][2] = 0;
   }
@@ -1015,7 +1065,7 @@ void rapidPreset() {
 }
 
 void noTimePreset() {
-  if (timeControl) {
+  if (TIME_CONTROL) {
     times[0][0] = 0; times[0][1] = 0; times[0][2] = 0;
     times[1][0] = 0; times[1][1] = 0; times[1][2] = 0;
   }
@@ -1343,7 +1393,7 @@ int playerInCheck(int checkColor) {
 
   if (checkColor == 2) {
     for (int i = 0; i < 2; i++) {
-      int opColor = (int)pow((i - 1), 2);
+      int opColor = opponent(i);
 
       //tester si le roi est en prise après un coup adverse
       for (int j = 0; j < pieces[opColor].size(); j++) { //pour chaque piece adverse
@@ -1362,7 +1412,7 @@ int playerInCheck(int checkColor) {
     }
     return -1;
   } else if (checkColor == 0 || checkColor == 1) {
-    int opColor = (int)pow((checkColor - 1), 2);
+    int opColor = opponent(checkColor);
     for (int j = 0; j < pieces[opColor].size(); j++) {
       int indexP = pieces[opColor].get(j).pieceIndex;
       if (!(pc.getDistanceTable(indexP, rois[checkColor].i, rois[checkColor].j, pieces[opColor].get(j).i, pieces[opColor].get(j).j))) continue;

@@ -2,8 +2,8 @@
 
 // TODO :
 
-// Nettoyer gameState == GAME et keyPressed (?)
-// Régler problème fenêtre lag au début
+// Réparer time copycat
+// (Note : pour l'instant deltaTimeHistory est en secondes, modifiable dans getTimeCopycat())
 // Editeur de position : Trait et roques
 // Hacker : anti-annulation Lichess
 // Auto calibration
@@ -165,6 +165,7 @@ String alert = "";
 int alertTime = 0;
 long alertStarted = 0;
 int addPiecesColor = 0;
+int timeAtGameStart = 0;
 
 // Les Moutons !
 String messageMouton = "";
@@ -225,7 +226,7 @@ void setup() {
   }
 
   // Importe les sons
-  if (soundControl >= 1) {
+  if (SOUND_CONTROL >= 1) {
     start_sound = new SoundFile(this, "sons/start.wav");
     castle_sound = new SoundFile(this, "sons/castle.wav");
     check_sound = new SoundFile(this, "sons/check.wav");
@@ -235,7 +236,7 @@ void setup() {
     prise_sound = new SoundFile(this, "sons/prise.wav");
     enPassant = new SoundFile(this, "sons/enPassant.mp3");
   }
-  if (soundControl >= 2) {
+  if (SOUND_CONTROL >= 2) {
     pachamama = new SoundFile(this, "sons/pachamama.mp3");
     diagnostic = new SoundFile(this, "sons/diagnostic.mp3");
     violons = new SoundFile(this, "sons/violons.mp3");
@@ -308,7 +309,7 @@ void draw() {
 
     // Bot vs bot
     if (!gameEnded && play && (!useHacker || hackerState != CALIBRATION)) {
-      if (!isHumain(0) && !isHumain(1)) {
+      if (!isHumain(0) && !isHumain(1) && (nbTour > 1 || millis()-timeAtGameStart >= TIME_WAIT_AT_START)) {
         if (playDelay == 0) joueurs.get(tourDeQui).play();
         else if (frameCount % playDelay == 0) joueurs.get(tourDeQui).play();
       }
@@ -324,41 +325,7 @@ void draw() {
     // Affichages / Interface
     if (MODE_SANS_AFFICHAGE && useHacker && hackerState != CALIBRATION) return;
 
-    // Titre
-    surface.setTitle(name + " - " + j1 + " (" + ((joueurs.get(0).useIterativeDeepening) ? "ID" : j1depth) +  ") contre " + j2 + " (" + ((joueurs.get(1).useIterativeDeepening) ? "ID" : j2depth) + ")" + ((infos == "") ? "" : " - ") + infos);
-
-    // Icones
-    for (ShortcutButton b : iconButtons) b.show();
-    for (int i = 0; i < humainButton.size(); i++) {
-      if (humainButton.get(i).isEnabled()) humainButton.get(i).show();
-    }
-
-    // Plateau
-    drawPlayersInfos();
-    drawBoard();
-    for (Arrow arrow : allArrows) arrow.show();
-
-    // Promotion
-    if (enPromotion != null) {
-      fill(220, 220, 220, 200);
-      rectMode(CORNER);
-      rect(offsetX, offsetY, cols*w, rows*w);
-      showPromoButtons();
-    }
-
-    // Écran et boutons de fin de partie
-    if (gameEnded) {
-      if (!disableEndScreen && millis() - timeAtEnd > timeBeforeEndDisplay) handleEndScreen();
-      if (!useHacker) {
-        newGameButton.show();
-        rematchButton.show();
-      }
-    }
-
-    // Page d'accueil du hacker
-    if (useHacker && hackerState == CALIBRATION) drawHackerPage();
-
-    // Messages
+    drawGameInterface();
     if (alert != "") displayAlert();
     if (infoBox != "") drawInfoBox(infoBox);
     if (messageMouton != "") displayMoutonAlert();
@@ -384,7 +351,7 @@ void draw() {
 
     positionEditor.show();
     if (useHacker) hackerButton.show();
-    if (timeControl) drawTimeButtons();
+    if (TIME_CONTROL) drawTimeButtons();
     for (TextButton b : hubButtons) b.show();
     for (int i = 0; i < presetButtons.size(); i++) presetButtons.get(i).show();
     for (ImageSelector s : selectors) s.show();

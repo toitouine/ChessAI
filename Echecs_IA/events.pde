@@ -5,24 +5,33 @@ void test() {
   // Move move = new Move(grid[5][5].piece, 5, 2, grid[5][2].piece, 0);
   // LeMaire m = new LeMaire(1, 2, 3, true);
 
-  println("———————————————");
-  long count = 0;
-  long numTest = 1000000;
-  long pas = numTest/10;
-  int before = millis();
+  // println("———————————————");
+  // long count = 0;
+  // long numTest = 1000000;
+  // long pas = numTest/10;
+  // int before = millis();
+  //
+  // for (int i = 0; i < numTest; i++) {
+  //   generateAllLegalMoves(tourDeQui, true, true);
+  //   count++;
+  //   if (i % pas == 0) println(i);
+  // }
+  //
+  // int temps = millis() - before;
+  // println("———————————————");
+  // println("Résultats :");
+  // println(formatInt((int)count) + " itérations");
+  // println(temps + " ms");
+  // println("-->", formatInt((int)(1000*count/temps)) + " itérations par seconde");
 
-  for (int i = 0; i < numTest; i++) {
-    generateAllLegalMoves(tourDeQui, true, true);
-    count++;
-    if (i % pas == 0) println(i);
+
+  for (int x = 0; x < 11; x++) {
+    for (int n = 0; n < 10; n++) {
+      float r = random(1);
+      // La formule prend une valeur en seconde et renvoie en ms
+      println(x, ceil(( ((r*100000) % ((x - x/2)*1000)) /1000 + x/2) * 1000));
+    }
   }
-
-  int temps = millis() - before;
-  println("———————————————");
-  println("Résultats :");
-  println(formatInt((int)count) + " itérations");
-  println(temps + " ms");
-  println("-->", formatInt((int)(1000*count/temps)) + " itérations par seconde");
 }
 
 void mouseMoved() {
@@ -91,17 +100,14 @@ void mousePressed() {
 
 void keyPressed() {
 
-  if (keyCode == ESC) key = 0;
+  if (keyCode == ESC) {
+    key = 0;
+    if (gameState == GAME) clearAlert();
+  }
+
   if (key == 'h' || key == 'H') printHelpMenu();
 
   if (gameState == GAME) {
-
-    if (useHacker && hackerState == CALIBRATION) {
-      if (keyCode == ENTER) addPointToCalibration();
-      if (keyCode == BACKSPACE) manualRestoreSaves();
-      if (keyCode == SHIFT) manualForceSaves();
-    }
-
     if (key == ' ')                    playPause();
     else if (key == 'p' || key == 'P') printPGN();
     else if (key == 'k' || key == 'K') flipBoard();
@@ -120,21 +126,27 @@ void keyPressed() {
     else if (keyCode == RIGHT)         rewindForward();
     else if (key == 'T')               test();
 
-    else if (useHacker && hackerState != CALIBRATION) {
-      if (key == 'r' || key == 'R') endOnHackerDetect();
-      else if (key == 'w' || key == 'W') hackStartGame();
+    if (useHacker) {
+      if (hackerState == CALIBRATION) {
+        if (keyCode == ENTER)     addPointToCalibration();
+        if (keyCode == BACKSPACE) manualRestoreSaves();
+        if (keyCode == SHIFT)     manualForceSaves();
+      }
+      else {
+        if (key == 'r' || key == 'R')      endOnHackerDetect();
+        else if (key == 'w' || key == 'W') hackStartGame();
+      }
     }
-
-  } else if (gameState == EDITOR) {
-
+  }
+  else if (gameState == EDITOR) {
     if (key == 'l' || key == 'L') toggleAttach();
     if (key == 'f' || key == 'F') printFEN();
     if (key == 'c' || key == 'C') copyFEN();
     if (key == 'k' || key == 'K') flipBoard();
     if (key == 'p' || key == 'P') pasteHTMLtoBoard();
     if (key == BACKSPACE)         clearPosition();
-
-  } else if (gameState == MENU) {
+  }
+  else if (gameState == MENU) {
     if (keyCode == ENTER) verifStartGame();
   }
 }
@@ -250,6 +262,6 @@ void mouseDragged() {
     else cursor(ARROW);
 
     // Missclicks :(
-    if (gameState == GAME && isMouton((int)pow(tourDeQui-1, 2))) missclick(i, j);
+    if (gameState == GAME && isMouton(opponent(tourDeQui))) missclick(i, j);
   }
 }

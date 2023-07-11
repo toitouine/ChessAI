@@ -22,16 +22,15 @@ final int END = 2; // Fin de partie détectée
 final int WAITING_TO_RESTART = 3; // Demande de nouvelle partie effectuée, en attente d'une partie
 
 // Index des calibrations
-final int CALIBRATION_NUMBER = 4;
+final int CALIBRATION_NUMBER = 3;
 final int UPLEFT = 0;
 final int DOWNRIGHT = 1;
 final int NEWGAME = 2;
-final int TEST = 3;
 
 Point[] hackerPoints = new Point[CALIBRATION_NUMBER];
 Point[] saveHackerPoints = new Point[CALIBRATION_NUMBER];
 Color hackerWhitePieceColor, hackerBlackPieceColor;
-String[] calibrationDesc = {"Coin haut-gauche", "Coin bas-droite", "Nouvelle partie", "Test"};
+String[] calibrationDesc = {"Coin haut-gauche", "Coin bas-droite", "Nouvelle partie"};
 
 int hackerState = CALIBRATION;
 boolean useHacker = false;
@@ -65,7 +64,6 @@ void calibrerHacker() {
   prepareEngine();
   setupHacker();
 
-  alert("Hacker calibré avec succès", 1500);
   println("[HACKER] Hacker calibré avec succès (ou pas)");
 }
 
@@ -83,7 +81,6 @@ void restoreCalibrationSaves() {
   prepareEngine();
   setupHacker();
 
-  alert("Sauvegardes restaurées", 1500);
   println("[HACKER] Sauvegardes restaurées");
 }
 
@@ -94,7 +91,6 @@ void forceCalibrationRestore() {
   prepareEngine();
   setupHacker();
 
-  alert("Calibration forcée", 1500);
   println("[HACKER] Restauration forcée des sauvegardes");
 }
 
@@ -164,6 +160,7 @@ void prepareEngine() {
 }
 
 void setupHacker() {
+  clearAlert();
   hackerState = INGAME;
   if (MODE_SANS_AFFICHAGE) {
     surface.setSize(150, 150);
@@ -182,6 +179,7 @@ void addPointToCalibration() {
   for (int i = 0; i < CALIBRATION_NUMBER; i++) {
     if (hackerPoints[i] == null) {
       hackerPoints[i] = copyPoint(p);
+      if (i == NEWGAME-1 && hackerSite == CHESSCOM) alert("Ne pas calibrer sur le + !", 60000);
       if (i == CALIBRATION_NUMBER-1) calibrerHacker();
       return;
     }
@@ -192,6 +190,11 @@ void addPointToCalibration() {
 }
 
 boolean verifyCalibration(int tolerance, boolean confondu) {
+  Color newGameColor = hacker.getPixelColor(hackerPoints[NEWGAME].x, hackerPoints[NEWGAME].y);
+  if (newGameColor.getRed() > 120 && newGameColor.getGreen() > 120 && newGameColor.getBlue() > 120) {
+    return false;
+  }
+
   // tolerance représente nombre d'erreurs autorisé et confondu si on confond les deux couleurs de pièce
   Color B = hackerWhitePieceColor;
   Color N = hackerBlackPieceColor;
@@ -384,22 +387,25 @@ void hackStartGame() {
     return;
   }
 
+  println("RESTARTING");
+
   deselectAll();
 
   Point mouse = MouseInfo.getPointerInfo().getLocation();
   int x = mouse.x;
   int y = mouse.y;
 
-  click(hackerCoords[0][0].x, hackerCoords[0][0].y);
-  delay(1500);
-  click(hackerPoints[NEWGAME].x, hackerPoints[NEWGAME].y);
-  delay(190);
-  click(x, y);
-  delay(20);
   colorOfRematch = hacker.getPixelColor(hackerPoints[NEWGAME].x, hackerPoints[NEWGAME].y);
+  click(hackerCoords[0][0].x, hackerCoords[0][0].y);
+  delay(2500);
+  click(hackerPoints[NEWGAME].x, hackerPoints[NEWGAME].y);
+  delay(20);
+  click(x, y);
+  delay(5);
 
   deselectAll();
   hackerState = WAITING_TO_RESTART;
+  timeAtLastRestartTry = millis();
 }
 
 void handleWaitForRestart() {
@@ -417,7 +423,12 @@ void handleWaitForRestart() {
     }
 
     // Protection anti-annulation
-    if (isSameColor(colorOfRematch, hacker.getPixelColor(hackerPoints[NEWGAME].x, hackerPoints[NEWGAME].y))) return;
+    if (isVerySimilarColor(colorOfRematch, hacker.getPixelColor(hackerPoints[NEWGAME].x, hackerPoints[NEWGAME].y))) {
+      println("PROTECTION ACTIVÉE");
+      return;
+    }
+
+    println("PROTECTION PASSÉE");
   }
 
   boolean isGameStarted = verifyCalibration(2, true);

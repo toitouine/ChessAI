@@ -75,7 +75,7 @@ ArrayList detectMoveDoubles(Move m) {
 
 ArrayList getFriendlyMoves(Piece p) {
   ArrayList<Move> moves = new ArrayList<Move>();
-  int oppositeColor = (int)pow(p.c - 1, 2);
+  int oppositeColor = opponent(p.c);
 
   switch (p.type) {
     case "cavalier":

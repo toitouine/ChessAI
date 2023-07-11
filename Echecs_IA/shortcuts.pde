@@ -208,19 +208,19 @@ void playPause() {
 
   if (gameEnded) {
     if (play) {
-      if (soundControl >= 2 && !diagnostic.isPlaying()) diagnostic.play();
+      if (SOUND_CONTROL >= 2 && !diagnostic.isPlaying()) diagnostic.play();
     } else {
-      if (soundControl >= 2 && diagnostic.isPlaying()) diagnostic.pause();
+      if (SOUND_CONTROL >= 2 && diagnostic.isPlaying()) diagnostic.pause();
     }
   } else {
     if (play) {
       infos = "Play";
-      if (soundControl >= 2 && !pachamama.isPlaying()) pachamama.play();
+      if (SOUND_CONTROL >= 2 && !pachamama.isPlaying()) pachamama.play();
       if (!isHumainTurn() && !gameEnded && !rewind && (!useHacker || hackerState != CALIBRATION)) joueurs.get(tourDeQui).play();
       if (useTime) ta.switchTimers(tourDeQui);
     } else {
       infos = "Pause";
-      if (soundControl >= 2 && pachamama.isPlaying()) pachamama.pause();
+      if (SOUND_CONTROL >= 2 && pachamama.isPlaying()) pachamama.pause();
       if (useTime) ta.stopTimers();
     }
   }
@@ -307,6 +307,7 @@ void printHelpMenu() {
   println(" ESPACE   | En partie           | Pause/Play");
   println(" ENTRER   | Menu                | Démarrer la partie");
   println(" SUPPR    | Éditeur             | Effacer la position");
+  println(" ESC      | En partie           | Effacer les alertes");
 }
 
 void runPerft() {

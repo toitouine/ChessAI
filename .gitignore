@@ -1,7 +1,7 @@
 # Ignore le fichier système .DS_Store
-**/.DS_Store
+.DS_Store
 
-# Ignore le résultat de l'aide à la configuration 
+# Ignore le résultat de l'aide à la configuration
 config.txt
 
 # Ignore les fichiers de build des programmes

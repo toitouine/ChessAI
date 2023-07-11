@@ -495,7 +495,7 @@ public class TimerApplet extends PApplet {
   }
 
   public void switchTimers(int toward) {
-    timers[(int)pow(toward-1, 2)].pause();
+    timers[opponent(toward)].pause();
     timers[toward].resume();
   }
 

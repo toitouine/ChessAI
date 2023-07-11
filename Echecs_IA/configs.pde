@@ -2,13 +2,13 @@
 
 // Configurations diverses
 
-String name = "Echecs on java";
+final String name = "Echecs on java";
+String startFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq"; // Position de départ par défaut
 
-String startFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq"; // Position de départ
-// String startFEN = "7k/1pp3qp/3p3r/pQb1pr2/PP6/2P3B1/5PPP/3R1R1K b"; // Problème difficile
-// String startFEN = "7K/P1p1p1p1/2P1P1Pk/6pP/3p2P1/1P6/3P4/8 w"; // Sous-promotion
-
-boolean MODE_PROBLEME = false; // Activer le mode résolution de problèmes (ou pas)
+final boolean MODE_PROBLEME = false; // Activer le mode résolution de problèmes (ou pas)
+final int TIME_WAIT_AT_START = 750; // Temps (en millisecondes) avant que les IAs commencent à jouer après le lancement de la partie
+final boolean TIME_CONTROL = true; // Activer le temps (ou pas)
+final int SOUND_CONTROL = 0; // Contrôle le son (0 = aucun / 1 = partie / 2 = musique)
 
 /////////////////////////////////////////////////////////////////
 
@@ -20,7 +20,7 @@ int hackerTestRestartCooldown = 1300; // Temps (ms) entre chaque scan du hacker 
 int scansBetweenEndDetect = 50; // Nombre de scans entre chaque détection de fin de partie
 int waitsBetweenStartRetry = 25; // Nombre d'essais de relance de partie avant de relancer une nouvelle fois (anti-revanche sur chess.com)
 int timeBeforeHackerRestart = 3500; // Temps d'attente avant de redémarrer une partie
-int timeCopycatSize = 3; // Taille du tableau des deltaTimes de time copycat
+int timeCopycatSize = 3; // Taille du tableau des deltaTimeHistory de time copycat
 
 Color coupChesscomWhite = new Color(246, 249, 87); // Couleur de surlignage des cases blanches sur chess.com [voir config helper]
 Color coupChesscomBlack = new Color(174, 195, 34); // Couleur de surlignage des cases noires sur chess.com [voir config helper]
@@ -33,22 +33,8 @@ Color expectLichessWhitePieceColor = new Color(254, 254, 254); // Couleur des pi
 Color expectLichessBlackPieceColor = new Color(42, 42, 42); // Couleur des pièces noires de Lichess (pour l'auto calibration) [voir config helper]
 Color endColorLichess = new Color(67, 107, 27); // Couleur du bouton de nouvelle partie de Lichess (quand la souris est dessus) [voir config helper]
 
-int HACKER_RATE = 5; // FPS du hacker (correspond entre autres au nombre de scans par seconde)
-boolean MODE_SANS_AFFICHAGE = false; // Afficher (ou pas) l'échiquier pendant le hacker
-
-// Sons, temps et autres
-
-int soundControl = 0; // 0 = aucun, 1 = partie, 2 = musique
-
-boolean attach = true; // Épingler la fenêtre par défaut (ou pas)
-boolean stats = true; // Afficher les statistiques et informations pendant le programme
-boolean details = true; // Afficher les statistiques détaillées
-
-boolean timeControl = true; // Activer le temps (ou pas)
-int[][] times = { // Temps par défaut
-  {0, 0, 0}, // blancs : minutes, secondes, incrément
-  {0, 0, 0}  // noirs : minutes, secondes, incrément
-};
+final int HACKER_RATE = 5; // FPS du hacker (correspond entre autres au nombre de scans par seconde)
+final boolean MODE_SANS_AFFICHAGE = false; // Afficher (ou pas) l'échiquier pendant le hacker
 
 /////////////////////////////////////////////////////////////////
 
@@ -59,16 +45,16 @@ int[][] times = { // Temps par défaut
 // Référencer dans le constructeur de la classe Joueur la classe correspondant à la nouvelle IA
 
 // Index des différentes IAs (ou humain) dans les tableaux de configurations (ne pas mélanger !)
-int HUMAIN_INDEX = 0;
-int LEMAIRE_INDEX = 1;
-int LESMOUTONS_INDEX = 2;
-int LOIC_INDEX = 3;
-int ANTOINE_INDEX = 4;
-int STOCKFISH_INDEX = 5;
+final int HUMAIN_INDEX = 0;
+final int LEMAIRE_INDEX = 1;
+final int LESMOUTONS_INDEX = 2;
+final int LOIC_INDEX = 3;
+final int ANTOINE_INDEX = 4;
+final int STOCKFISH_INDEX = 5;
 
-int CONSTANTE_DE_STOCKFISH = 3; // On ne sait pas
+final int CONSTANTE_DE_STOCKFISH = 3; // On ne sait pas
 
-int AI_NUMBER = 6; // Nombre d'IAs et humain différents
+final int AI_NUMBER = 6; // Nombre d'IAs et humain différents
 String[] AI_NAME = {"Humain", "LeMaire", "LesMoutons", "Loic", "Antoine", "Stockfish"}; // Nom complet des joueurs
 String[] AI_CODE = {"humain", "lemaire", "lesmoutons", "loic", "antoine", "stockfish"}; // Nom des joueurs (utilisé notamment pour les images)
 
@@ -95,6 +81,19 @@ String[] AI_VICTORY = { // Texte de victoire de chaque IA
 
 /////////////////////////////////////////////////////////////////
 
+// Autres
+
+boolean attach = true; // Épingler la fenêtre par défaut (ou pas)
+boolean stats = true; // Afficher les statistiques et informations pendant le programme
+boolean details = true; // Afficher les statistiques détaillées
+
+int[][] times = { // Temps par défaut
+  {0, 0, 0}, // blancs : minutes, secondes, incrément
+  {0, 0, 0}  // noirs : minutes, secondes, incrément
+};
+
+/////////////////////////////////////////////////////////////////
+
 // Configuration de l'interface
 
 int w = 70; // Taille d'une case
@@ -111,7 +110,6 @@ float targetEndScreenY = 2.5*w + offsetY; // Position (hauteur) de fin de l'écr
 float defaultEndScreenY = -210; // Position (hauteur) de départ de l'écran de fin de partie
 float endScreenEasing = 0.04; // Vitesse de descente de l'écran de fin de partie
 
-// 346
 Point whiteTimePosition = new Point(30, 283); // Position du sélecteur de temps des blancs
 Point blackTimePosition = new Point(selectWidth - 184, 283); // Position du sélecteur de temps des noirs
 
@@ -146,7 +144,8 @@ String[] savedFENSname = {
 
 // Moutons
 
-boolean ENABLE_ARNAQUES = true; // Activer les arnaques des moutons (ou pas)
+final boolean ENABLE_ARNAQUES = true; // Activer les arnaques des moutons (ou pas)
+int missclickCooldown = 6; // Nombre minimum de tour entre chaque missclick
 
 String[] moutonMessages = { // Liste des messages envoyés par les moutons
   "Moutonn !! YOU LOUSE",
@@ -160,8 +159,6 @@ String[] moutonMessages = { // Liste des messages envoyés par les moutons
   "TU VAS TE FAIRE MATER",
   "Sur prise, prise puis prise"
 };
-
-int missclickCooldown = 6; // Nombre minimum de tour entre chaque tentative de missclick
 
 /////////////////////////////////////////////////////////////////
 
@@ -339,7 +336,7 @@ float[][] loicPawnGrid = {
 
 /////////////////////////////////////////////////////////////////
 
-int maireEvalArray[] = {100000, 900, 500, 330, 320, 100}; // Valeurs de chaque pièce selon le maire
+int maireEvalArray[] = {100000, 900, 500, 330, 320, 100}; // Valeurs de chaque pièce selon LeMaire
 int loicEvalArray[] = {100000, 900, 150, 300, 300, 100}; // Valeurs de chaque pièce selon Loic
 
 float[][] mairePosArray[] = {maireKingGrid, maireQueenGrid, maireRookGrid, maireBishopGrid, maireKnightGrid, mairePawnGrid};

@@ -266,12 +266,12 @@ class IA {
     return 0;
   }
 
-  // Retourne le temps à jouer en fonction de celui de l'adversaire (avec le hacker)
+  // Retourne le temps à jouer en fonction de celui de l'adversaire (avec le hacker) en millisecondes
   int getTimeCopycat() {
     int time; // en millisecondes
 
-    float deltaTime = millis() - lastMoveTime; // en secondes
-    deltaTime /= 1000;
+    float deltaTime = millis() - lastMoveTime;
+    deltaTime /= 1000; // en secondes
 
     if (deltaTimeHistory.size() < timeCopycatSize) {
       time = sa.savedTimes[this.c] - floor(random(sa.savedTimes[this.c]/1.5, sa.savedTimes[this.c]/3));
@@ -280,6 +280,10 @@ class IA {
       int index = floor(random(0, timeCopycatSize));
       float prevTime = deltaTimeHistory.remove(index);
       time = (ceil((((random(1)*10000) % ((prevTime-prevTime/2)*1000)) /1000 + prevTime/2)*1000)) - (int)(exp(-2 * (float)sa.savedTimes[this.c]/1000) * pow(((float)sa.savedTimes[this.c]/1000 + 0.6), 2.7) * 1000);
+      // float moyenneTime = moyenne(deltaTimeHistory); // moyenne en seconde
+      // float a = (exp(-2 * prevTime)) * pow(prevTime + 0.35, 2.7);
+      // time = (int)((ceil((((random(1)*10000) % ((prevTime-prevTime/2)*1000)) /1000 + prevTime/2)*1000)) - (a*1000));
+      // println(prevTime, a, time);
     }
 
     if (useHacker && nbTour > 1) deltaTimeHistory.add(deltaTime);
@@ -299,7 +303,7 @@ class IA {
 
     if (moves.size() > 0 && !gameEnded) {
       int timeToWait = 250;
-      if (useHacker) timeToWait = getTimeCopycat();
+      // if (useHacker) timeToWait = getTimeCopycat();
       delay(timeToWait);
 
       this.bestMoveFound = playMoveFromBook(moves);
@@ -566,7 +570,7 @@ class LeMaire extends IA {
     float[] Evals = {0, 0};
 
     for (int i = 0; i < 2; i++) {
-      int opponent = (i == 0) ? 1 : 0;
+      int opponent = opponent(i);
 
       Evals[i] += materials[i];
 
@@ -753,7 +757,7 @@ class LesMoutons extends IA {
     float[] Evals = {0, 0};
 
     for (int i = 0; i < 2; i++) {
-      int opponent = (i == 0) ? 1 : 0;
+      int opponent = opponent(i);
 
       Evals[i] += materials[i];
 
@@ -865,7 +869,7 @@ class SheepEval {
 }
 
 void arnaques() {
-  int opponent = (int)pow(tourDeQui-1, 2);
+  int opponent = opponent(tourDeQui);
 
   // Arnaque au temps
   if (isMouton(opponent)) {

@@ -19,7 +19,7 @@ void startGame() {
   surface.setLocation(displayWidth - width, 0);
   surface.setAlwaysOnTop(attach);
 
-  if (timeControl && (times[0][0] != 0 || times[0][1] != 0 || times[0][2] != 0) && (times[1][0] != 0 || times[1][1] != 0 || times[1][2] != 0)) {
+  if (TIME_CONTROL && (times[0][0] != 0 || times[0][1] != 0 || times[0][2] != 0) && (times[1][0] != 0 || times[1][1] != 0 || times[1][2] != 0)) {
     useTime = true;
   } else {
     useTime = false;
@@ -38,7 +38,7 @@ void startGame() {
   s2.hide();
   t1.hide();
   t2.hide();
-  if (soundControl >= 2) {
+  if (SOUND_CONTROL >= 2) {
     violons.stop();
     pachamama.play(); pachamama.loop();
   }
@@ -74,7 +74,7 @@ void startGame() {
 
   for (int i = 0; i < 2; i++) materials[i] = countMaireMaterial(i);
 
-  if (soundControl >= 1) start_sound.play();
+  if (SOUND_CONTROL >= 1) start_sound.play();
   if (useTime) {
     ta.initTimers();
     ta.show();
@@ -87,6 +87,8 @@ void startGame() {
     if (useHacker) ta.goToHackerPosition();
   }
 
+  clearAlert();
+
   sa.setTimes(j1Time, j2Time);
   showSearchController = true;
   sa.show();
@@ -96,6 +98,8 @@ void startGame() {
 
   delay(3);
   surface.setVisible(true);
+
+  timeAtGameStart = millis();
 }
 
 void startEditor() {
@@ -114,7 +118,7 @@ void startEditor() {
 
   cursor(ARROW);
 
-  if (soundControl >= 2) {
+  if (SOUND_CONTROL >= 2) {
     violons.stop();
     pachamama.play(); pachamama.loop();
   }
@@ -183,7 +187,7 @@ void resetGame(boolean menu) {
   }
 
   // Arrête la musique :(
-  if (soundControl >= 2) {
+  if (SOUND_CONTROL >= 2) {
     pachamama.stop();
     diagnostic.stop();
     violons.play(); violons.loop();
@@ -236,7 +240,10 @@ void resetSettingsToDefault() {
     }
   }
 
+  clearAlert();
+
   // Variables
+  timeAtGameStart = 0;
   numberOfRestartWait = 0;
   numberOfScan = 0;
   lastMoveTime = 0;
@@ -253,9 +260,6 @@ void resetSettingsToDefault() {
   messageMoutonTime = 0;
   alertPos = new Point();
   missclickDragNextMove = false;
-  alert = "";
-  alertTime = 0;
-  alertStarted = 0;
   showSavedPositions = false;
   timeAtHackerEnd = 0;
   engineToPlay = false;
@@ -446,11 +450,11 @@ void endGame(int winnerTag, Object... b) {
   infos = "Game ended";
 
   // Sons
-  if (soundControl >= 1) {
+  if (SOUND_CONTROL >= 1) {
     if (winner == 2) nulle_sound.play();
     else mat_sound.play();
   }
-  if (soundControl >= 2) {
+  if (SOUND_CONTROL >= 2) {
     pachamama.stop();
     diagnostic.play();
   }

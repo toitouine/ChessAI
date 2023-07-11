@@ -98,16 +98,16 @@ class Move {
     else if (this.piece.petitRoquable != -1) this.piece.petitRoquable = this.piece.grandRoquable = 0;
 
     // Enlève le pion en passant de l'adversaire
-    int opp = (this.piece.c == 0) ? 1 : 0;
+    int opp = opponent(this.piece.c);
     if (currentEnPassantable[opp] != null) {
       currentEnPassantable[opp] = null;
     }
 
     // Variables
     if (really) {
-      if (enPromotion == null) tourDeQui = (tourDeQui == 0) ? 1 : 0;
+      if (enPromotion == null) tourDeQui = opponent(tourDeQui);
     } else {
-      tourDeQui = (tourDeQui == 0) ? 1 : 0;
+      tourDeQui = opponent(tourDeQui);
     }
     nbTour += 0.5;
     if (this.capture != null) { calcEndGameWeight(); materials[this.capture.c] -= this.capture.maireEval; }
@@ -137,7 +137,7 @@ class Move {
     this.piece.setPlace(this.fromI, this.fromJ);
 
     // Update les variables
-    tourDeQui = (tourDeQui == 0) ? 1 : 0;
+    tourDeQui = opponent(tourDeQui);
     nbTour -= 0.5;
 
     // Update d'autres variables et réssucite la pièce capturée
