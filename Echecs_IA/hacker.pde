@@ -45,7 +45,7 @@ boolean isNextMoveRestranscrit = false;
 Point[][] hackerCoords = new Point[8][8];
 Point[][] saveHackerCoords = new Point[8][8];
 ArrayList<Move> hackerMoves = new ArrayList<Move>();
-ArrayList<Float> deltaTimeHistory = new ArrayList<Float>(); // en secondes
+ArrayList<Integer> deltaTimeHistory = new ArrayList<Integer>();
 
 /////////////////////////////////////////////////////////////////
 

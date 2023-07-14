@@ -86,7 +86,8 @@ class IA {
 
   void play() {
     if (gameEnded || stopSearch) return;
-    if (!(MODE_SANS_AFFICHAGE && useHacker && hackerState != CALIBRATION)) cursor(WAIT);
+
+    if (!(MODE_SANS_AFFICHAGE && useHacker)) cursor(WAIT);
 
     if (nbTour <= AI_OUVERTURE[joueurs.get(this.c).index]) {
      if (this.tryPlayingBookMove()) return;
@@ -100,14 +101,14 @@ class IA {
     stopSearch = false;
     cursor(ARROW);
 
-    // Ne joue pas le coup (et n'affiche pas les statistiques) si la partie est terminée (au temps notamment)
+    // Ne joue pas le coup (et n'affiche pas les statistiques) si la partie est terminée
     if (gameEnded) return;
 
     // Joue le coup
     this.bestMoveFound.play();
 
     // Affichage des statistiques dans la console et l'interface
-    if (!MODE_SANS_AFFICHAGE) this.updateStats(posEval);
+    if (!(MODE_SANS_AFFICHAGE && useHacker)) this.updateStats(posEval);
 
     // Reset les statistiques pour la prochaine recherche
     this.resetStats();
@@ -188,7 +189,7 @@ class IA {
       // Pour éviter de sortir trop vite de la boucle en cas de position "évidente" (répétition immédiate)
       if (d == 1001) d = 1000;
 
-      if (!(MODE_SANS_AFFICHAGE && useHacker && hackerState != CALIBRATION)) this.resetStats();
+      if (!(MODE_SANS_AFFICHAGE && useHacker)) this.resetStats();
       this.cuts = new int[d];
 
       // effectue la recherche à la profondeur
@@ -203,7 +204,7 @@ class IA {
       // Si la recherche a été interrompue par search controller (ou défaite)
       if (gameEnded) sa.endSearch();
       if (stopSearch) {
-        if (!(MODE_SANS_AFFICHAGE && useHacker && hackerState != CALIBRATION)) {
+        if (!(MODE_SANS_AFFICHAGE && useHacker)) {
           this.numQuiet = lastNumQuiet;
           this.numPos = lastNumPos;
           this.depthSearched = d-1;
@@ -227,7 +228,7 @@ class IA {
       lastEval = eval;
       lastBestMove = this.bestMoveFound;
 
-      if (!(MODE_SANS_AFFICHAGE && useHacker && hackerState != CALIBRATION)) {
+      if (!(MODE_SANS_AFFICHAGE && useHacker)) {
         lastNumQuiet = this.numQuiet;
         lastNumPos = this.numPos;
         lastCuts = this.cuts;
@@ -268,22 +269,30 @@ class IA {
 
   // Retourne le temps à jouer en fonction de celui de l'adversaire (avec le hacker) en millisecondes
   int getTimeCopycat() {
-    int time; // en millisecondes
+    int time;
 
-    float deltaTime = millis() - lastMoveTime;
-    deltaTime /= 1000; // en secondes
+    int deltaTime = millis() - lastMoveTime;
+    printArray(deltaTimeHistory);
 
     if (deltaTimeHistory.size() < timeCopycatSize) {
       time = sa.savedTimes[this.c] - floor(random(sa.savedTimes[this.c]/1.5, sa.savedTimes[this.c]/3));
     }
     else {
       int index = floor(random(0, timeCopycatSize));
-      float prevTime = deltaTimeHistory.remove(index);
-      time = (ceil((((random(1)*10000) % ((prevTime-prevTime/2)*1000)) /1000 + prevTime/2)*1000)) - (int)(exp(-2 * (float)sa.savedTimes[this.c]/1000) * pow(((float)sa.savedTimes[this.c]/1000 + 0.6), 2.7) * 1000);
-      // float moyenneTime = moyenne(deltaTimeHistory); // moyenne en seconde
-      // float a = (exp(-2 * prevTime)) * pow(prevTime + 0.35, 2.7);
-      // time = (int)((ceil((((random(1)*10000) % ((prevTime-prevTime/2)*1000)) /1000 + prevTime/2)*1000)) - (a*1000));
-      // println(prevTime, a, time);
+      int prevTime = deltaTimeHistory.remove(index);
+      println("prevTime (avant) : " + prevTime);
+      prevTime -= TIME_COPYCAT_FIX;
+      println("prevTime (après) : " + prevTime);
+
+      if (prevTime >= 0) {
+        // La formule prend une valeur en seconde et renvoie en ms
+        float x = (float)prevTime/1000;
+        print("x :", x, " ");
+        time = ceil((((random(1)*100000) % ((x - x/2)*1000)) /1000 + x/2) * 1000);
+      }
+      else time = 20;
+      println("time ms : " + time);
+      println(" ");
     }
 
     if (useHacker && nbTour > 1) deltaTimeHistory.add(deltaTime);
@@ -303,12 +312,13 @@ class IA {
 
     if (moves.size() > 0 && !gameEnded) {
       int timeToWait = 250;
-      // if (useHacker) timeToWait = getTimeCopycat();
+      if (useHacker) getTimeCopycat(); // Pour sauvegarder les temps dans l'array
       delay(timeToWait);
 
       this.bestMoveFound = playMoveFromBook(moves);
-      if (stats) {
+      if (stats && !(MODE_SANS_AFFICHAGE && useHacker)) {
         println("[BOT] " + joueurs.get(this.c).name + " : " + "Book");
+        println("");
       }
       sa.setEvals("Book", this.c);
       sa.setBestMoves(getPGNString(this.bestMoveFound), this.c);

@@ -54,7 +54,7 @@ public class SearchApplet extends PApplet {
       transpositions[inNormalSearch] = formatInt(joueurs.get(inNormalSearch).player.numTranspositions);
     }
 
-    if (!show || (MODE_SANS_AFFICHAGE && useHacker && hackerState != CALIBRATION)) return;
+    if (!show || gameState != GAME || (MODE_SANS_AFFICHAGE && useHacker && hackerState != CALIBRATION)) return;
     surface.setAlwaysOnTop(attach);
 
     background(#272522);
@@ -93,6 +93,11 @@ public class SearchApplet extends PApplet {
         fill(#abb88a); text("Temps : " + timesDisplay[i], i*width/2 + 8, 161);
       }
     }
+  }
+
+  public void mouseDragged() {
+    Point mouse = MouseInfo.getPointerInfo().getLocation();
+    surface.setLocation(mouse.x - sizeW/2, mouse.y - sizeH/2);
   }
 
   public void startSearch(int c) {
@@ -210,19 +215,20 @@ public class GraphApplet extends PApplet {
     surface.setLocation(0, 23);
     surface.setTitle("Analyse");
     surface.setFrameRate(5);
+    surface.setAlwaysOnTop(attach);
   }
 
   public void draw() {
     background(#272522);
     if (show) {
+      surface.setAlwaysOnTop(attach);
       g.plot();
     }
   }
 
   public void mouseDragged() {
     surface.setFrameRate(60);
-    Point mouse;
-    mouse = MouseInfo.getPointerInfo().getLocation();
+    Point mouse = MouseInfo.getPointerInfo().getLocation();
     surface.setLocation(mouse.x - sizeW/2, mouse.y - sizeH/2);
   }
 
@@ -485,8 +491,7 @@ public class TimerApplet extends PApplet {
 
   public void mouseDragged() {
     // surface.setFrameRate(60);
-    Point mouse;
-    mouse = MouseInfo.getPointerInfo().getLocation();
+    Point mouse = MouseInfo.getPointerInfo().getLocation();
     surface.setLocation(mouse.x - windowWidth/2, mouse.y - windowHeight/2);
   }
 

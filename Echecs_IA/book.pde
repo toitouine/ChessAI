@@ -37,11 +37,11 @@ class Arrow {
     this.shape = null;
     this.shape = createShape(GROUP);
 
-    strokeWeight(5);
+    strokeWeight(5 * w/70);
     stroke(color(currentColor.getRed(), currentColor.getGreen(), currentColor.getBlue()));
     PShape line = createShape(LINE, -this.length/2, 0, this.length/2, 0);
-    PShape left = createShape(LINE, this.length/2, 0, this.length/2-15, -15);
-    PShape right = createShape(LINE, this.length/2, 0, this.length/2-15, 15);
+    PShape left = createShape(LINE, this.length/2, 0, this.length/2-(15*w/70), -(15*w/70));
+    PShape right = createShape(LINE, this.length/2, 0, this.length/2-(15*w/70), (15*w/70));
 
     this.shape.addChild(line);
     this.shape.addChild(left);

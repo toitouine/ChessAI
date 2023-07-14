@@ -2,8 +2,7 @@
 
 // TODO :
 
-// Réparer time copycat
-// (Note : pour l'instant deltaTimeHistory est en secondes, modifiable dans getTimeCopycat())
+// Recherche sur un autre thread pour pouvoir faire autre chose en même temps
 // Editeur de position : Trait et roques
 // Hacker : anti-annulation Lichess
 // Auto calibration
@@ -152,7 +151,7 @@ boolean rewind = false;
 boolean showGraph = false;
 boolean showVariante = false;
 boolean showSavedPositions = false;
-boolean showSearchController = false;
+boolean showSearchController = true;
 boolean showParameters = false;
 boolean useTime = false;
 boolean pointDeVue = true;

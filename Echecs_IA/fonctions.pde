@@ -20,7 +20,6 @@ void clearAlert() {
   alert = "";
   alertStarted = 0;
   alertTime = 0;
-  println("stop");
 }
 
 void sendMoutonMessage(String message, float x, float y, int time) {
@@ -144,6 +143,12 @@ static final javax.swing.JFrame getJFrame(final PSurface surf) {
     (javax.swing.JFrame)
     ((processing.awt.PSurfaceAWT.SmoothCanvas)
     surf.getNative()).getFrame();
+}
+
+Point getMainWindowLocation() {
+  Frame mainFrame = ( (PSurfaceAWT.SmoothCanvas) ((PSurfaceAWT)surface).getNative()).getFrame();
+  if (mainFrame.isShowing()) return mainFrame.getLocationOnScreen();
+  return null;
 }
 
 int getIAIndex(String ia) {
@@ -332,9 +337,9 @@ void initGUI() {
 
   // Revanche et menu en fin de partie
   Condition endButtons = new Condition() { public boolean c() { return(gameState == GAME && gameEnded && !useHacker); } };
-  rematchButton = new TextButton(offsetX - offsetX/1.08, offsetY+4*w-29, offsetX-2*(offsetX - offsetX/1.08), 24, "Revanche", 15, 3, "rematch", endButtons);
+  rematchButton = new TextButton(offsetX - offsetX/1.08, offsetY+4*w-29, offsetX-2*(offsetX - offsetX/1.08), 24 * w/70, "Revanche", 15 * w/70, 3, "rematch", endButtons);
   rematchButton.setColors(#1d1c1a, #ffffff);
-  newGameButton = new TextButton(offsetX - offsetX/1.08, offsetY+4*w+5, offsetX-2*(offsetX - offsetX/1.08), 24, "Menu", 15, 3, "newGame", endButtons);
+  newGameButton = new TextButton(offsetX - offsetX/1.08, offsetY+4*w+5, offsetX-2*(offsetX - offsetX/1.08), 24 * w/70, "Menu", 15 * w/70, 3, "newGame", endButtons);
   newGameButton.setColors(#1d1c1a, #ffffff);
   allButtons.add(rematchButton);
   allButtons.add(newGameButton);
@@ -373,10 +378,13 @@ void initGUI() {
   // Aide et abandon
   Condition humainWCondition = new Condition() { public boolean c() { return(gameState == GAME && !useHacker && !gameEnded && isHumain(0)); } };
   Condition humainBCondition = new Condition() { public boolean c() { return(gameState == GAME && !useHacker && !gameEnded && isHumain(1)); } };
-  humainButton.add(new ImageButton(6, offsetY + 7*w - 127, 38, 38, 10, #272522, loadImage("icons/resign.png"), false, "resignWhite", humainWCondition));
-  humainButton.add(new ImageButton(6, offsetY + w + 80, 38, 38, 10, #272522, loadImage("icons/resign.png"), false, "resignBlack", humainBCondition));
-  humainButton.add(new ImageButton(offsetX-44, offsetY + 7*w - 127, 38, 38, 10, #272522, loadImage("icons/helpMove.png"), false, "helpMoveWhite", humainWCondition));
-  humainButton.add(new ImageButton(offsetX-44, offsetY + w + 80, 38, 38, 10, #272522, loadImage("icons/helpMove.png"), false, "helpMoveBlack", humainBCondition));
+  // float space = (2*(1750-19*w))/105;
+  float space = (offsetX - (76*w/70))/3;
+  float hbSize = 38 * w/70;
+  humainButton.add(new ImageButton(space,            offsetY + 7*w - 127, hbSize, hbSize, 10, #272522, loadImage("icons/resign.png"), false, "resignWhite", humainWCondition));
+  humainButton.add(new ImageButton(space,            offsetY + w + 80   , hbSize, hbSize, 10, #272522, loadImage("icons/resign.png"), false, "resignBlack", humainBCondition));
+  humainButton.add(new ImageButton(hbSize + 2*space, offsetY + 7*w - 127, hbSize, hbSize, 10, #272522, loadImage("icons/helpMove.png"), false, "helpMoveWhite", humainWCondition));
+  humainButton.add(new ImageButton(hbSize + 2*space, offsetY + w + 80   , hbSize, hbSize, 10, #272522, loadImage("icons/helpMove.png"), false, "helpMoveBlack", humainBCondition));
   allButtons.addAll(humainButton);
 
   // Drag and drops
@@ -867,7 +875,7 @@ void clickedOnBoard(int i, int j) {
   if (enPromotion != null) return;
 
   Piece p = grid[i][j].piece;
-  if (stats && details) println("Case : [" + i + "][" + j + "] (" + grid[i][j].name + ")");
+  // if (stats && details) println("Case : [" + i + "][" + j + "] (" + grid[i][j].name + ")");
 
   if (grid[i][j].possibleMove != null) {
       grid[i][j].possibleMove.play();

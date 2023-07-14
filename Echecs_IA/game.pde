@@ -90,8 +90,10 @@ void startGame() {
   clearAlert();
 
   sa.setTimes(j1Time, j2Time);
-  showSearchController = true;
-  sa.show();
+  if (showGraph) ga.show();
+  if (showSearchController) sa.show();
+  if (isHumain(0) && isHumain(1) && showSearchController) toggleSearchController();
+  // if ((!isHumain(0) || !isHumain(1)) && !showSearchController && !useHacker) toggleSearchController();
 
   setPieces();
   checkGameState();
@@ -263,9 +265,7 @@ void resetSettingsToDefault() {
   showSavedPositions = false;
   timeAtHackerEnd = 0;
   engineToPlay = false;
-  showGraph = false;
   showVariante = false;
-  showSearchController = false;
   pieceSelectionne = null;
   enPromotion = null;
   attach = true;

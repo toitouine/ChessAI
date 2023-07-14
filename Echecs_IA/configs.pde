@@ -34,7 +34,9 @@ Color expectLichessBlackPieceColor = new Color(42, 42, 42); // Couleur des pièc
 Color endColorLichess = new Color(67, 107, 27); // Couleur du bouton de nouvelle partie de Lichess (quand la souris est dessus) [voir config helper]
 
 final int HACKER_RATE = 5; // FPS du hacker (correspond entre autres au nombre de scans par seconde)
-final boolean MODE_SANS_AFFICHAGE = false; // Afficher (ou pas) l'échiquier pendant le hacker
+final boolean MODE_SANS_AFFICHAGE = true; // Afficher (ou pas) l'échiquier pendant le hacker
+// final int TIME_COPYCAT_FIX = 730; // Mesuré
+final int TIME_COPYCAT_FIX = 830; // Temps (en ms) d'erreur de mesure en trop de time copycat [voir TimeCopycatFix]
 
 /////////////////////////////////////////////////////////////////
 
@@ -96,10 +98,10 @@ int[][] times = { // Temps par défaut
 
 // Configuration de l'interface
 
-int w = 70; // Taille d'une case
+int w = 70; // Taille d'une case (définit la taille de tout)
 float pieceSize = w; // Taille d'une pièce
-int offsetX = 100 * w/75; // Taille de la bande verticale à gauche
-int offsetY = 50 * w/75; // Taille de la bande horizontale en haut
+int offsetX = 95 * w/70; // Taille de la bande verticale à gauche
+int offsetY = 50 * w/70; // Taille de la bande horizontale en haut
 int gameWidth = cols * w + offsetX; // Largeur de la fenêtre de la partie
 int gameHeight = rows * w + offsetY; // Hauteur de la fenêtre de la partie
 int selectWidth = 1100; // Largeur de la page d'acceuil
