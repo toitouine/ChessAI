@@ -230,11 +230,11 @@ class ImageButton extends Button {
 }
 
 class ToggleImage extends Button {
-  int x, y, w, h;
+  float x, y, w, h;
   PImage img1, img2;
   boolean state = false;
 
-  ToggleImage(int x, int y, int w, int h, PImage img1, PImage img2, String f, Condition c) {
+  ToggleImage(float x, float y, float w, float h, PImage img1, PImage img2, String f, Condition c) {
     super(f, c);
     this.x = x;
     this.y = y;
@@ -257,8 +257,8 @@ class ToggleImage extends Button {
 
   @Override
   void call() {
-    super.call();
     this.toggle();
+    super.call();
   }
 
   boolean contains(int x, int y) {

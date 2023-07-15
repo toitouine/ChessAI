@@ -3,8 +3,6 @@
 // TODO :
 
 // Recherche sur un autre thread pour pouvoir faire autre chose en même temps
-// Editeur de position : Trait et roques
-// Hacker : anti-annulation Lichess
 // Auto calibration
 // La brebis / Statistiques bot
 // Mode tournoi
@@ -104,6 +102,7 @@ ArrayList<DragAndDrop>[] addPiecesButtons = new ArrayList[2];
 ArrayList<TimeButton>[] timeButtons = new ArrayList[2];
 ArrayList<ImageButton> presetButtons = new ArrayList<ImageButton>();
 ArrayList<ImageButton> humainButton = new ArrayList<ImageButton>();
+ArrayList<ToggleImage> parametersButtons = new ArrayList<ToggleImage>();
 
 ArrayList<String> book = new ArrayList<String>();
 ArrayList<Arrow> varianteArrows = new ArrayList<Arrow>();
@@ -165,6 +164,7 @@ int alertTime = 0;
 long alertStarted = 0;
 int addPiecesColor = 0;
 int timeAtGameStart = 0;
+float yEndScreen;
 
 // Les Moutons !
 String messageMouton = "";

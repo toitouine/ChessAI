@@ -1,5 +1,5 @@
 # Ignore le fichier système .DS_Store
-**/.DS_Store
+.DS_Store
 
 # Ignore le résultat de l'aide à la configuration
 config.txt

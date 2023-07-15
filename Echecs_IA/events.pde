@@ -222,7 +222,7 @@ void mouseReleased() {
 void mouseDragged() {
   if ((MODE_SANS_AFFICHAGE && useHacker && hackerState != CALIBRATION) || gameState == MENU) return;
 
-  if (gameState == EDITOR && mouseButton == RIGHT) {
+  if (gameState == EDITOR && mouseButton == RIGHT  && !showSavedPositions && !showParameters) {
     int i = getGridI();
     int j = getGridJ();
 

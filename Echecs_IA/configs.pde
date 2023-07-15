@@ -8,7 +8,7 @@ String startFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq"; // Posit
 final boolean MODE_PROBLEME = false; // Activer le mode résolution de problèmes (ou pas)
 final int TIME_WAIT_AT_START = 750; // Temps (en millisecondes) avant que les IAs commencent à jouer après le lancement de la partie
 final boolean TIME_CONTROL = true; // Activer le temps (ou pas)
-final int SOUND_CONTROL = 0; // Contrôle le son (0 = aucun / 1 = partie / 2 = musique)
+final int SOUND_CONTROL = 0; // Contrôle du son (0 = aucun / 1 = partie / 2 = musique)
 
 /////////////////////////////////////////////////////////////////
 
@@ -124,7 +124,7 @@ Color arrowFinalColor = new Color(255, 0, 0); // Couleur des flèches (niveau 1 
 
 String[] savedFENS = {
   "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq",
-  "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w",
+  "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq",
   "r5k1/6pp/5b2/4N3/8/q7/5PPP/3Q1RK1 w",
   "8/1RK5/8/3k4/8/8/8/8 w",
   "8/6p1/8/3k4/8/3K4/8/8 w",

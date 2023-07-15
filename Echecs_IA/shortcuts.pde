@@ -93,6 +93,14 @@ void toggleSearchController() {
 void toggleParameters() {
   showParameters =! showParameters;
   showSavedPositions = false;
+
+  if (tourDeQui == 0 && parametersButtons.get(4).state) parametersButtons.get(4).toggle();
+  else if (tourDeQui == 1 && !parametersButtons.get(4).state) parametersButtons.get(4).toggle();
+
+  parametersButtons.get(0).state = pRoqueCondition(0);
+  parametersButtons.get(1).state = gRoqueCondition(0);
+  parametersButtons.get(2).state = pRoqueCondition(1);
+  parametersButtons.get(3).state = gRoqueCondition(1);
 }
 
 void toggleSavedPos() {

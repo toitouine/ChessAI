@@ -250,6 +250,8 @@ void drawGameInterface() {
 }
 
 void initGUI() {
+  yEndScreen = defaultEndScreenY;
+
   cp5 = new ControlP5(this);
   s1 = cp5.addSlider("j1depth")
      .setPosition(30, 80)
@@ -378,7 +380,6 @@ void initGUI() {
   // Aide et abandon
   Condition humainWCondition = new Condition() { public boolean c() { return(gameState == GAME && !useHacker && !gameEnded && isHumain(0)); } };
   Condition humainBCondition = new Condition() { public boolean c() { return(gameState == GAME && !useHacker && !gameEnded && isHumain(1)); } };
-  // float space = (2*(1750-19*w))/105;
   float space = (offsetX - (76*w/70))/3;
   float hbSize = 38 * w/70;
   humainButton.add(new ImageButton(space,            offsetY + 7*w - 127, hbSize, hbSize, 10, #272522, loadImage("icons/resign.png"), false, "resignWhite", humainWCondition));
@@ -453,6 +454,15 @@ void initGUI() {
     }
   }
   allButtons.addAll(savedFENSbuttons);
+
+  // Boutons des paramètres de l'éditeur
+  Condition paramCondition = new Condition() { public boolean c() { return (gameState == EDITOR && showParameters); } };
+  parametersButtons.add(new ToggleImage(offsetX + 2.25*w, offsetY + 4.125*w, 2.5*w,   1.25*w, loadImage("icons/pRoqueB_off.png"), loadImage("icons/pRoqueB.png"), "togglePRoqueB", paramCondition));
+  parametersButtons.add(new ToggleImage(offsetX + 6.06*w, offsetY + 4.125*w, 3.125*w, 1.25*w, loadImage("icons/gRoqueB_off.png"), loadImage("icons/gRoqueB.png"), "toggleGRoqueB", paramCondition));
+  parametersButtons.add(new ToggleImage(offsetX + 2.25*w, offsetY + 6.125*w, 2.5*w,   1.25*w, loadImage("icons/pRoqueN_off.png"), loadImage("icons/pRoqueN.png"), "togglePRoqueN", paramCondition));
+  parametersButtons.add(new ToggleImage(offsetX + 6.06*w, offsetY + 6.125*w, 3.125*w, 1.25*w, loadImage("icons/gRoqueN_off.png"), loadImage("icons/gRoqueN.png"), "toggleGRoqueN", paramCondition));
+  parametersButtons.add(new ToggleImage(offsetX + 4*w, offsetY + 2*w, 1.25*w, 1.25*w, loadImage("pieces/roi_b.png"), loadImage("pieces/roi_n.png"), "toggleTrait", paramCondition));
+  allButtons.addAll(parametersButtons);
 }
 
 void initImages() {
@@ -614,13 +624,17 @@ void drawParameters() {
   blur(220);
   fill(0);
   stroke(0);
-  // textSize(35 * w/75);
-  // textAlign(LEFT, CENTER);
-  // text("Trait :", offsetX + w/2, offsetY + w/2);
-  // line(offsetX + w/2, offsetY + 0.875*w, offsetX + w/2 + textWidth("Trait :"), offsetY + 0.875*w);
-  //
-  // text("Roques :", offsetX + w/2, offsetY + 2.5*w);
-  // line(offsetX + w/2, offsetY + 2.875*w, offsetX + w/2 + textWidth("Roques :"), offsetY + 2.875*w);
+
+  for (ToggleImage ti : parametersButtons) ti.show();
+
+  textAlign(CENTER);
+  textSize(20 * w/70);
+  text("Trait aux " + (tourDeQui == 0 ? "blancs" : "noirs"), offsetX + 4*w, offsetY + 3*w);
+  textSize(18 * w/70);
+  text("Petit roque blanc " + (pRoqueCondition(0) ? "activé" : "désactivé"), offsetX + 2.25*w, offsetY + 5*w);
+  text("Grand roque blanc " + (gRoqueCondition(0) ? "activé" : "désactivé"), offsetX + 6.06*w, offsetY + 5*w);
+  text("Petit roque noir " + (pRoqueCondition(1) ? "activé" : "désactivé"), offsetX + 2.25*w, offsetY + 7*w);
+  text("Grand roque noir " + (gRoqueCondition(1) ? "activé" : "désactivé"), offsetX + 6.06*w, offsetY + 7*w);
 }
 
 void drawInfoBox(String i) {
@@ -728,7 +742,6 @@ void handleEndScreen() {
   drawEndScreen(yEndScreen);
 }
 
-float yEndScreen = defaultEndScreenY;
 void drawEndScreen(float y) {
   noStroke();
   int gris = color(#666463);
@@ -875,7 +888,7 @@ void clickedOnBoard(int i, int j) {
   if (enPromotion != null) return;
 
   Piece p = grid[i][j].piece;
-  // if (stats && details) println("Case : [" + i + "][" + j + "] (" + grid[i][j].name + ")");
+  if (stats && details) println("Case : [" + i + "][" + j + "] (" + grid[i][j].name + ")");
 
   if (grid[i][j].possibleMove != null) {
       grid[i][j].possibleMove.play();
@@ -1118,7 +1131,7 @@ void HTMLtoBoard(String str) {
     }
   }
 
-  println("[EDITOR] Plateau importé");
+  println("[EDITEUR] Plateau importé");
 
   piecesToDisplay.clear();
   piecesToDisplay.addAll(pieces[0]);
@@ -1154,7 +1167,7 @@ String generateFEN() {
   String fen = "";
   int vide = 0;
 
-  //Position
+  // Position
   for (int j = 0; j < rows; j++) {
     for (int i = 0; i < cols; i++) {
       Cell g = grid[i][j];
@@ -1175,58 +1188,47 @@ String generateFEN() {
     }
   }
 
-  //Trait
+  // Trait
   if (tourDeQui == 0) {
     fen = fen + "w";
   } else {
     fen = fen + "b";
   }
 
-  //Roques
-  boolean pRoques[] = {false, false}; //blancs, noirs
+  // Roques (blancs, noirs)
+  boolean pRoques[] = {false, false};
   boolean gRoques[] = {false, false};
 
   for (int i = 0; i < pieces.length; i++) {
-    if (rois[i].roquable == 1) {
-      for (int j = 0; j < pieces[i].size(); j++) {
-
-        if (pieces[i].get(j).petitRoquable != -1) {
-          if (pieces[i].get(j).petitRoquable == 1) {
-            pRoques[i] = true;
-          }
-        }
-
-        if (pieces[i].get(j).grandRoquable != -1) {
-          if (pieces[i].get(j).grandRoquable == 1) {
-            gRoques[i] = true;
-          }
-        }
-      }
+    if (rois[i].roquable != 1) continue;
+    for (int j = 0; j < pieces[i].size(); j++) {
+      if (pieces[i].get(j).petitRoquable == 1) pRoques[i] = true;
+      if (pieces[i].get(j).grandRoquable == 1) gRoques[i] = true;
     }
   }
 
   if (pRoques[0] || pRoques[1] || gRoques[0] || gRoques[1]) {
     fen = fen + " ";
-    if (pRoques[0]) fen = fen + "K";
-    if (gRoques[0]) fen = fen + "Q";
-    if (pRoques[1]) fen = fen + "k";
-    if (gRoques[1]) fen = fen + "q";
+    if (pRoques[0] && pRoquePosition(0)) fen = fen + "K";
+    if (gRoques[0] && gRoquePosition(0)) fen = fen + "Q";
+    if (pRoques[1] && pRoquePosition(1)) fen = fen + "k";
+    if (gRoques[1] && gRoquePosition(1)) fen = fen + "q";
   }
 
   return fen;
 }
 
-void importFEN(String f) { //fen simplifiée, sans en passant et règle des 50 coups
+void importFEN(String f) { // Fen simplifiée, sans en passant et règle des 50 coups
   removeAllPieces();
 
-  //roques et trait
+  // Roques et trait
   int pRoqueB = 0, pRoqueN = 0, gRoqueB = 0, gRoqueN = 0;
   int roiRoqueB = 0; int roiRoqueN = 0;
   boolean stopEvaluatingEnd = false;
 
   for (int i = f.length() - 1; i >= 0; i--) {
     if (stopEvaluatingEnd) break;
-    char c = f.charAt(i); //current char
+    char c = f.charAt(i); // Current char
     switch (c) {
       case ' ':
         break;
@@ -1245,18 +1247,18 @@ void importFEN(String f) { //fen simplifiée, sans en passant et règle des 50 c
     }
   }
 
-  //importe la position
+  // Importe la position
   int cursorI = 0, cursorJ = 0;
   boolean stopEvaluatingStart = false;
 
   for (int i = 0; i < f.length(); i++) {
     if (stopEvaluatingStart) break;
-    char c = f.charAt(i); //current char
+    char c = f.charAt(i); // Current char
     int pieceColor = Character.isLowerCase(c) ? 1 : 0;
 
     switch (Character.toLowerCase(c)) {
       case '/':
-        cursorI = 0; cursorJ++; //nouvelle ligne
+        cursorI = 0; cursorJ++; // Nouvelle ligne
       break;
 
       case ' ':
@@ -1295,12 +1297,96 @@ void importFEN(String f) { //fen simplifiée, sans en passant et règle des 50 c
 
   }
 
-  //set les roques
-  if (pRoqueB == 1) grid[7][7].piece.setRoques(1, 0);
-  if (gRoqueB == 1) grid[0][7].piece.setRoques(0, 1);
+  // Règle les roques
+  if (pRoqueB == 1 && pRoquePosition(0)) grid[7][7].piece.setRoques(1, 0);
+  if (gRoqueB == 1 && gRoquePosition(0)) grid[0][7].piece.setRoques(0, 1);
 
-  if (pRoqueN == 1) grid[7][0].piece.setRoques(1, 0);
-  if (gRoqueN == 1) grid[0][0].piece.setRoques(0, 1);
+  if (pRoqueN == 1 && pRoquePosition(1)) grid[7][0].piece.setRoques(1, 0);
+  if (gRoqueN == 1 && gRoquePosition(1)) grid[0][0].piece.setRoques(0, 1);
+}
+
+void toggleTrait() {
+  tourDeQui = opponent(tourDeQui);
+}
+
+boolean pRoquePosition(int qui) {
+  int j_ = (qui == 0 ? 7 : 0);
+  return (grid[4][j_].piece != null && rois[qui].i == 4 && rois[qui].j == j_ && grid[7][j_].piece != null && grid[7][j_].piece.pieceIndex == TOUR_INDEX && grid[7][j_].piece.c == qui);
+}
+
+boolean gRoquePosition(int qui) {
+  int j_ = (qui == 0 ? 7 : 0);
+  return (grid[4][j_].piece != null && rois[qui].i == 4 && rois[qui].j == j_ && grid[0][j_].piece != null && grid[0][j_].piece.pieceIndex == TOUR_INDEX && grid[0][j_].piece.c == qui);
+}
+
+boolean pRoqueCondition(int qui) {
+  int j_ = (qui == 0 ? 7 : 0);
+  return (pRoquePosition(qui) && rois[qui].roquable == 1 && grid[7][j_].piece.petitRoquable == 1);
+}
+
+boolean gRoqueCondition(int qui) {
+  int j_ = (qui == 0 ? 7 : 0);
+  return (gRoquePosition(qui) && rois[qui].roquable == 1 && grid[0][j_].piece.grandRoquable == 1);
+}
+
+void togglePRoqueB() {
+  if (!pRoquePosition(0)) {
+    parametersButtons.get(0).state = false;
+    return;
+  }
+
+  if (pRoqueCondition(0)) {
+    grid[7][7].piece.petitRoquable = 0;
+    if (!gRoqueCondition(0)) rois[0].roquable = 0;
+  } else {
+    grid[7][7].piece.petitRoquable = 1;
+    rois[0].roquable = 1;
+  }
+}
+
+void togglePRoqueN() {
+  if (!pRoquePosition(1)) {
+    parametersButtons.get(2).state = false;
+    return;
+  }
+
+  if (pRoqueCondition(1)) {
+    grid[7][0].piece.petitRoquable = 0;
+    if (!gRoqueCondition(1)) rois[1].roquable = 0;
+  } else {
+    grid[7][0].piece.petitRoquable = 1;
+    rois[1].roquable = 1;
+  }
+}
+
+void toggleGRoqueB() {
+  if (!gRoquePosition(0)) {
+    parametersButtons.get(1).state = false;
+    return;
+  }
+
+  if (gRoqueCondition(0)) {
+    grid[0][7].piece.grandRoquable = 0;
+    if (!pRoqueCondition(0)) rois[0].roquable = 0;
+  } else {
+    grid[0][7].piece.grandRoquable = 1;
+    rois[0].roquable = 1;
+  }
+}
+
+void toggleGRoqueN() {
+  if (!gRoquePosition(1)) {
+    parametersButtons.get(3).state = false;
+    return;
+  }
+
+  if (gRoqueCondition(1)) {
+    grid[0][0].piece.grandRoquable = 0;
+    if (!pRoqueCondition(1)) rois[1].roquable = 0;
+  } else {
+    grid[0][0].piece.grandRoquable = 1;
+    rois[1].roquable = 1;
+  }
 }
 
 /////////////////////////////////////////////////////////////////
@@ -1396,7 +1482,6 @@ ArrayList selectionSortMoves(ArrayList<Move> arr) {
 
 // Retourne le joueur en échec si 2 est passé en argument, sinon ne regarde que le joueur passé en argument
 // Retourne -1 si aucun n'est en échec ou si le joueur testé n'est pas en échec
-
 int playerInCheck(int checkColor) {
 
   if (checkColor == 2) {
@@ -1441,7 +1526,6 @@ int playerInCheck(int checkColor) {
 
 // Reçoit en paramètres la pièce qui a généré les coups et la liste des coups qu'elle a générée
 // Renvoie la liste des coups illégaux : à optimiser
-
 ArrayList<Move> findIllegalMoves(Piece piece, ArrayList<Move> pseudoMoves) {
   ArrayList<Move> illegalMoves = new ArrayList<Move>();
 
