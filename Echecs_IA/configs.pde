@@ -2,7 +2,7 @@
 
 // Configurations diverses
 
-final String name = "Echecs on java";
+final String name = "Échecs on java";
 String startFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq"; // Position de départ par défaut
 
 final boolean MODE_PROBLEME = false; // Activer le mode résolution de problèmes (ou pas)
@@ -35,8 +35,8 @@ Color endColorLichess = new Color(67, 107, 27); // Couleur du bouton de nouvelle
 
 final int HACKER_RATE = 5; // FPS du hacker (correspond entre autres au nombre de scans par seconde)
 final boolean MODE_SANS_AFFICHAGE = true; // Afficher (ou pas) l'échiquier pendant le hacker
-// final int TIME_COPYCAT_FIX = 730; // Mesuré
-final int TIME_COPYCAT_FIX = 830; // Temps (en ms) d'erreur de mesure en trop de time copycat [voir TimeCopycatFix]
+final int MINIMUM_PIXEL_DETECTION = 6; // Nombre minimum de pixels à la suite pour que l'auto-calibration accepte le point
+final int TIME_COPYCAT_FIX = 830; // Temps (en ms) d'erreur de mesure en trop de time copycat (730 ms mesuré) [voir TimeCopycatFix]
 
 /////////////////////////////////////////////////////////////////
 

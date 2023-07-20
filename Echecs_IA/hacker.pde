@@ -4,9 +4,10 @@
 
 // 1) Variables / Données
 // 2) Calibration
-// 3) Scans
-// 4) Hacker sans fin
-// 5) Fonctions très utiles
+// 3) Auto calibration
+// 4) Scans
+// 5) Hacker sans fin
+// 6) Fonctions très utiles
 
 /////////////////////////////////////////////////////////////////
 
@@ -189,13 +190,15 @@ void addPointToCalibration() {
   println("[HACKER] Hacker déjà calibré");
 }
 
-boolean verifyCalibration(int tolerance, boolean confondu) {
+boolean verifyNewGameButton() {
   Color newGameColor = hacker.getPixelColor(hackerPoints[NEWGAME].x, hackerPoints[NEWGAME].y);
   if (newGameColor.getRed() > 120 && newGameColor.getGreen() > 120 && newGameColor.getBlue() > 120) {
     return false;
   }
+  return true;
+}
 
-  // tolerance représente nombre d'erreurs autorisé et confondu si on confond les deux couleurs de pièce
+boolean verifyBoard(int tolerance, boolean confondu) {
   Color B = hackerWhitePieceColor;
   Color N = hackerBlackPieceColor;
   Color A = null;
@@ -244,6 +247,14 @@ boolean verifyCalibration(int tolerance, boolean confondu) {
   return true;
 }
 
+boolean verifyCalibration(int tolerance, boolean confondu) {
+  // Vérifie que l'on n'a pas calibré sur le + (ou pas)
+  if (hackerSite == CHESSCOM && !verifyNewGameButton()) return false;
+
+  // Tolerance représente nombre d'erreurs autorisé et confondu si on confond les deux couleurs de pièce
+  return verifyBoard(tolerance, confondu);
+}
+
 void manualRestoreSaves() {
   restoreCalibrationSaves();
   if (isHumain(0) && !isHumain(1)) {
@@ -256,6 +267,163 @@ void manualForceSaves() {
   if (isHumain(0) && !isHumain(1)) {
     setHackerPOV(1);
   }
+}
+
+/////////////////////////////////////////////////////////////////
+
+// Auto calibration
+
+void autoCalibration() {
+  Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+  Rectangle screenRectangle = new Rectangle(screenSize);
+  BufferedImage image = hacker.createScreenCapture(screenRectangle);
+
+  Color targetWhite = null, targetBlack = null;
+  if (hackerSite == CHESSCOM) {
+    targetWhite = expectChesscomWhitePieceColor;
+    targetBlack = expectChesscomBlackPieceColor;
+  }
+  else if (hackerSite == LICHESS) {
+    targetWhite = expectLichessWhitePieceColor;
+    targetBlack = expectLichessBlackPieceColor;
+  }
+
+  Map<Integer, ArrayList<Integer>> coords = getPointsMap(image, targetBlack);
+
+  int[] minimax = findIntervalY(coords);
+  int minY = minimax[0];
+  int maxY = minimax[1];
+
+  Point[] points = findBoard(image, coords, minY, maxY, targetWhite, targetBlack);
+
+  if (points[0] == null || points[1] ==  null) {
+    println("[HACKER] Échec de l'auto calibration :(");
+    alert("Échec de l'auto calibration", 1500);
+  }
+  else {
+    println("[HACKER] Auto calibration réussie");
+    hacker.mouseMove(points[0].x, points[0].y);
+    delay(100);
+    addPointToCalibration();
+    delay(200);
+    hacker.mouseMove(points[1].x, points[1].y);
+    delay(100);
+    addPointToCalibration();
+  }
+}
+
+// Renvoie une liste des points de la couleur demandée rangés par coordonnée y
+Map<Integer, ArrayList<Integer>> getPointsMap(BufferedImage image, Color targetBlack) {
+  Map<Integer, ArrayList<Integer>> coords = new HashMap<Integer, ArrayList<Integer>>();
+
+  for (int j = 0; j < displayHeight; j++) {
+    for (int i = 0; i < displayWidth; i++) {
+
+      if (!isSameColor(targetBlack, getColor(image, i, j))) continue;
+      if (displayWidth-i > MINIMUM_PIXEL_DETECTION) {
+        for (int n = i; n < i+MINIMUM_PIXEL_DETECTION; n++) {
+          if (!isSameColor(targetBlack, getColor(image, n, j))) continue;
+        }
+      }
+
+      if (coords.get(j) == null) coords.put(j, new ArrayList<Integer>());
+      coords.get(j).add(i);
+    }
+  }
+
+  return coords;
+}
+
+// Renvoie l'intervalle y dans lequel se trouve l'échiquier
+int[] findIntervalY(Map<Integer, ArrayList<Integer>> coords) {
+  // Le minimum est dans l'index 0 et le maximum dans l'index 1
+  int[] minimax = {displayHeight, 0};
+
+  for (Map.Entry<Integer, ArrayList<Integer>> set : coords.entrySet()) {
+    minimax[0] = min(minimax[0], set.getKey());
+    minimax[1] = max(minimax[1], set.getKey());
+  }
+  return minimax;
+}
+
+// Vérifie que l'échiquier (essai d'auto calibration) correspond bien à un échiquier
+boolean autoVerifyBoard(int xDepart, int yDepart, int caseWidth, Color whitePiece, Color blackPiece, BufferedImage image) {
+  Color B = whitePiece;
+  Color N = blackPiece;
+  Color A = null;
+
+  if (isSameColor(B, N)) return false;
+
+  Color[][] expectedBoard = {
+  {N, N, N, N, N, N, N, N},
+  {N, N, N, N, N, N, N, N},
+  {A, A, A, A, A, A, A, A},
+  {A, A, A, A, A, A, A, A},
+  {A, A, A, A, A, A, A, A},
+  {A, A, A, A, A, A, A, A},
+  {B, B, B, B, B, B, B, B},
+  {B, B, B, B, B, B, B, B}};
+
+  Color[][] scannedBoard = new Color[8][8];
+  for (int i = 0; i < 8; i++) {
+    for (int j = 0; j < 8; j++) {
+
+      int x = xDepart + i*caseWidth;
+      int y = yDepart + j*caseWidth;
+      if (x >= 0 && x < displayWidth && y >= 0 && y < displayHeight) scannedBoard[i][j] = getColor(image, x, y);
+      else scannedBoard[i][j] = Color.black;
+
+      if (expectedBoard[j][i] == null) {
+        if (isSimilarColor(scannedBoard[i][j], whitePiece) || isSimilarColor(scannedBoard[i][j], blackPiece)) {
+          return false;
+        }
+        continue;
+      }
+      if (!isSimilarColor(scannedBoard[i][j], expectedBoard[j][i])) return false;
+    }
+  }
+  return true;
+}
+
+// Cherche l'échiquier dans l'écran
+// Si il est trouvé, renvoie un couple de points correspondant aux deux points de calibration
+Point[] findBoard(BufferedImage image, Map<Integer, ArrayList<Integer>> coords, int minY, int maxY, Color whiteColor, Color blackColor) {
+  Point[] points = {null, null};
+
+  for (int y = minY; y < maxY + 1; y++) {
+    if (coords.get(y) == null) continue;
+
+    ArrayList<Integer> valuesX = coords.get(y);
+    int testW = (valuesX.get(getLastCoordIndex(valuesX)) - valuesX.get(0)) / 7;
+
+    // On essaie avec (x+5, y, testW)
+    if (testW != 0) {
+      int index = 0;
+      if (hackerSite == CHESSCOM) index = (valuesX.size() < 6 ? 0 : 5);
+      if (hackerSite == LICHESS) index = (valuesX.size() < 11 ? 0 : 10);
+
+      if (autoVerifyBoard(valuesX.get(index), y, testW, whiteColor, blackColor, image)) {
+        points[0] = new Point(valuesX.get(index), y);
+        points[1] = new Point(valuesX.get(index) + 7*testW, y + 7*testW);
+        return points;
+      }
+    }
+  }
+  return points;
+}
+
+// Récupère l'index de la première coordonnée x de la dernière supposée pièce de la ligne
+int getLastCoordIndex(ArrayList<Integer> values) {
+  for (int i = values.size()-1; i >= 1; i--) {
+    if (values.get(i) - values.get(i-1) > 1) return i;
+  }
+  return 0;
+}
+
+// Récupère la couleur d'un point dans une image
+Color getColor(BufferedImage image, int x, int y) {
+  int rgb = image.getRGB(x, y);
+  return new Color ((rgb >> 16) & 0xFF, (rgb >> 8) & 0xFF, rgb & 0xFF);
 }
 
 /////////////////////////////////////////////////////////////////

@@ -3,7 +3,7 @@
 // TODO :
 
 // Recherche sur un autre thread pour pouvoir faire autre chose en même temps
-// Auto calibration
+// Informations menu hacker
 // La brebis / Statistiques bot
 // Mode tournoi
 // Tester améliorations (killer moves, voir taux d'overwrite dans transpositions...)
@@ -19,6 +19,10 @@ import java.awt.Point;
 import java.awt.datatransfer.*;
 import java.awt.event.InputEvent;
 import java.awt.Robot;
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferByte;
+import java.awt.image.DataBufferInt;
+import java.util.Map;
 import processing.awt.PSurfaceAWT;
 import processing.awt.PSurfaceAWT.SmoothCanvas;
 import processing.sound.*;

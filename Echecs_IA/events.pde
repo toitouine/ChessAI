@@ -99,6 +99,19 @@ void keyPressed() {
   if (key == 'h' || key == 'H') printHelpMenu();
 
   if (gameState == GAME) {
+
+    if (useHacker) {
+      if (hackerState == CALIBRATION) {
+        if (keyCode == ENTER)     addPointToCalibration();
+        if (keyCode == BACKSPACE) manualRestoreSaves();
+        if (keyCode == SHIFT)     manualForceSaves();
+        if (key == ' ') {         autoCalibration(); return; }
+      } else {
+        if (key == 'r' || key == 'R')      endOnHackerDetect();
+        else if (key == 'w' || key == 'W') hackStartGame();
+      }
+    }
+
     if (key == ' ')                    playPause();
     else if (key == 'p' || key == 'P') printPGN();
     else if (key == 'k' || key == 'K') flipBoard();
@@ -116,18 +129,6 @@ void keyPressed() {
     else if (keyCode == LEFT)          rewindBack();
     else if (keyCode == RIGHT)         rewindForward();
     else if (key == 'T')               test();
-
-    if (useHacker) {
-      if (hackerState == CALIBRATION) {
-        if (keyCode == ENTER)     addPointToCalibration();
-        if (keyCode == BACKSPACE) manualRestoreSaves();
-        if (keyCode == SHIFT)     manualForceSaves();
-      }
-      else {
-        if (key == 'r' || key == 'R')      endOnHackerDetect();
-        else if (key == 'w' || key == 'W') hackStartGame();
-      }
-    }
   }
   else if (gameState == EDITOR) {
     if (key == 'l' || key == 'L') toggleAttach();
