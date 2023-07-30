@@ -163,6 +163,11 @@ void toggleGraph() {
 }
 
 void rewindBack() {
+  if (sa.inThreadSearch) {
+    alert("Recherche en cours", 1000);
+    return;
+  }
+
   if (!play || gameEnded) {
     if (movesHistory.size() == 0 || rewindCount == movesHistory.size()) return;
     rewind = true;
@@ -173,6 +178,11 @@ void rewindBack() {
 }
 
 void rewindForward() {
+  if (sa.inThreadSearch) {
+    alert("Recherche en cours", 1000);
+    return;
+  }
+
   if (!play || gameEnded) {
     if (rewindCount <= 0) return;
     movesHistory.get(movesHistory.size() - rewindCount).replay();
@@ -241,6 +251,11 @@ void printPGN() {
 }
 
 void printInfos() {
+  if (sa.inThreadSearch) {
+    alert("Recherche en cours", 1000);
+    return;
+  }
+
   printMaireEval();
   println("Endgame weight : " + endGameWeight);
   println("FEN : " + generateFEN());
@@ -323,6 +338,11 @@ void runPerft() {
 }
 
 void perft(int d) {
+  if (sa.inThreadSearch) {
+    alert("Recherche en cours", 1000);
+    return;
+  }
+
   ArrayList<Move> moves = generateAllLegalMoves(tourDeQui, true, true);
   int numPos = 0;
   int total = 0;

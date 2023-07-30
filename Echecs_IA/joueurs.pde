@@ -46,8 +46,13 @@ class Joueur {
   }
 
   void play() {
-    if (name.equals(AI_NAME[HUMAIN_INDEX])) return;
-    player.play();
+    if (isHumain(this.c)) return;
+
+    if (useHacker) player.play();
+    else if (!sa.inThreadSearch) {
+      savePiecesPosition();
+      thread("playAI");
+    }
   }
 
   float getScore() {
@@ -65,6 +70,11 @@ class Joueur {
   void addTotalScore(int add) {
     totalScores[this.index] += add;
   }
+}
+
+public void playAI() {
+  sa.beginThread();
+  joueurs.get(tourDeQui).player.play();
 }
 
 /////////////////////////////////////////////////////////////////
@@ -90,7 +100,10 @@ class IA {
     if (!(MODE_SANS_AFFICHAGE && useHacker)) cursor(WAIT);
 
     if (nbTour <= AI_OUVERTURE[joueurs.get(this.c).index]) {
-     if (this.tryPlayingBookMove()) return;
+     if (this.tryPlayingBookMove()) {
+       sa.endThread();
+       return;
+     }
     }
 
     // Recherche du meilleur coup
@@ -98,25 +111,27 @@ class IA {
     if (this.useIterativeDeepening) posEval = this.iterativeDeepening();
     else posEval = this.findBestMove();
 
-    stopSearch = false;
+    // On vérifie que la partie n'est pas terminée et que la recherche ne soit pas interrompue par autre chose
+    // Si on utilise le hacker, la recherche n'est pas sur un autre thread donc elle n'est pas interrompue
+    if (!gameEnded && (sa.inThreadSearch || useHacker)) {
+      // Joue le coup
+      this.bestMoveFound.play();
+
+      // Affichage des statistiques dans la console et l'interface
+      if (!(MODE_SANS_AFFICHAGE && useHacker)) this.updateStats(posEval);
+
+      // Reset les statistiques pour la prochaine recherche
+      this.resetStats();
+    }
+
     cursor(ARROW);
-
-    // Ne joue pas le coup (et n'affiche pas les statistiques) si la partie est terminée
-    if (gameEnded) return;
-
-    // Joue le coup
-    this.bestMoveFound.play();
-
-    // Affichage des statistiques dans la console et l'interface
-    if (!(MODE_SANS_AFFICHAGE && useHacker)) this.updateStats(posEval);
-
-    // Reset les statistiques pour la prochaine recherche
-    this.resetStats();
+    stopSearch = false;
+    sa.endThread();
   }
 
   /////////////////////////////////////////////////////////////////
 
-  // Recherche rapide (pour les aides notamment)
+  // Recherche rapide (pour les aides)
   Move getBestMove(int time) {
     sa.setTime(this.c, time);
     sa.startSearch(this.c);
@@ -148,8 +163,8 @@ class IA {
 
     float timeBefore = millis();
     float posEval;
-    sa.inNormalSearch = this.c;
-    sa.setDepths(str(this.depthSearched), this.c);
+    sa.startDepthSearch(this.c);
+    sa.setDepth(str(this.depthSearched), this.c);
 
     if (this instanceof LesMoutons) {
       SheepEval sheep = this.moyennemax(this.depthSearched, 0, -Infinity, Infinity, null);
@@ -159,12 +174,12 @@ class IA {
     }
 
     this.time = millis() - timeBefore;
-    sa.inNormalSearch = -1;
+    sa.stopDepthSearch();
 
     return posEval;
   }
 
-  // Iterative Deepening : Recherche le plus loin jusque plus de temps de réflexion
+  // Iterative Deepening : Recherche le plus loin possible jusque plus de temps de réflexion
   float iterativeDeepening() {
     // Sauvegardes des statistiques
     Move lastBestMove = null;
@@ -186,23 +201,19 @@ class IA {
 
     // Iterative deepening
     for (int d = 1; d < 10000; d++) {
-      // Pour éviter de sortir trop vite de la boucle en cas de position "évidente" (répétition immédiate)
+      // Pour éviter de sortir de la boucle en cas de position "évidente" (répétition immédiate)
       if (d == 1001) d = 1000;
 
       if (!(MODE_SANS_AFFICHAGE && useHacker)) this.resetStats();
       this.cuts = new int[d];
 
-      // effectue la recherche à la profondeur
+      // Effectue la recherche à la profondeur
       float eval;
-      if (this instanceof LesMoutons) {
-        SheepEval sheep = this.moyennemax(d, 0, -Infinity, Infinity, null);
-        eval = -sheep.eval;
-      } else {
-        eval = -this.minimax(d, 0, -Infinity, Infinity, null);
-      }
+      if (this instanceof LesMoutons) eval = -this.moyennemax(d, 0, -Infinity, Infinity, null).eval;
+      else eval = -this.minimax(d, 0, -Infinity, Infinity, null);
 
       // Si la recherche a été interrompue par search controller (ou défaite)
-      if (gameEnded) sa.endSearch();
+      if (gameEnded) sa.stopSearch();
       if (stopSearch) {
         if (!(MODE_SANS_AFFICHAGE && useHacker)) {
           this.numQuiet = lastNumQuiet;
@@ -243,7 +254,7 @@ class IA {
         lastNumTranspositions = this.numTranspositions;
 
         float evalToDisplay = (this.c == 0) ? -eval : eval;
-        sa.setDepths(str(d), this.c);
+        sa.setDepth(str(d), this.c);
         if (this instanceof Loic) sa.setEvals(evalToStringLoic(evalToDisplay), this.c);
         else sa.setEvals(evalToStringMaire(evalToDisplay), this.c);
         sa.setBestMoves(getPGNString(this.bestMoveFound), this.c);
@@ -258,7 +269,7 @@ class IA {
       if (abs(eval) > 20000) {
         this.depthSearched = d;
         this.time = sa.getTime(this.c);
-        sa.endSearch();
+        sa.stopSearch();
         delay(min(850, (int)this.time));
         return -eval;
       }
@@ -322,7 +333,7 @@ class IA {
       }
       sa.setEvals("Book", this.c);
       sa.setBestMoves(getPGNString(this.bestMoveFound), this.c);
-      sa.setDepths("/", this.c);
+      sa.setDepth("/", this.c);
       sa.setPositions("/", this.c);
       sa.setTris("/", this.c);
       sa.setTranspositions("/", this.c);
@@ -453,7 +464,7 @@ class IA {
     }
     if (stats) println();
 
-    // Update le graphique, la valeur de l'évaluation et search controller
+    // Actualise le graphique, la valeur de l'évaluation et search controller
     this.updateSearchController(posEval, tri);
     if (this instanceof Loic) joueurs.get(this.c).lastEval = evalToStringLoic(posEval);
     else joueurs.get(this.c).lastEval = evalToStringMaire(posEval);
@@ -466,7 +477,7 @@ class IA {
     else sa.setEvals(evalToStringMaire(posEval), this.c);
 
     sa.setBestMoves(getPGNString(this.bestMoveFound), this.c);
-    sa.setDepths(str(this.depthSearched), this.c);
+    sa.setDepth(str(this.depthSearched), this.c);
     sa.setPositions(formatInt(this.numPos), this.c);
     sa.setTris(roundNumber(tri, 2), this.c);
     sa.setTranspositions(formatInt(this.numTranspositions), this.c);
@@ -505,7 +516,10 @@ class Antoine extends IA {
   @Override
   void play() {
     if (nbTour <= AI_OUVERTURE[joueurs.get(this.c).index]) {
-     if (this.tryPlayingBookMove()) return;
+      if (this.tryPlayingBookMove()) {
+        sa.endThread();
+        return;
+      }
     }
 
     // Génération des coups légaux
@@ -520,7 +534,7 @@ class Antoine extends IA {
     float eval = random(-10, 10);
 
     sa.setEvals(evalToStringMaire(eval), this.c);
-    sa.setDepths(str(floor(random(-10, 10))), this.c);
+    sa.setDepth(str(floor(random(-10, 10))), this.c);
     sa.setPositions(formatInt(floor(random(10, 10000))), this.c);
     sa.setTris(roundNumber(random(0, 1), 2), this.c);
     sa.setTranspositions(formatInt(floor(random(0, 10000))), this.c);
@@ -531,6 +545,10 @@ class Antoine extends IA {
 
     println("[BOT] " + joueurs.get(this.c).name + " : " + getPGNString(moves.get(moveIndex)));
     println();
+
+    cursor(ARROW);
+    stopSearch = false;
+    sa.endThread();
   }
 }
 

@@ -180,7 +180,6 @@ void addPointToCalibration() {
   for (int i = 0; i < CALIBRATION_NUMBER; i++) {
     if (hackerPoints[i] == null) {
       hackerPoints[i] = copyPoint(p);
-      if (i == NEWGAME-1 && hackerSite == CHESSCOM) alert("Ne pas calibrer sur le + !", 60000);
       if (i == CALIBRATION_NUMBER-1) calibrerHacker();
       return;
     }
@@ -274,6 +273,8 @@ void manualForceSaves() {
 // Auto calibration
 
 void autoCalibration() {
+  resetCalibrationData();
+
   Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
   Rectangle screenRectangle = new Rectangle(screenSize);
   BufferedImage image = hacker.createScreenCapture(screenRectangle);

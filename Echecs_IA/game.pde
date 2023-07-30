@@ -166,6 +166,8 @@ void setRandomPlayers() {
 // Redémarrage / Retour au menu
 
 void resetGame(boolean menu) {
+  if (sa.inThreadSearch) sa.abortSearch();
+
   // Reset les timers
   if (useTime) {
     ta.resetTimers();

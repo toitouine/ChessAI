@@ -1,4 +1,9 @@
 void test() {
+  if (sa.inThreadSearch) {
+    alert("Recherche en cours", 1000);
+    return;
+  }
+
   // Move move = new Move(grid[1][7].piece, 2, 5, null, 0);
   // Move move2 = new Move(grid[4][6].piece, 4, 4, null, 0);
   // Move move = new Move(grid[4][4].piece, 3, 3, grid[3][3].piece, 0);
@@ -12,7 +17,7 @@ void test() {
   int before = millis();
 
   for (int i = 0; i < numTest; i++) {
-    generateAllLegalMoves(tourDeQui, true, true);
+    savePiecesPosition();
     count++;
     if (i % pas == 0) println(i);
   }

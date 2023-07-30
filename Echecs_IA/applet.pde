@@ -8,8 +8,9 @@ public class SearchApplet extends PApplet {
   boolean showDepthTracker = false;
 
   // -1 : aucun, 0 : blanc, 1 : noir
-  int inSearch = -1; // avec iterative deepening
-  int inNormalSearch = -1; // sans iterative deepening
+  int inIDSearch = -1; // Recherche avec iterative deepening
+  int inDepthSearch = -1; // Recherche sans iterative deepening
+  boolean inThreadSearch = false; // Recherche lancée sur un thread
   int searchStartTime;
   int[] savedTimes = {0, 0};
   int[] times = {0, 0};
@@ -38,20 +39,20 @@ public class SearchApplet extends PApplet {
 
   public void draw() {
 
-    if (this.inSearch != -1) {
-      if (millis() - this.searchStartTime >= this.times[this.inSearch]) {
-        sa.endSearch();
+    if (this.inIDSearch != -1) {
+      if (millis() - this.searchStartTime >= this.times[this.inIDSearch]) {
+        this.stopSearch();
       }
 
-      if (inSearch >= 0 && joueurs.get(inSearch).player != null) {
-        positions[inSearch] = formatInt(joueurs.get(inSearch).player.numPos);
-        transpositions[inSearch] = formatInt(joueurs.get(inSearch).player.numTranspositions);
+      if (this.inIDSearch != -1 && joueurs.get(this.inIDSearch).player != null) {
+        positions[this.inIDSearch] = formatInt(joueurs.get(this.inIDSearch).player.numPos);
+        transpositions[this.inIDSearch] = formatInt(joueurs.get(this.inIDSearch).player.numTranspositions);
       }
     }
 
-    if (this.inNormalSearch != -1 && joueurs.get(inNormalSearch).player != null) {
-      positions[inNormalSearch] = formatInt(joueurs.get(inNormalSearch).player.numPos);
-      transpositions[inNormalSearch] = formatInt(joueurs.get(inNormalSearch).player.numTranspositions);
+    else if (this.inDepthSearch != -1 && joueurs.get(this.inDepthSearch).player != null) {
+      positions[this.inDepthSearch] = formatInt(joueurs.get(this.inDepthSearch).player.numPos);
+      transpositions[this.inDepthSearch] = formatInt(joueurs.get(this.inDepthSearch).player.numTranspositions);
     }
 
     if (!show || gameState != GAME || (MODE_SANS_AFFICHAGE && useHacker && hackerState != CALIBRATION)) return;
@@ -100,15 +101,47 @@ public class SearchApplet extends PApplet {
     surface.setLocation(mouse.x - sizeW/2, mouse.y - sizeH/2);
   }
 
+  /////////////////////////////////////////////////////////////////
+
+  // Démarrage d'une recherche sur un autre thread (à appeler au tout début)
+  public void beginThread() {
+    inThreadSearch = true;
+  }
+
+  // Arrêt de la recherche sur thread (à appeler à la fin)
+  public void endThread() {
+    inThreadSearch = false;
+  }
+
   public void startSearch(int c) {
-    this.inSearch = c;
+    this.inIDSearch = c;
     this.searchStartTime = millis();
   }
 
-  public void endSearch() {
-    this.inSearch = -1;
+  public void stopSearch() {
+    this.inIDSearch = -1;
     stopSearch = true;
   }
+
+  public void startDepthSearch(int c) {
+    this.inDepthSearch = c;
+  }
+
+  public void stopDepthSearch() {
+    this.inDepthSearch = -1;
+  }
+
+  // public boolean isInSearch() {
+  //   return (this.inThreadSearch || this.inIDSearch || this)
+  // }
+
+  public void abortSearch() {
+    this.stopSearch();
+    this.stopDepthSearch();
+    this.endThread();
+  }
+
+  /////////////////////////////////////////////////////////////////
 
   public void setTimes(int timeForSearch1, int timeForSearch2) {
     this.times[0] = timeForSearch1;
@@ -129,7 +162,7 @@ public class SearchApplet extends PApplet {
     evals[c] = eval;
   }
 
-  public void setDepths(String depth, int c) {
+  public void setDepth(String depth, int c) {
     depths[c] = depth;
   }
 

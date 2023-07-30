@@ -2,8 +2,18 @@
 
 // TODO :
 
+// Auto calibration nouvelle partie
+// Hacker plus pratique
 // Recherche sur un autre thread pour pouvoir faire autre chose en même temps
-// Informations menu hacker
+// Liste des choses à interdire pendant la recherche :
+// - voir updateBoard OK
+// - infos (fen, hash key, eval statique, endgameweight) OK
+// - fonctions test et perft OK
+// - générer les coups (ou en parallèle) OK
+// - gérer la fin de partie OK
+// - rewind OK
+// - tester le hacker
+// - réparer Antoine OK
 // La brebis / Statistiques bot
 // Mode tournoi
 // Tester améliorations (killer moves, voir taux d'overwrite dans transpositions...)

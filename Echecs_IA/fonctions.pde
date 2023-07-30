@@ -106,7 +106,7 @@ String evalToStringLoic(float eval) {
 }
 
 boolean blockPlaying() {
-  return (!play || gameEnded || rewind || (useHacker && hackerState == CALIBRATION));
+  return (!play || sa.inThreadSearch || gameEnded || rewind || (useHacker && hackerState == CALIBRATION));
 }
 
 Object GetFromClipboard(DataFlavor flavor) {
@@ -169,6 +169,8 @@ void error(String function, String message) {
 }
 
 void helpMoveWhite() {
+  if (sa.inThreadSearch) return;
+
   if (tourDeQui != 0 || useHacker) return;
   cursor(WAIT);
   LeMaire cmaire = new LeMaire(0, 7, 30, true);
@@ -178,6 +180,8 @@ void helpMoveWhite() {
 }
 
 void helpMoveBlack() {
+  if (sa.inThreadSearch) return;
+
   if (tourDeQui != 1 || useHacker) return;
   cursor(WAIT);
   LeMaire cmaire = new LeMaire(1, 7, 30, true);
@@ -613,6 +617,21 @@ void drawHackerPage() {
   String bd = (hackerPoints[DOWNRIGHT] == null) ? "___" : str(hackerPoints[DOWNRIGHT].x) + " ; " + str(hackerPoints[DOWNRIGHT].y);
   textSize(20 * w/75);
   text("HG : " + hg + "     " + "BD : " + bd, (width-offsetX)/2 + offsetX, rectY + (100*w/75)/1.15);
+
+  // Informations en bas
+  fill(255);
+  rectMode(CORNER);
+  rect(offsetX + 0.25*w, offsetY + 5.75*w, 7.5*w, 2*w);
+  fill(color(#b33430));
+  textSize(22 * w/75);
+  text("Ne pas calibrer la nouvelle partie sur le +", offsetX + 4*w, offsetY + 7.35*w);
+  textSize(19 * w/75);
+  fill(0);
+  textAlign(LEFT, CENTER);
+  text("[ENTRÉE] Ajouter un point de calibration", offsetX+0.35*w, offsetY+6*w);
+  text("[SUPPR] Restaurer les sauvegardes avec vérification", offsetX+0.35*w, offsetY+6.3*w);
+  text("[SHIFT]  Forcer la restauration des sauvegardes", offsetX+0.35*w, offsetY+6.6*w);
+  text("[ESPACE] Auto calibration", offsetX+0.35*w, offsetY+6.9*w);
 }
 
 void drawSavedPosition() {
@@ -730,6 +749,7 @@ void updateDraggedArrow(int i, int j) {
 }
 
 void handleEndScreen() {
+  if (useHacker) yEndScreen = targetEndScreenY;
   if (yEndScreen < targetEndScreenY) {
     float dy = targetEndScreenY - yEndScreen;
     dy = max(dy, 5);
@@ -821,6 +841,12 @@ void drawBoard() {
 
   for (int i = 0; i < piecesToDisplay.size(); i++) {
     piecesToDisplay.get(i).show();
+  }
+}
+
+void savePiecesPosition() {
+  for (int i = 0; i < piecesToDisplay.size(); i++) {
+    piecesToDisplay.get(i).savePosition();
   }
 }
 

@@ -18,6 +18,9 @@ class Piece {
   String code, type;
   boolean dragging;
 
+  // Sauvegarde la position des pièces pendant la recherche (sur autre thread)
+  Cell saveCase = null;
+
   int roquable = -1, petitRoquable = -1, grandRoquable = -1;
 
   int maireEval; //Matériel
@@ -35,16 +38,18 @@ class Piece {
     noStroke();
 
     float posX, posY;
+    Cell displayCase = (sa.inThreadSearch && !SHOW_SEARCH_PIECES ? this.saveCase : grid[this.i][this.j]);
+
     if (this.dragging) {
       posX = mouseX;
       posY = mouseY;
     } else {
       if (pointDeVue) {
-        posX = this.i*w + w/2 + offsetX;
-        posY = this.j*w + w/2 + offsetY;
+        posX = displayCase.i*w + w/2 + offsetX;
+        posY = displayCase.j*w + w/2 + offsetY;
       } else {
-        posX = width - (this.i*w + w/2);
-        posY = height - (this.j*w + w/2);
+        posX = width - (displayCase.i*w + w/2);
+        posY = height - (displayCase.j*w + w/2);
       }
     }
 
@@ -131,6 +136,10 @@ class Piece {
         if (grid[i][j].piece == null) grid[i][j].freeMove = true;
       }
     }
+  }
+
+  void savePosition() {
+    this.saveCase = grid[this.i][this.j];
   }
 }
 

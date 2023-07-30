@@ -6,35 +6,37 @@ final String name = "Échecs on java";
 String startFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq"; // Position de départ par défaut
 
 final boolean MODE_PROBLEME = false; // Activer le mode résolution de problèmes (ou pas)
-final int TIME_WAIT_AT_START = 750; // Temps (en millisecondes) avant que les IAs commencent à jouer après le lancement de la partie
 final boolean TIME_CONTROL = true; // Activer le temps (ou pas)
+final int TIME_WAIT_AT_START = 750; // Temps (en millisecondes) avant que les IAs commencent à jouer après le lancement de la partie
 final int SOUND_CONTROL = 0; // Contrôle du son (0 = aucun / 1 = partie / 2 = musique)
+final boolean SHOW_SEARCH_PIECES = false; // Affiche les pièces pendant la recherche
 
 /////////////////////////////////////////////////////////////////
 
 // Configurations du hacker [voir hacker config helper]
 
 int hackerSite = CHESSCOM; // Hacker sur chess.com (CHESSCOM) ou lichess (LICHESS)
-boolean hackerSansFin = true; // Activer le hacker sans fin (ou pas), permet de relancer automatiquement les parties
-int hackerTestRestartCooldown = 1300; // Temps (ms) entre chaque scan du hacker pour relancer la partie
-int scansBetweenEndDetect = 50; // Nombre de scans entre chaque détection de fin de partie
-int waitsBetweenStartRetry = 25; // Nombre d'essais de relance de partie avant de relancer une nouvelle fois (anti-revanche sur chess.com)
-int timeBeforeHackerRestart = 3500; // Temps d'attente avant de redémarrer une partie
-int timeCopycatSize = 3; // Taille du tableau des deltaTimeHistory de time copycat
+final boolean hackerSansFin = true; // Activer le hacker sans fin (ou pas), permet de relancer automatiquement les parties
 
-Color coupChesscomWhite = new Color(246, 249, 87); // Couleur de surlignage des cases blanches sur chess.com [voir config helper]
-Color coupChesscomBlack = new Color(174, 195, 34); // Couleur de surlignage des cases noires sur chess.com [voir config helper]
-Color expectChesscomWhitePieceColor = new Color(234, 184, 99); // Couleur des pièces blanches de chess.com (pour l'auto calibration) [voir config helper]
-Color expectChesscomBlackPieceColor = new Color(42, 42, 42); // Couleur des pièces noires de chess.com (pour l'auto calibration) [voir config helper]
+final int hackerTestRestartCooldown = 1300; // Temps (ms) entre chaque scan du hacker pour relancer la partie
+final int scansBetweenEndDetect = 50; // Nombre de scans entre chaque détection de fin de partie
+final int waitsBetweenStartRetry = 25; // Nombre d'essais de relance de partie avant de relancer une nouvelle fois (anti-revanche sur chess.com)
+final int timeBeforeHackerRestart = 3500; // Temps d'attente avant de redémarrer une partie
+final int timeCopycatSize = 3; // Taille du tableau des deltaTimeHistory de time copycat
 
-Color coupLichessWhite = new Color(194, 202, 87); // Couleur de surlignage des cases blanches sur Lichess [voir config helper]
-Color coupLichessBlack = new Color(153, 147, 45); // Couleur de surlignage des cases noires sur Lichess [voir config helper]
-Color expectLichessWhitePieceColor = new Color(254, 254, 254); // Couleur des pièces blanches de Lichess (pour l'auto calibration) [voir config helper]
-Color expectLichessBlackPieceColor = new Color(42, 42, 42); // Couleur des pièces noires de Lichess (pour l'auto calibration) [voir config helper]
-Color endColorLichess = new Color(67, 107, 27); // Couleur du bouton de nouvelle partie de Lichess (quand la souris est dessus) [voir config helper]
+final Color coupChesscomWhite = new Color(246, 249, 87); // Couleur de surlignage des cases blanches sur chess.com [voir config helper]
+final Color coupChesscomBlack = new Color(174, 195, 34); // Couleur de surlignage des cases noires sur chess.com [voir config helper]
+final Color expectChesscomWhitePieceColor = new Color(234, 184, 99); // Couleur des pièces blanches de chess.com (pour l'auto calibration) [voir config helper]
+final Color expectChesscomBlackPieceColor = new Color(42, 42, 42); // Couleur des pièces noires de chess.com (pour l'auto calibration) [voir config helper]
+
+final Color coupLichessWhite = new Color(194, 202, 87); // Couleur de surlignage des cases blanches sur Lichess [voir config helper]
+final Color coupLichessBlack = new Color(153, 147, 45); // Couleur de surlignage des cases noires sur Lichess [voir config helper]
+final Color expectLichessWhitePieceColor = new Color(255, 255, 255); // Couleur des pièces blanches de Lichess (pour l'auto calibration) [voir config helper]
+final Color expectLichessBlackPieceColor = new Color(42, 42, 42); // Couleur des pièces noires de Lichess (pour l'auto calibration) [voir config helper]
+final Color endColorLichess = new Color(67, 107, 27); // Couleur du bouton de nouvelle partie de Lichess (quand la souris est dessus) [voir config helper]
 
 final int HACKER_RATE = 5; // FPS du hacker (correspond entre autres au nombre de scans par seconde)
-final boolean MODE_SANS_AFFICHAGE = true; // Afficher (ou pas) l'échiquier pendant le hacker
+final boolean MODE_SANS_AFFICHAGE = false; // Afficher (ou pas) l'échiquier pendant le hacker
 final int MINIMUM_PIXEL_DETECTION = 6; // Nombre minimum de pixels à la suite pour que l'auto-calibration accepte le point
 final int TIME_COPYCAT_FIX = 830; // Temps (en ms) d'erreur de mesure en trop de time copycat (730 ms mesuré) [voir TimeCopycatFix]
 
@@ -43,7 +45,8 @@ final int TIME_COPYCAT_FIX = 830; // Temps (en ms) d'erreur de mesure en trop de
 // Configuration des IAs
 
 // Pour ajouter une IA, créer toutes les configurations nécessaires en étendant les tableaux et en spécifiant l'index (ajouter 1 au nombre d'IAs)
-// Créer la classe de la nouvelle IA dans joueurs.pde en héritant de la classe IA (respecter les noms de fonctions de Cmère)
+// Créer la classe de la nouvelle IA dans joueurs.pde en héritant de la classe IA
+// Implémenter minimax et evaluation (et autres si besoin), modifier bestMoveFound et les statistiques pendant la recherche
 // Référencer dans le constructeur de la classe Joueur la classe correspondant à la nouvelle IA
 
 // Index des différentes IAs (ou humain) dans les tableaux de configurations (ne pas mélanger !)
@@ -57,14 +60,14 @@ final int STOCKFISH_INDEX = 5;
 final int CONSTANTE_DE_STOCKFISH = 3; // On ne sait pas
 
 final int AI_NUMBER = 6; // Nombre d'IAs et humain différents
-String[] AI_NAME = {"Humain", "LeMaire", "LesMoutons", "Loic", "Antoine", "Stockfish"}; // Nom complet des joueurs
-String[] AI_CODE = {"humain", "lemaire", "lesmoutons", "loic", "antoine", "stockfish"}; // Nom des joueurs (utilisé notamment pour les images)
+final String[] AI_NAME = {"Humain", "LeMaire", "LesMoutons", "Loic", "Antoine", "Stockfish"}; // Nom complet des joueurs
+final String[] AI_CODE = {"humain", "lemaire", "lesmoutons", "loic", "antoine", "stockfish"}; // Nom des joueurs (utilisé notamment pour les images)
 
-String[] AI_ELO = {"???", "3845", "1400", "-142", "100", "284"}; // Élo des différentes IAs
-String[] AI_TITLE = {"", "GM", "Mouton", "IM", "", "Noob"}; // Titre des différentes IAs
-int[] AI_OUVERTURE = {0, 10, 5, 0, 0, 0}; // Nombre maximum de coups du livre d'ouverture
+final String[] AI_ELO = {"???", "3845", "1400", "-142", "100", "284"}; // Élo des différentes IAs
+final String[] AI_TITLE = {"", "GM", "Mouton", "IM", "", "Noob"}; // Titre des différentes IAs
+final int[] AI_OUVERTURE = {0, 10, 5, 0, 0, 0}; // Nombre maximum de coups du livre d'ouverture
 
-String[] AI_DESCRIPTION = { // Description de chaque IA
+final String[] AI_DESCRIPTION = { // Description de chaque IA
   "",
   "Très bon en ouverture et en finale",
   "Voleur, arnaqueur, tricheur, menaces en un !!",
@@ -72,7 +75,7 @@ String[] AI_DESCRIPTION = { // Description de chaque IA
   "Un jeu aléatoire de qualité",
   "Extrêmement difficile de perdre contre lui"
 };
-String[] AI_VICTORY = { // Texte de victoire de chaque IA
+final String[] AI_VICTORY = { // Texte de victoire de chaque IA
   "",
   "Cmaire",
   "YOU LOUSE",
@@ -147,9 +150,9 @@ String[] savedFENSname = {
 // Moutons
 
 final boolean ENABLE_ARNAQUES = true; // Activer les arnaques des moutons (ou pas)
-int missclickCooldown = 6; // Nombre minimum de tour entre chaque missclick
+final int missclickCooldown = 6; // Nombre minimum de tour entre chaque missclick
 
-String[] moutonMessages = { // Liste des messages envoyés par les moutons
+final String[] moutonMessages = { // Liste des messages envoyés par les moutons
   "Moutonn !! YOU LOUSE",
   "YOU CHEAT",
   "LOIC LA GROSSE VACHE",
@@ -166,7 +169,7 @@ String[] moutonMessages = { // Liste des messages envoyés par les moutons
 
 // Valeurs positionnelles du maire
 
-int[] kingSafetyPenalty = {
+final int[] kingSafetyPenalty = {
     0,   0,   1,   2,   3,   5,   7,   9,  12,  15,
    18,  22,  26,  30,  35,  39,  44,  50,  56,  62,
    68,  75,  82,  85,  89,  97, 105, 113, 122, 131,
@@ -179,7 +182,7 @@ int[] kingSafetyPenalty = {
   500, 500, 500, 500, 500, 500, 500, 500, 500, 500,
 };
 
-float[][] maireKnightGrid = {
+final float[][] maireKnightGrid = {
   {-50, -40, -30, -30,  -30, -30, -40, -50},
   {-40, -20,   0,   5,    0,   5, -20, -40},
   {-30,   0,  10,  15,   15,  10,   0, -30},
@@ -190,7 +193,7 @@ float[][] maireKnightGrid = {
   {-50, -40, -30, -30,  -30, -30, -40, -50}
 };
 
-float[][] maireQueenGrid = {
+final float[][] maireQueenGrid = {
   {-20, -10, -10, -5, 0, -10, -10, -20},
   {-10,   0,   0,  0, 0,   5,   0, -10},
   {-10,   0,   5,  5, 5,   5,   5, -10},
@@ -201,7 +204,7 @@ float[][] maireQueenGrid = {
   {-20, -10, -10, -5, 0, -10, -10, -20}
 };
 
-float[][] maireBishopGrid = {
+final float[][] maireBishopGrid = {
   {-20, -10, -10, -10, -10, -10, -10, -20},
   {-10,   0,   0,   5,   0,  10,   5, -10},
   {-10,   0,   5,   5,  10,  10,   0, -10},
@@ -212,7 +215,7 @@ float[][] maireBishopGrid = {
   {-20, -10, -10, -10, -10, -10, -10, -20},
 };
 
-float[][] mairePawnGrid = {
+final float[][] mairePawnGrid = {
   {100, 50, 10,  5,  0,   5,   5, 0},
   {100, 50, 10,  5,  0,  -5,  10, 0},
   {100, 50, 20, 10,  0, -10,  10, 0},
@@ -222,7 +225,7 @@ float[][] mairePawnGrid = {
   {100, 50, 10,  5,  0,  -5,  10, 0},
   {100, 50, 10,  5,  0,   5,   5, 0}
 };
-float[][] mairePawnGridEnd = {
+final float[][] mairePawnGridEnd = {
   {0, 100, 60, 40, 20, 10, 10, 0},
   {0, 100, 60, 40, 20, 10, 10, 0},
   {0, 100, 40, 30, 20, 10, 10, 0},
@@ -233,7 +236,7 @@ float[][] mairePawnGridEnd = {
   {0, 100, 60, 40, 20, 10, 10, 0}
 };
 
-float[][] maireKingGrid = {
+final float[][] maireKingGrid = {
   {-30, -30, -30, -30, -20, -10, 20,  20},
   {-40, -40, -40, -40, -30, -20, 20,  35},
   {-40, -40, -40, -40, -30, -20,  0, -10},
@@ -244,7 +247,7 @@ float[][] maireKingGrid = {
   {-30, -30, -30, -30, -20, -10, 20,  20},
 };
 
-float[][] maireRookGrid = {
+final float[][] maireRookGrid = {
   {0,  5, -5, -5, -5, -5, -5, 0},
   {0, 10,  0,  0,  0,  0,  0, 0},
   {0, 10,  0,  0,  0,  0,  0, 0},
@@ -255,7 +258,7 @@ float[][] maireRookGrid = {
   {0,  5, -5, -5, -5, -5, -5, 0}
 };
 
-float[][] zeroArray = {
+final float[][] zeroArray = {
   {0, 0, 0, 0, 0, 0, 0, 0},
   {0, 0, 0, 0, 0, 0, 0, 0},
   {0, 0, 0, 0, 0, 0, 0, 0},
@@ -270,7 +273,7 @@ float[][] zeroArray = {
 
 // Valeurs positionnelles de Loic
 
-float[][] loicKingGrid = {
+final float[][] loicKingGrid = {
   {-30, -30, -30, -30, -20, -10,  5,  0},
   {-40, -40, -40, -40, -30, -20,  5,  0},
   {-40, -40, -40, -40, -30, -20,  0,  0},
@@ -281,7 +284,7 @@ float[][] loicKingGrid = {
   {-30, -30, -30, -30, -20, -10,  5,  0},
 };
 
-float[][] loicQueenGrid = {
+final float[][] loicQueenGrid = {
   {-20, -10, -10, -5, 0, -10, -10, -20},
   {-10,   0,   0,  0, 0,   5,   0, -10},
   {-10,   0,   5,  5, 5,   5,  -5, -10},
@@ -292,7 +295,7 @@ float[][] loicQueenGrid = {
   {-20, -10, -10, -5, 0, -10, -10, -20}
 };
 
-float[][] loicBishopGrid = {
+final float[][] loicBishopGrid = {
   {-20, -10, - 10,  -10, -10, -10, -10, -20},
   {-10,   0,    0,  -15,   0, -10,  40,   0},
   {-10,   0,  -15,  -15, -10, -10, -20, -10},
@@ -303,7 +306,7 @@ float[][] loicBishopGrid = {
   {-20, -10,  -10,  -10, -10, -10, -10, -20},
 };
 
-float[][] loicKnightGrid = {
+final float[][] loicKnightGrid = {
   {-50, -40, -30, -30, -30, -30, -40,  -50},
   {-40, -20,   0,   0,   0,   0, -20,  -40},
   {-30,   0,   0,   0,   0, -10,   0,  -30},
@@ -314,7 +317,7 @@ float[][] loicKnightGrid = {
   {-50, -40, -30, -30, -30, -30, -40,  -50}
 };
 
-float[][] loicRookGrid = {
+final float[][] loicRookGrid = {
   {0,  5, -5, -5, -5, -5, -5, 10},
   {0,  0,  0,  0,  0,  0,  0,  0},
   {0,  0,  0,  0,  0,  0,  0,  0},
@@ -325,7 +328,7 @@ float[][] loicRookGrid = {
   {0,  5, -5, -5, -5, -5, -5, 10}
 };
 
-float[][] loicPawnGrid = {
+final float[][] loicPawnGrid = {
   {100, 50, 10, 5, 0,  20,   5, 0},
   {100, 50, 10, 5, 0,  20,  10, 0},
   {100, 50, 20, 5, 0, -10,  20, 0},
@@ -338,11 +341,11 @@ float[][] loicPawnGrid = {
 
 /////////////////////////////////////////////////////////////////
 
-int maireEvalArray[] = {100000, 900, 500, 330, 320, 100}; // Valeurs de chaque pièce selon LeMaire
-int loicEvalArray[] = {100000, 900, 150, 300, 300, 100}; // Valeurs de chaque pièce selon Loic
+final int maireEvalArray[] = {100000, 900, 500, 330, 320, 100}; // Valeurs de chaque pièce selon LeMaire
+final int loicEvalArray[] = {100000, 900, 150, 300, 300, 100}; // Valeurs de chaque pièce selon Loic
 
-float[][] mairePosArray[] = {maireKingGrid, maireQueenGrid, maireRookGrid, maireBishopGrid, maireKnightGrid, mairePawnGrid};
-float[][] mairePosArrayEnd[] = {zeroArray, zeroArray, zeroArray, zeroArray, zeroArray, mairePawnGridEnd};
-float[][] loicPosArray[] = {loicKingGrid, loicQueenGrid, loicRookGrid, loicBishopGrid, loicKnightGrid, loicPawnGrid};
+final float[][] mairePosArray[] = {maireKingGrid, maireQueenGrid, maireRookGrid, maireBishopGrid, maireKnightGrid, mairePawnGrid};
+final float[][] mairePosArrayEnd[] = {zeroArray, zeroArray, zeroArray, zeroArray, zeroArray, mairePawnGridEnd};
+final float[][] loicPosArray[] = {loicKingGrid, loicQueenGrid, loicRookGrid, loicBishopGrid, loicKnightGrid, loicPawnGrid};
 
 /////////////////////////////////////////////////////////////////
