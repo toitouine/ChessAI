@@ -592,7 +592,7 @@ void handleWaitForRestart() {
     }
 
     // Protection anti-annulation
-    if (isVerySimilarColor(colorOfRematch, hacker.getPixelColor(hackerPoints[NEWGAME].x, hackerPoints[NEWGAME].y))) {
+    if (isSimilarColor(colorOfRematch, hacker.getPixelColor(hackerPoints[NEWGAME].x, hackerPoints[NEWGAME].y), 5)) {
       println("PROTECTION ACTIVÉE");
       return;
     }

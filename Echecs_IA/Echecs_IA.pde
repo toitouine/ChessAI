@@ -3,18 +3,8 @@
 // TODO :
 
 // Auto calibration nouvelle partie
-// Hacker plus pratique
-// Recherche sur un autre thread pour pouvoir faire autre chose en même temps
-// Liste des choses à interdire pendant la recherche :
-// - voir updateBoard OK
-// - infos (fen, hash key, eval statique, endgameweight) OK
-// - fonctions test et perft OK
-// - générer les coups (ou en parallèle) OK
-// - gérer la fin de partie OK
-// - rewind OK
-// - tester le hacker
-// - réparer Antoine OK
-// La brebis / Statistiques bot
+// Réécriture du code : hacker class, ia class, pgn, fen, book à clarifier, setup, et gui
+// La brebis
 // Mode tournoi
 // Tester améliorations (killer moves, voir taux d'overwrite dans transpositions...)
 
@@ -30,8 +20,6 @@ import java.awt.datatransfer.*;
 import java.awt.event.InputEvent;
 import java.awt.Robot;
 import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferByte;
-import java.awt.image.DataBufferInt;
 import java.util.Map;
 import processing.awt.PSurfaceAWT;
 import processing.awt.PSurfaceAWT.SmoothCanvas;
@@ -168,6 +156,7 @@ boolean showSearchController = true;
 boolean showParameters = false;
 boolean useTime = false;
 boolean pointDeVue = true;
+boolean inEndOfSearch = false;
 int gameState;
 int winner = -1;
 int timeAtEnd = 0;
@@ -292,14 +281,12 @@ void setup() {
   println("/!\\ La direction rejette toute responsabilité en cas de CPU détruit par ce programme ou d'ordinateur brulé.");
   println("—————————————————————");
 
-  // Initialise les pièces
-  pieces[0] = new ArrayList<Piece>();
-  pieces[1] = new ArrayList<Piece>();
-
   // Initialise PreComputedData
   pc.init();
 
-  // Place les pièces
+  // Initialise les pièces
+  pieces[0] = new ArrayList<Piece>();
+  pieces[1] = new ArrayList<Piece>();
   setPieces();
 
   // Démarre le menu
@@ -311,7 +298,6 @@ void draw() {
   /////////////////////////////////////////////////////////////////
 
   if (gameState == GAME) {
-    background(49, 46, 43);
 
     // Bot vs humain
     if (engineToPlay) {
@@ -337,7 +323,9 @@ void draw() {
 
     // Affichages / Interface
     if (MODE_SANS_AFFICHAGE && useHacker && hackerState != CALIBRATION) return;
+    if (inEndOfSearch) return; // On évite d'utiliser les variables car elles sont modifiées par la fin de la recherche
 
+    background(49, 46, 43);
     drawGameInterface();
     if (alert != "") displayAlert();
     if (infoBox != "") drawInfoBox(infoBox);
@@ -348,25 +336,13 @@ void draw() {
 
   else if (gameState == MENU) {
     background(49, 46, 43);
-
-    fill(255);
-    textSize(30);
-    textAlign(LEFT, LEFT);
-    text("Échecs on Java :", 20, 45);
-    strokeWeight(2);
-    stroke(255);
-    line(20, 51, 253, 51);
-
-    fill(255);
-    textAlign(LEFT, LEFT);
-    textSize(15);
-    text(startFEN, 10, selectHeight-10);
+    drawMenuText();
 
     positionEditor.show();
     if (useHacker) hackerButton.show();
     if (TIME_CONTROL) drawTimeButtons();
     for (TextButton b : hubButtons) b.show();
-    for (int i = 0; i < presetButtons.size(); i++) presetButtons.get(i).show();
+    for (ImageButton ib : presetButtons) ib.show();
     for (ImageSelector s : selectors) s.show();
   }
 

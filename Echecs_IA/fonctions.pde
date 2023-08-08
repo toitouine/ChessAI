@@ -38,8 +38,8 @@ boolean isSimilarColor(Color c1, Color c2) {
   return abs(c1.getRed()-c2.getRed()) <= 10 && abs(c1.getGreen()-c2.getGreen()) <= 10 && abs(c1.getBlue()-c2.getBlue()) <= 10;
 }
 
-boolean isVerySimilarColor(Color c1, Color c2) {
-  return abs(c1.getRed()-c2.getRed()) <= 5 && abs(c1.getGreen()-c2.getGreen()) <= 5 && abs(c1.getBlue()-c2.getBlue()) <= 5;
+boolean isSimilarColor(Color c1, Color c2, float ecart) {
+  return abs(c1.getRed()-c2.getRed()) <= ecart && abs(c1.getGreen()-c2.getGreen()) <= ecart && abs(c1.getBlue()-c2.getBlue()) <= ecart;
 }
 
 String roundedString(float num) {
@@ -730,6 +730,21 @@ void drawTimeButtons() {
   }
 }
 
+void drawMenuText() {
+  fill(255);
+  textSize(30);
+  textAlign(LEFT, LEFT);
+  text("Échecs on Java :", 20, 45);
+  strokeWeight(2);
+  stroke(255);
+  line(20, 51, 253, 51);
+
+  fill(255);
+  textAlign(LEFT, LEFT);
+  textSize(15);
+  text(startFEN, 10, selectHeight-10);
+}
+
 void drawArrow(int fromI, int fromJ, int i, int j) {
   Arrow arrow = new Arrow(fromI, fromJ, i, j);
   for (Arrow a : allArrows) {
@@ -742,6 +757,7 @@ void drawArrow(int fromI, int fromJ, int i, int j) {
 }
 
 void updateDraggedArrow(int i, int j) {
+  if (lastCellRightClicked == null) return;
   Arrow newArrow = new Arrow(lastCellRightClicked.i, lastCellRightClicked.j, i, j);
   allArrows.remove(lastArrowDrawn);
   allArrows.add(newArrow);

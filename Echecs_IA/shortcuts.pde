@@ -131,17 +131,13 @@ void toggleVariantes() {
 
 void importSavedFEN(int number) {
   String fen = savedFENS[number];
-  importFEN(fen);
-  piecesToDisplay.clear();
-  piecesToDisplay.addAll(pieces[0]);
-  piecesToDisplay.addAll(pieces[1]);
+  startFEN = fen;
+  setPieces();
 }
 
 void makeStartPos() {
-  importFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq");
-  piecesToDisplay.clear();
-  piecesToDisplay.addAll(pieces[0]);
-  piecesToDisplay.addAll(pieces[1]);
+  startFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq";
+  setPieces();
 }
 
 void toggleGraph() {
@@ -218,7 +214,7 @@ void goToSelectScreen() {
   // println();
   // println("Quitter la partie et revenir à la sélection ? [y/n]");
   // println();
-  resetGame(true);
+  forceQuit();
 }
 
 void playPause() {

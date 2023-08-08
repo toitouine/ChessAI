@@ -44,7 +44,7 @@ final int TIME_COPYCAT_FIX = 830; // Temps (en ms) d'erreur de mesure en trop de
 
 // Configuration des IAs
 
-// Pour ajouter une IA, créer toutes les configurations nécessaires en étendant les tableaux et en spécifiant l'index (ajouter 1 au nombre d'IAs)
+// Pour ajouter une IA, créer toutes les configurations nécessaires (et les images) en étendant les tableaux et en spécifiant l'index (ajouter 1 au nombre d'IAs)
 // Créer la classe de la nouvelle IA dans joueurs.pde en héritant de la classe IA
 // Implémenter minimax et evaluation (et autres si besoin), modifier bestMoveFound et les statistiques pendant la recherche
 // Référencer dans le constructeur de la classe Joueur la classe correspondant à la nouvelle IA
@@ -61,7 +61,7 @@ final int CONSTANTE_DE_STOCKFISH = 3; // On ne sait pas
 
 final int AI_NUMBER = 6; // Nombre d'IAs et humain différents
 final String[] AI_NAME = {"Humain", "LeMaire", "LesMoutons", "Loic", "Antoine", "Stockfish"}; // Nom complet des joueurs
-final String[] AI_CODE = {"humain", "lemaire", "lesmoutons", "loic", "antoine", "stockfish"}; // Nom des joueurs (utilisé notamment pour les images)
+final String[] AI_CODE = {"humain", "lemaire", "lesmoutons", "loic", "antoine", "stockfish"}; // Nom des joueurs (utilisé pour les images)
 
 final String[] AI_ELO = {"???", "3845", "1400", "-142", "100", "284"}; // Élo des différentes IAs
 final String[] AI_TITLE = {"", "GM", "Mouton", "IM", "", "Noob"}; // Titre des différentes IAs

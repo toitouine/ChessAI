@@ -167,6 +167,7 @@ void setRandomPlayers() {
 
 void resetGame(boolean menu) {
   if (sa.inThreadSearch) sa.abortSearch();
+  if (gameState == EDITOR) startFEN = generateFEN();
 
   // Reset les timers
   if (useTime) {
@@ -247,6 +248,7 @@ void resetSettingsToDefault() {
   clearAlert();
 
   // Variables
+  inEndOfSearch = false;
   timeAtGameStart = 0;
   numberOfRestartWait = 0;
   numberOfScan = 0;

@@ -114,6 +114,9 @@ class IA {
     // On vérifie que la partie n'est pas terminée et que la recherche ne soit pas interrompue par autre chose
     // Si on utilise le hacker, la recherche n'est pas sur un autre thread donc elle n'est pas interrompue
     if (!gameEnded && (sa.inThreadSearch || useHacker)) {
+      inEndOfSearch = true;
+      if (!useHacker) delay(17);
+
       // Joue le coup
       this.bestMoveFound.play();
 
@@ -126,6 +129,7 @@ class IA {
 
     cursor(ARROW);
     stopSearch = false;
+    inEndOfSearch = false;
     sa.endThread();
   }
 

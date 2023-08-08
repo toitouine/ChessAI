@@ -131,10 +131,6 @@ public class SearchApplet extends PApplet {
     this.inDepthSearch = -1;
   }
 
-  // public boolean isInSearch() {
-  //   return (this.inThreadSearch || this.inIDSearch || this)
-  // }
-
   public void abortSearch() {
     this.stopSearch();
     this.stopDepthSearch();
