@@ -1,11 +1,2 @@
-# Ignore le fichier système .DS_Store
 .DS_Store
-
-# Ignore le résultat de l'aide à la configuration
-config.txt
-
-# Ignore les fichiers de build des programmes
-build
-
-# Ignore les pgns sauvegardées
-pgn/
+out/*.class
