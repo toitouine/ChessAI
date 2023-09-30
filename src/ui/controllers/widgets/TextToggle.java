@@ -1,3 +1,5 @@
+import processing.core.PApplet;
+
 public class TextToggle extends CallableWidget<TextToggle> {
   private int textSize;
   private int arrondi = 8;
@@ -7,7 +9,7 @@ public class TextToggle extends CallableWidget<TextToggle> {
   private boolean state = false; // false = state 1, true = state 2
   private String caption1, caption2;
 
-  TextToggle(Main sketch, float x, float y, String text1, String text2, int tSize) {
+  TextToggle(PApplet sketch, float x, float y, String text1, String text2, int tSize) {
     me = this;
     this.sketch = sketch;
     this.x = x;
@@ -40,6 +42,10 @@ public class TextToggle extends CallableWidget<TextToggle> {
 
   public String current() {
     return (state ? text2 : text1);
+  }
+
+  public boolean getState() {
+    return state;
   }
 
   @Override

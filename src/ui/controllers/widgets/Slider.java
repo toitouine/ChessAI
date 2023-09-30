@@ -1,3 +1,5 @@
+import processing.core.PApplet;
+
 public class Slider extends Widget<Slider> {
   private int backgroundColor;
   private int frontColor;
@@ -7,7 +9,7 @@ public class Slider extends Widget<Slider> {
   private int graduationNumber = 0;
   private boolean lock = false;
 
-  public Slider(Main sketch, float x, float y, float w, float h) {
+  public Slider(PApplet sketch, float x, float y, float w, float h) {
     me = this;
     this.sketch = sketch;
     this.x = x;
@@ -100,7 +102,7 @@ public class Slider extends Widget<Slider> {
 
   public Slider setValue(int value) {
     if (value > max || value < min) {
-      Debug.log("erreur", "Valeur du slider " + this + " en dehors des limites");
+      Debug.error("Valeur du slider " + this + " en dehors des limites");
       return this;
     }
     this.value = value;
@@ -114,7 +116,7 @@ public class Slider extends Widget<Slider> {
   }
 
   public Slider setGraduations(int num) {
-    if (num <= 1) Debug.log("erreur", "Graduation minimum pour les sliders : 2");
+    if (num <= 1) Debug.error("Graduation minimum pour les sliders : 2");
     graduationNumber = num;
     return this;
   }

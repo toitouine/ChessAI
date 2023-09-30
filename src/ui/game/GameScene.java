@@ -14,17 +14,14 @@ public class GameScene extends Scene {
   private GameManager game;
   private BoardDisplay boardDisplay;
 
-  // Utiliser plutôt des objets Player
+  private Player white, black;
   private PImage whiteImage, blackImage;
 
-  public GameScene(Main sketch) {
+  public GameScene(Main sketch, GameManager game) {
     this.sketch = sketch;
+    this.game = game;
     width = Math.round(offsetX + 8*w);
     height = Math.round(offsetY + 8*w);
-    game = sketch.game;
-
-    whiteImage = sketch.loadImage("data/joueurs/humainImg.jpg");
-    blackImage = sketch.loadImage("data/joueurs/lemaireImg.jpg");
 
     init();
   }
@@ -32,38 +29,50 @@ public class GameScene extends Scene {
   public void awake() {
     Debug.log("UI", "Nouvelle scène : Partie");
     PSurface surface = sketch.getSurface();
-    sketch.setTitle("Humain contre LeMaire");
-    // sketch.setTitle(game.getWhite().name + " contre " + game.getBlack().name);
+    sketch.setTitle(game.getWhite().pseudo + " contre " + game.getBlack().pseudo);
     surface.setSize(width, height);
     surface.setLocation(sketch.displayWidth-width, 0);
     surface.setAlwaysOnTop(attach);
     surface.setVisible(true);
+
+    white = game.getWhite();
+    black = game.getBlack();
+    whiteImage = sketch.loadImage("data/joueurs/" + white.name.toLowerCase() + "Img.jpg");
+    blackImage = sketch.loadImage("data/joueurs/" + black.name.toLowerCase() + "Img.jpg");
   }
 
   public void draw() {
     sketch.background(49, 46, 43);
-    sketch.fill(rgb(201, 186, 155));
-    sketch.noStroke();
-    sketch.rectMode(sketch.CORNER);
-    sketch.rect(offsetX, offsetY, 8*w, 8*w);
 
     float space = 0.19f * w;
-    float whiteImgY = (pov == Player.White ? height - (space + w/2) : offsetY + w/2);
-    float blackImgY = (pov == Player.Black ? height - (space + w/2) : offsetY + w/2);
+    float whiteImgY, whiteTextY, whiteEvalY;
+    float blackImgY, blackTextY, blackEvalY;
+    if (pov == Player.White) {
+      whiteImgY = height - (space + w/2);
+      blackImgY = offsetY + w/2;
+      whiteTextY = height - (space*2 + w);
+      blackTextY = offsetY + w + space;
+      whiteEvalY = height - (space*3.5f + 82*w/70);
+      blackEvalY = offsetY + space*2.5f + 82*w/70;
+    } else {
+      whiteImgY = offsetY + w/2;
+      blackImgY = height - (space + w/2);
+      whiteTextY = offsetY + w + space;
+      blackTextY = height - (space*2 + w);
+      whiteEvalY = offsetY + space*2.5f + 82*w/70;
+      blackEvalY = height - (space*3.5f + 82*w/70);
+    }
+
     sketch.imageMode(sketch.CENTER);
     sketch.image(whiteImage, offsetX/2, whiteImgY, w, w);
     sketch.image(blackImage, offsetX/2, blackImgY, w, w);
 
-    float whiteTextY = (pov == Player.White ? height - (space*2 + w) : offsetY + w + space);
-    float blackTextY = (pov == Player.Black ? height - (space*2 + w) : offsetY + w + space);
     sketch.fill(255);
     sketch.textSize(12 * w / 70);
     sketch.textAlign(sketch.CENTER, sketch.CENTER);
-    sketch.text("Humain (???)", offsetX/2, whiteTextY);
-    sketch.text("LeMaire (3845)", offsetX/2, blackTextY);
+    sketch.text(white.pseudo + " (" + white.elo + ")", offsetX/2, whiteTextY);
+    sketch.text(black.pseudo + " (" + black.elo + ")", offsetX/2, blackTextY);
 
-    // float whiteEvalY = (pov == Player.White ? height - (space*3.5f + 82*w/70) : offsetY + space*2.5f + 82*w/70);
-    // float blackEvalY = (pov == Player.Black ? height - (space*3.5f + 82*w/70) : offsetY + space*2.5f + 82*w/70);
     // sketch.text("Eval : MAT EN 1", offsetX/2, blackEvalY);
     // sketch.text("Eval : 1,294", offsetX/2, whiteEvalY);
 
@@ -85,7 +94,7 @@ public class GameScene extends Scene {
   private void init() {
     controllers.clear();
 
-    Board b = sketch.game.board;
+    Board b = game.board;
     boardDisplay = new BoardDisplay(sketch, offsetX + 4*w, offsetY + 4*w, w, b);
     controllers.add(boardDisplay);
 
@@ -131,7 +140,7 @@ public class GameScene extends Scene {
         .setAction( () -> Debug.log("todo", "Afficher Search Controller / Stats displayer (?)") ),
 
       new ImageButton(sketch, calcX.apply(9), offsetY/2, iconSize, iconSize, "data/icons/quit.png")
-        .setAction( () -> sketch.sm.setScene(SceneIndex.Menu) )
+        .setAction( () -> sketch.setScene(SceneIndex.Menu) )
     );
   }
 
@@ -152,28 +161,28 @@ public class GameScene extends Scene {
         .setFullSize(false)
         .setArrondi(10)
         .setAction( () -> Debug.log("todo", "Abandon blanc") )
-        .setCondition( () -> !game.useHacker )
+        .setCondition( () -> !game.useHacker && !game.gameEnded && !white.isBot )
         .setMovablePosition(() -> space + buttonSize/2f, whiteYPos),
 
       new ImageButton(sketch, 0, 0, buttonSize, buttonSize, "data/icons/helpMove.png")
         .setFullSize(false)
         .setArrondi(10)
         .setAction( () -> Debug.log("todo", "Aide blanc") )
-        .setCondition( () -> !game.useHacker )
+        .setCondition( () -> !game.useHacker && !game.gameEnded && !white.isBot )
         .setMovablePosition(() -> space*2 + 3*buttonSize/2f, whiteYPos),
 
       new ImageButton(sketch, 0, 0, buttonSize, buttonSize, "data/icons/resign.png")
         .setFullSize(false)
         .setArrondi(10)
         .setAction( () -> Debug.log("todo", "Abandon noir") )
-        .setCondition( () -> !game.useHacker )
+        .setCondition( () -> !game.useHacker && !game.gameEnded && !black.isBot )
         .setMovablePosition(() -> space + buttonSize/2f, blackYPos),
 
       new ImageButton(sketch, 0, 0, buttonSize, buttonSize, "data/icons/helpMove.png")
         .setFullSize(false)
         .setArrondi(10)
         .setAction( () -> Debug.log("todo", "Aide noir") )
-        .setCondition( () -> !game.useHacker )
+        .setCondition( () -> !game.useHacker && !game.gameEnded && !black.isBot )
         .setMovablePosition(() -> space*2 + 3*buttonSize/2f, blackYPos),
 
       new TextButton(sketch, offsetX/2, offsetY + 4*w - 16*w/70, "Revanche", 15 * w/70, 3)
@@ -185,8 +194,6 @@ public class GameScene extends Scene {
         .setDimensions(79 * w / 70, 26 * w / 70)
         .setAction( () -> Debug.log("todo", "Menu") )
         .setCondition( () -> game.gameEnded && !game.useHacker )
-
-      // Condition : gameState == GAME && !useHacker && !gameEnded && isHumain(0)
     );
   }
 }

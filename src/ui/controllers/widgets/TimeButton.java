@@ -1,5 +1,6 @@
 import java.util.Collections;
 import java.util.ArrayList;
+import processing.core.PApplet;
 
 public class TimeButton extends Widget<TimeButton> {
   private float buttonHeight;
@@ -12,7 +13,7 @@ public class TimeButton extends Widget<TimeButton> {
   private Time increment = Time.fromMillis(0);
   private ArrayList<SubTimebutton> subButtons = new ArrayList<SubTimebutton>();
 
-  TimeButton(Main sketch, float x, float y, float h) {
+  TimeButton(PApplet sketch, float x, float y, float h) {
     me = this;
     this.sketch = sketch;
     this.x = x;
@@ -73,9 +74,9 @@ public class TimeButton extends Widget<TimeButton> {
     return increment;
   }
 
-  public void set(Time time, Time increment) {
-    this.time.millis = time.millis;
-    this.increment.millis = increment.millis;
+  public void set(Time t, Time i) {
+    time.setMillis(t.millis());
+    increment.setMillis(i.millis());
   }
 
   public void show() {

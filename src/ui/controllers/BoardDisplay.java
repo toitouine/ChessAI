@@ -1,5 +1,6 @@
 import java.util.HashMap;
 import processing.core.PImage;
+import processing.core.PApplet;
 
 public class BoardDisplay extends Controller<BoardDisplay> {
 
@@ -8,7 +9,7 @@ public class BoardDisplay extends Controller<BoardDisplay> {
   private int pov = Player.White;
   private HashMap<Integer, PImage> imgs;
 
-  public BoardDisplay(Main sketch, float x, float y, int caseWidth, Board board) {
+  public BoardDisplay(PApplet sketch, float x, float y, int caseWidth, Board board) {
     this.sketch = sketch;
     this.board = board;
     this.caseWidth = caseWidth;

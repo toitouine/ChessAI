@@ -40,7 +40,7 @@ public abstract class Widget<T> extends Controller<T> {
 
   final public T setCaptionSize(float s) {
     if (s <= 0) {
-      Debug.log("erreur", "Taille de légende demandée strictement positive");
+      Debug.error("Taille de légende demandée strictement positive");
       return me;
     }
     captionSize = s;

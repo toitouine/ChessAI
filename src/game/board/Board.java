@@ -59,7 +59,7 @@ public final class Board {
     else if (type == Piece.Fou) pieces[c].add(new Fou(this, i, j, c));
     else if (type == Piece.Cavalier) pieces[c].add(new Cavalier(this, i, j, c));
     else if (type == Piece.Pion) pieces[c].add(new Pion(this, i, j, c));
-    else Debug.log("erreur", "Type de pièce invalide");
+    else Debug.error("Type de pièce invalide");
 
     updatePositionData();
   }

@@ -3,6 +3,7 @@ import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.datatransfer.StringSelection;
 import processing.core.PSurface;
+import processing.core.PApplet;
 
 public final class Clipboard {
   private static Main sketch;
@@ -37,11 +38,11 @@ public final class Clipboard {
         object = contents.getTransferData(flavor);
       }
       catch (UnsupportedFlavorException e1) {
-        Debug.log("erreur", "Clipboard.GetFromClipboard() >> Unsupported flavor: " + e1);
+        Debug.error("Clipboard.GetFromClipboard() >> Unsupported flavor: " + e1);
         e1.printStackTrace();
       }
       catch (java.io.IOException e2) {
-        Debug.log("erreur", "Clipboard.GetFromClipboard() >> Unavailable data: " + e2);
+        Debug.error("Clipboard.GetFromClipboard() >> Unavailable data: " + e2);
         e2.printStackTrace() ;
       }
     }

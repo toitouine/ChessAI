@@ -7,6 +7,6 @@ public abstract class Overlay extends Scene {
   }
 
   final public void awake() {
-    Debug.log("erreur", "Impossible d'appeler awake() sur un overlay");
+    Debug.error("Impossible d'appeler awake() sur un overlay");
   }
 }

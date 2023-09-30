@@ -8,13 +8,11 @@ enum SceneIndex {
 
 public class SceneManager {
 
-  private Main sketch;
   private HashMap<SceneIndex, Scene> scenes;
   private Scene currentScene;
 
-  public SceneManager(Main sketch) {
-    this.sketch = sketch;
-    this.scenes = new HashMap<SceneIndex, Scene>();
+  public SceneManager() {
+    scenes = new HashMap<SceneIndex, Scene>();
   }
 
   public SceneManager register(Scene scene, SceneIndex index) {
@@ -34,7 +32,7 @@ public class SceneManager {
 
   public void drawScene() {
     if (currentScene == null) {
-      Debug.log("erreur", "Aucune scène sélectionnée dans SceneManager");
+      Debug.error("Aucune scène sélectionnée dans SceneManager");
       return;
     }
 

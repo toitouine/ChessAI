@@ -1,4 +1,5 @@
 import processing.core.PImage;
+import processing.core.PApplet;
 
 public class ImageButton extends CallableWidget<ImageButton> {
   private PImage img;
@@ -6,7 +7,7 @@ public class ImageButton extends CallableWidget<ImageButton> {
   private int arrondi = 5;
   private int backgroundColor;
 
-  ImageButton(Main sketch, float x, float y, float w, float h, String imgPath) {
+  ImageButton(PApplet sketch, float x, float y, float w, float h, String imgPath) {
     me = this;
     this.sketch = sketch;
     this.x = x;

@@ -2,10 +2,14 @@ import processing.core.PApplet;
 
 public class Time {
   private static PApplet sketch;
-  public int millis = 0;
+  private int millis = 0;
 
   private Time(int millis) {
     this.millis = millis;
+  }
+
+  public void setMillis(int m) {
+    millis = m;
   }
 
   public int millis() {

@@ -2,8 +2,6 @@ JC = javac
 #JC = javac -Xlint:unchecked
 OUTPUT = out
 MAIN = Main
-
-# Path to the processing library (core.jar file)
 PROCESSING_PATH = /Applications/Processing.app/Contents/Java/core.jar
 
 CP_SEP = :

@@ -22,8 +22,8 @@ public final class Debug {
     colorMap.put("test", RED);
     colorMap.put("todo", PURPLE);
     colorMap.put("ui", YELLOW);
-    colorMap.put("menu", CYAN);
-    colorMap.put("éditeur", CYAN);
+    colorMap.put("menu", YELLOW);
+    colorMap.put("éditeur", YELLOW);
   }
 
   public static void println(Object... logs) {
@@ -31,6 +31,10 @@ public final class Debug {
       System.out.print(logs[i] + (i == logs.length-1 ? "" : " " ) );
     }
     System.out.println();
+  }
+
+  public static void error(Object message) {
+    log("erreur", message);
   }
 
   public static void log(Object... logs) {

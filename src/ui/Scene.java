@@ -37,7 +37,6 @@ public abstract class Scene {
       }
     }
 
-    sketch.cursor(sketch.ARROW);
+    if (e.mouseMoved()) sketch.cursor(sketch.ARROW);
   }
-
 }

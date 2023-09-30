@@ -113,7 +113,7 @@ public class EditorScene extends Scene {
         .setAction( () -> flipPov() ),
 
       new ImageButton(sketch, calcX.apply(8), offsetY/2, iconSize, iconSize, "data/icons/quit.png")
-        .setAction( () -> sketch.sm.setScene(SceneIndex.Menu) )
+        .setAction( () -> sketch.setScene(SceneIndex.Menu) )
     );
   }
 

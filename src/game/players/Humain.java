@@ -7,6 +7,8 @@ public class Humain extends Player {
     title = "";
     victoryTitle = "";
     ouvertureNumber = 0;
+    isBot = false;
+    this.settings = settings;
   }
-  
+
 }

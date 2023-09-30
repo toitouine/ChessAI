@@ -7,7 +7,7 @@ public class MenuScene extends Scene {
   private boolean showWhiteID = true;
   private boolean showBlackID = true;
   private String startFEN = Config.General.defaultFEN;
-  private Selector whiteSelector, blackSelector;
+  private Selector<String> whiteSelector, blackSelector;
   private TimeButton whiteTime, blackTime;
   private TextToggle whiteSearchMode, blackSearchMode;
   private Slider whiteIDSlider, blackIDSlider;
@@ -51,13 +51,18 @@ public class MenuScene extends Scene {
   }
 
   private void startGame() {
-    // SearchSettings whiteSettings = new SearchSettings();
-    // SearchSettings blackSettings = new SearchSettings();
-    // Player.create(whiteSelector.getIndex(), whiteSettings);
-    // Player.create(blackSelector.getIndex(), blackSettings);
+    // TODO (TEMPS)
+    SearchSettings s1, s2;
+    if (showWhiteID) s1 = new SearchSettings(SearchType.IterativeDeepening, whiteIDSlider.getValue());
+    else s1 = new SearchSettings(SearchType.Fixed, whiteFixSlider.getValue());
 
-    sketch.game.startGame(null, null, startFEN);
-    sketch.sm.setScene(SceneIndex.Game);
+    if (showBlackID) s2 = new SearchSettings(SearchType.IterativeDeepening, blackIDSlider.getValue());
+    else s2 = new SearchSettings(SearchType.Fixed, blackFixSlider.getValue());
+
+    Player p1 = Player.create(whiteSelector.getValue(), s1);
+    Player p2 = Player.create(blackSelector.getValue(), s2);
+
+    sketch.startGame(p1, p2, startFEN);
   }
 
   void init() {
@@ -110,22 +115,25 @@ public class MenuScene extends Scene {
                             whiteIDSlider.setValue(720); blackIDSlider.setValue(720); } ),
       // Éditeur de position
       new ImageButton(sketch, width-28, 38, 55, 55, "data/icons/chess.png")
-        .setAction( () -> sketch.sm.setScene(SceneIndex.Editor) ),
+        .setAction( () -> sketch.setScene(SceneIndex.Editor) ),
 
       // Bouton du hacker
       new ImageToggle(sketch, width-84, 34, 45, 45, "data/icons/background.png", "data/icons/hacker.png")
-        .setAction( () -> sketch.game.useHacker = !sketch.game.useHacker )
+        .setAction( () -> sketch.toggleHacker() )
     );
   }
 
   void addPlayerControllers() {
-    PImage[] imgs = new PImage[Config.IA.number];
+    PImage[] imgs = new PImage[Config.IA.players.length];
+    String[] outputs = new String[Config.IA.players.length];
     for (int i = 0; i < imgs.length; i++)  {
-      imgs[i] = sketch.loadImage("data/joueurs/" + Config.IA.names[i].toLowerCase() + ".jpg");
+      imgs[i] = sketch.loadImage("data/joueurs/" + Config.IA.players[i].toLowerCase() + ".jpg");
+      outputs[i] = Config.IA.players[i];
     }
 
-    whiteSelector = new Selector(sketch, 312, 163, 165, 165, imgs);
-    blackSelector = new Selector(sketch, width - 312, 163, 165, 165, imgs);
+    whiteSelector = new Selector<String>(sketch, 312, 163, 165, 165, outputs, imgs);
+    blackSelector = new Selector<String>(sketch, width - 312, 163, 165, 165, outputs, imgs);
+
     whiteTime = new TimeButton(sketch, 108, height - 152, 75);
 
     blackTime = new TimeButton(sketch, width - 108, height - 152, 75)

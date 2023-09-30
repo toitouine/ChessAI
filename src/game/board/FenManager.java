@@ -57,16 +57,9 @@ public final class FenManager {
       // Trait
       if (fen.charAt(endOfPosition+1) == 'w') board.tourDeQui = Player.White;
       else if (fen.charAt(endOfPosition+1) == 'b') board.tourDeQui = Player.Black;
-      else {
-        Debug.log("erreur", "FEN invalide : Trait");
-        return;
-      }
+      else throw new Exception("FEN invalide : Trait");
 
       // Roques
-      if (fen.charAt(endOfPosition+2) != ' ') {
-        Debug.log("erreur", "FEN invalide : Séparation trait-roque");
-        return;
-      }
       for (int i = endOfPosition+3; i < fen.length(); i++) {
         char c = fen.charAt(i);
         if (c == 'K') board.whitePetitRoque = true;
@@ -77,7 +70,7 @@ public final class FenManager {
 
     }
     catch (Exception e) {
-      Debug.log("erreur", "FEN non valide ! Importation de la FEN par défaut.");
+      Debug.error("FEN non valide ! Importation de la FEN par défaut.");
       loadPosition(Config.General.defaultFEN);
     }
   }
