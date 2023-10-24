@@ -1,7 +1,7 @@
 public class Move {
   public byte fromI, fromJ; // Case de départ
   public byte i, j; // Case d'arrivée
-  public Piece piece; // Pièce capturée (ou pas)
+  public Piece piece; // Pièce qui bouge
   public Piece capture; // Pièce capturée (ou pas)
   public Flag flag; // Coup spécial
 
@@ -13,16 +13,16 @@ public class Move {
     this.flag = flag;
   }
 
+  public Move(Piece piece, int i, int j) {
+    this(piece, i, j, null, Flag.None);
+  }
+
   public Move(Piece piece, int i, int j, Piece capture) {
     this(piece, i, j, capture, Flag.None);
   }
 
   public Move(Piece piece, int i, int j, Flag flag) {
     this(piece, i, j, null, flag);
-  }
-
-  public Move(Piece piece, int i, int j) {
-    this(piece, i, j, null, Flag.None);
   }
 }
 

@@ -70,7 +70,7 @@ public final class FenManager {
 
     }
     catch (Exception e) {
-      Debug.error("FEN non valide ! Importation de la FEN par défaut.");
+      Debug.error("FEN non valide (" + fen + ") ! Importation de la FEN par défaut.");
       loadPosition(Config.General.defaultFEN);
     }
   }

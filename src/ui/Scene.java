@@ -1,14 +1,14 @@
 import java.util.ArrayList;
 
 public abstract class Scene {
-  protected Main sketch;
+  protected Applet sketch;
   protected ArrayList<Controller> controllers = new ArrayList<Controller>();
   protected int width; // Largeur de la fenêtre
   protected int height; // Hauteur de la fenêtre
   protected Overlay currentOverlay = null;
 
   abstract void awake(); // Appelée une fois au lancement de la scène
-  abstract void draw();
+  abstract void draw();  // Appelée continuellement si la scène est active
 
   protected void showControllers() {
     for (Controller c : controllers) {
@@ -24,7 +24,7 @@ public abstract class Scene {
     return sketch.color(r, g, b);
   }
 
-  final public void onUserEvent(UserEvent e) {
+  public void onUserEvent(UserEvent e) {
     if (currentOverlay != null && currentOverlay.contains(e.x, e.y)) {
       currentOverlay.onUserEvent(e);
       return;

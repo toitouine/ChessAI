@@ -1,3 +1,6 @@
+// Scène particulière qui s'affiche par dessus une autre scène
+// Empêche les controllers inaccessibles d'être activé par des events
+
 public abstract class Overlay extends Scene {
   protected Scene scene;
   protected float x, y;

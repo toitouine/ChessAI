@@ -14,7 +14,7 @@ abstract public class Player {
       return (Player)instance;
     }
     catch (Exception e) {
-      Debug.error("Classe du joueur introuvable ! Ajout d'un humain à la place.");
+      Debug.error("Classe du joueur introuvable [" + name + "] ! Ajout d'un humain à la place.");
       return new Humain(s);
     }
   }
@@ -26,5 +26,16 @@ abstract public class Player {
   public String victoryTitle;
   public int ouvertureNumber;
   public boolean isBot = true;
-  protected SearchSettings settings;
+  public SearchSettings settings;
+
+  public String description() {
+    String desc = name;
+    if (settings.type == Search.Iterative) {
+      desc += " : Iterative Deepening, " + settings.time.millis() + "ms";
+    }
+    else if (settings.type == Search.Fixed) {
+      desc += " : Profondeur fixe, " + settings.depth;
+    }
+    return desc;
+  }
 }

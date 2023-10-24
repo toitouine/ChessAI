@@ -1,5 +1,7 @@
+// hlength = 0.5f * Math.sqrt(Math.pow((deltaI*caseWidth), 2) + Math.pow((deltaJ*caseWidth), 2));
+
 public class Case {
-  private int i, j;
+  public int i, j;
   public String name;
   public Piece piece;
 

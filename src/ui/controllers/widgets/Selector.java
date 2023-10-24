@@ -1,5 +1,4 @@
 import processing.core.PImage;
-import processing.core.PApplet;
 
 public class Selector<T> extends Widget<Selector<T>> {
   private PImage[] imgs;
@@ -7,7 +6,7 @@ public class Selector<T> extends Widget<Selector<T>> {
   private PImage leftArrow, rightArrow;
   private int index = 0;
 
-  Selector(PApplet sketch, float x, float y, float w, float h, T[] inputs, PImage[] imgs) {
+  Selector(Applet sketch, float x, float y, float w, float h, T[] inputs, PImage[] imgs) {
     me = this;
     this.sketch = sketch;
     this.x = x;

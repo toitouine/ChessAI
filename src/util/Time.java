@@ -1,7 +1,5 @@
-import processing.core.PApplet;
-
 public class Time {
-  private static PApplet sketch;
+  private static Applet sketch;
   private int millis = 0;
 
   private Time(int millis) {
@@ -35,7 +33,11 @@ public class Time {
     return time;
   }
 
-  static void init(PApplet s) {
+  public Time copy() {
+    return new Time(millis);
+  }
+
+  static void init(Applet s) {
     sketch = s;
   }
 

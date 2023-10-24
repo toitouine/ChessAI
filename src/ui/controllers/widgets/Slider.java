@@ -1,5 +1,3 @@
-import processing.core.PApplet;
-
 public class Slider extends Widget<Slider> {
   private int backgroundColor;
   private int frontColor;
@@ -9,7 +7,7 @@ public class Slider extends Widget<Slider> {
   private int graduationNumber = 0;
   private boolean lock = false;
 
-  public Slider(PApplet sketch, float x, float y, float w, float h) {
+  public Slider(Applet sketch, float x, float y, float w, float h) {
     me = this;
     this.sketch = sketch;
     this.x = x;

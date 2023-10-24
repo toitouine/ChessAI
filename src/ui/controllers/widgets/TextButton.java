@@ -1,5 +1,3 @@
-import processing.core.PApplet;
-
 public class TextButton extends CallableWidget<TextButton> {
   private int textSize;
   private int arrondi;
@@ -7,7 +5,7 @@ public class TextButton extends CallableWidget<TextButton> {
   private int backColor;
   private int textColor;
 
-  TextButton(PApplet sketch, float x, float y, String t, int tSize, int arrondi) {
+  TextButton(Applet sketch, float x, float y, String t, int tSize, int arrondi) {
     me = this;
     this.sketch = sketch;
     this.x = x;
@@ -24,7 +22,7 @@ public class TextButton extends CallableWidget<TextButton> {
     this.h = textSize * 1.76f;
   }
 
-  TextButton(PApplet sketch, float x, float y, String t, int tSize) {
+  TextButton(Applet sketch, float x, float y, String t, int tSize) {
     this(sketch, x, y, t, tSize, 8);
   }
 

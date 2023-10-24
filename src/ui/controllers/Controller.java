@@ -6,10 +6,9 @@
 /////////////////////////////////////////////////////////////////
 
 import java.util.function.BooleanSupplier;
-import processing.core.PApplet;
 
 public abstract class Controller<T> {
-  protected PApplet sketch;
+  protected Applet sketch;
   protected float x, y, w, h;
   protected BooleanSupplier condition;
   protected T me;

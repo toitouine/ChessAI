@@ -4,8 +4,10 @@ import java.util.Collections;
 
 public class MenuScene extends Scene {
 
+  private MainApplet mainApplet;
   private boolean showWhiteID = true;
   private boolean showBlackID = true;
+  private boolean useHacker = false;
   private String startFEN = Config.General.defaultFEN;
   private Selector<String> whiteSelector, blackSelector;
   private TimeButton whiteTime, blackTime;
@@ -13,8 +15,9 @@ public class MenuScene extends Scene {
   private Slider whiteIDSlider, blackIDSlider;
   private Slider whiteFixSlider, blackFixSlider;
 
-  public MenuScene(Main sketch) {
-    this.sketch = sketch;
+  public MenuScene(MainApplet mainApplet) {
+    this.mainApplet = mainApplet;
+    sketch = (Applet) mainApplet;
     width = 1100;
     height = 460;
 
@@ -51,18 +54,20 @@ public class MenuScene extends Scene {
   }
 
   private void startGame() {
-    // TODO (TEMPS)
     SearchSettings s1, s2;
-    if (showWhiteID) s1 = new SearchSettings(SearchType.IterativeDeepening, whiteIDSlider.getValue());
-    else s1 = new SearchSettings(SearchType.Fixed, whiteFixSlider.getValue());
-
-    if (showBlackID) s2 = new SearchSettings(SearchType.IterativeDeepening, blackIDSlider.getValue());
-    else s2 = new SearchSettings(SearchType.Fixed, blackFixSlider.getValue());
+    s1 = (showWhiteID
+           ? new SearchSettings(Search.Iterative, Time.fromMillis(whiteIDSlider.getValue()))
+           : new SearchSettings(Search.Fixed, whiteFixSlider.getValue()));
+    s2 = (showBlackID
+           ? new SearchSettings(Search.Iterative, Time.fromMillis(blackIDSlider.getValue()))
+           : new SearchSettings(Search.Fixed, blackFixSlider.getValue()));
 
     Player p1 = Player.create(whiteSelector.getValue(), s1);
     Player p2 = Player.create(blackSelector.getValue(), s2);
+    Timer t1 = new Timer(whiteTime.getTime(), whiteTime.getIncrement());
+    Timer t2 = new Timer(blackTime.getTime(), blackTime.getIncrement());
 
-    sketch.startGame(p1, p2, startFEN);
+    mainApplet.startDisplayGame(p1, p2, startFEN, t1, t2, useHacker);
   }
 
   void init() {
@@ -119,7 +124,7 @@ public class MenuScene extends Scene {
 
       // Bouton du hacker
       new ImageToggle(sketch, width-84, 34, 45, 45, "data/icons/background.png", "data/icons/hacker.png")
-        .setAction( () -> sketch.toggleHacker() )
+        .setAction( () -> useHacker = !useHacker )
     );
   }
 

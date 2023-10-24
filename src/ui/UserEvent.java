@@ -1,5 +1,13 @@
+enum EventType {
+  MousePressed,
+  MouseReleased,
+  MouseMoved,
+  MouseDragged,
+  KeyPressed
+}
+
 public class UserEvent {
-  public EventType type;
+  private EventType type;
   public int x;
   public int y;
   public int key;
@@ -34,12 +42,4 @@ public class UserEvent {
   public boolean keyPressed() {
     return (type == EventType.KeyPressed);
   }
-}
-
-enum EventType {
-  MousePressed,
-  MouseReleased,
-  MouseMoved,
-  MouseDragged,
-  KeyPressed
 }

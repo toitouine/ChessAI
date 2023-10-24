@@ -1,29 +1,32 @@
 import java.util.HashMap;
 
 public final class Debug {
-  public static final String RESET = "\u001B[0m";
-  public static final String BLACK = "\u001B[30m";
-  public static final String RED = "\u001B[31m";
-  public static final String GREEN = "\u001B[32m";
-  public static final String YELLOW = "\u001B[33m";
-  public static final String BLUE = "\u001B[34m";
-  public static final String PURPLE = "\u001B[35m";
-  public static final String CYAN = "\u001B[36m";
-  public static final String WHITE = "\u001B[37m";
-
-  private static HashMap<String, String> colorMap = new HashMap<String, String>();
-  private static boolean disableLog = false;
-  private static String[] disableTags = {};
 
   private Debug () {}
 
-  public static void init() {
+  private static final String RESET = "\u001B[0m";
+  private static final String BLACK = "\u001B[30m";
+  private static final String RED = "\u001B[31m";
+  private static final String GREEN = "\u001B[32m";
+  private static final String YELLOW = "\u001B[33m";
+  private static final String BLUE = "\u001B[34m";
+  private static final String PURPLE = "\u001B[35m";
+  private static final String CYAN = "\u001B[36m";
+  private static final String WHITE = "\u001B[37m";
+
+  private static HashMap<String, String> colorMap = new HashMap<String, String>();
+  private static boolean disableLogs;
+  private static String[] disableTags = {"ui"};
+
+  static {
     colorMap.put("erreur", RED);
     colorMap.put("test", RED);
     colorMap.put("todo", PURPLE);
     colorMap.put("ui", YELLOW);
     colorMap.put("menu", YELLOW);
     colorMap.put("éditeur", YELLOW);
+    colorMap.put("game", CYAN);
+    disableLogs = Config.General.disableLogs;
   }
 
   public static void println(Object... logs) {
@@ -46,7 +49,7 @@ public final class Debug {
   }
 
   public static void log(String tag, Object message) {
-    if (disableLog) return;
+    if (disableLogs) return;
     for (String s : disableTags) {
       if (s.toUpperCase().equals(tag.toUpperCase())) return;
     }

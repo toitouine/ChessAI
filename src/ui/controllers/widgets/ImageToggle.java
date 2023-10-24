@@ -1,5 +1,4 @@
 import processing.core.PImage;
-import processing.core.PApplet;
 
 public class ImageToggle extends CallableWidget<ImageToggle> {
   private PImage img1, img2;
@@ -9,7 +8,7 @@ public class ImageToggle extends CallableWidget<ImageToggle> {
   private int backgroundColor;
   private String caption1, caption2;
 
-  ImageToggle(PApplet sketch, float x, float y, float w, float h, String imgPath1, String imgPath2) {
+  ImageToggle(Applet sketch, float x, float y, float w, float h, String imgPath1, String imgPath2) {
     me = this;
     this.sketch = sketch;
     this.x = x;

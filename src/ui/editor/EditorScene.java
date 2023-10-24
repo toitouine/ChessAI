@@ -14,7 +14,7 @@ public class EditorScene extends Scene {
 
   private Overlay settings, fens;
 
-  public EditorScene(Main sketch) {
+  public EditorScene(Applet sketch) {
     this.sketch = sketch;
     width = Math.round(offsetX + 8*w);
     height = Math.round(offsetY + 8*w);

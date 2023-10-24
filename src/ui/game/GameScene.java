@@ -11,15 +11,15 @@ public class GameScene extends Scene {
   private float offsetY = Config.UI.offsetY;
   private int pov = Player.White;
   private boolean attach = true;
-  private GameManager game;
   private BoardDisplay boardDisplay;
 
   private Player white, black;
   private PImage whiteImage, blackImage;
 
-  public GameScene(Main sketch, GameManager game) {
+  private Game game;
+
+  public GameScene(Applet sketch) {
     this.sketch = sketch;
-    this.game = game;
     width = Math.round(offsetX + 8*w);
     height = Math.round(offsetY + 8*w);
 
@@ -27,6 +27,11 @@ public class GameScene extends Scene {
   }
 
   public void awake() {
+    if (game == null) {
+      Debug.error("Scène de partie activée mais aucune partie fournie");
+      return;
+    }
+
     Debug.log("UI", "Nouvelle scène : Partie");
     PSurface surface = sketch.getSurface();
     sketch.setTitle(game.getWhite().pseudo + " contre " + game.getBlack().pseudo);
@@ -39,14 +44,24 @@ public class GameScene extends Scene {
     black = game.getBlack();
     whiteImage = sketch.loadImage("data/joueurs/" + white.name.toLowerCase() + "Img.jpg");
     blackImage = sketch.loadImage("data/joueurs/" + black.name.toLowerCase() + "Img.jpg");
+    boardDisplay.setBoard(game.board);
+  }
+
+  public void setGame(Game g) {
+    game = g;
   }
 
   public void draw() {
+    if (game == null) {
+      Debug.error("Scène de partie activée mais aucune partie fournie");
+      return;
+    }
+
     sketch.background(49, 46, 43);
 
     float space = 0.19f * w;
-    float whiteImgY, whiteTextY, whiteEvalY;
-    float blackImgY, blackTextY, blackEvalY;
+    float whiteImgY, whiteTextY, whiteEvalY, whiteTimeY;
+    float blackImgY, blackTextY, blackEvalY, blackTimeY;
     if (pov == Player.White) {
       whiteImgY = height - (space + w/2);
       blackImgY = offsetY + w/2;
@@ -54,6 +69,8 @@ public class GameScene extends Scene {
       blackTextY = offsetY + w + space;
       whiteEvalY = height - (space*3.5f + 82*w/70);
       blackEvalY = offsetY + space*2.5f + 82*w/70;
+      whiteTimeY = offsetY + 4*w + 0.39f*w;
+      blackTimeY = offsetY + 4*w - 0.39f*w;
     } else {
       whiteImgY = offsetY + w/2;
       blackImgY = height - (space + w/2);
@@ -61,20 +78,42 @@ public class GameScene extends Scene {
       blackTextY = height - (space*2 + w);
       whiteEvalY = offsetY + space*2.5f + 82*w/70;
       blackEvalY = height - (space*3.5f + 82*w/70);
+      whiteTimeY = offsetY + 4*w - 0.39f*w;
+      blackTimeY = offsetY + 4*w + 0.39f*w;
     }
 
     sketch.imageMode(sketch.CENTER);
-    sketch.image(whiteImage, offsetX/2, whiteImgY, w, w);
-    sketch.image(blackImage, offsetX/2, blackImgY, w, w);
-
     sketch.fill(255);
     sketch.textSize(12 * w / 70);
     sketch.textAlign(sketch.CENTER, sketch.CENTER);
+
+    sketch.image(whiteImage, offsetX/2, whiteImgY, w, w);
+    sketch.image(blackImage, offsetX/2, blackImgY, w, w);
     sketch.text(white.pseudo + " (" + white.elo + ")", offsetX/2, whiteTextY);
     sketch.text(black.pseudo + " (" + black.elo + ")", offsetX/2, blackTextY);
+    if (white.isBot) sketch.text("Eval : 1,294", offsetX/2, whiteEvalY);
+    if (black.isBot) sketch.text("Eval : MAT EN 1", offsetX/2, blackEvalY);
 
-    // sketch.text("Eval : MAT EN 1", offsetX/2, blackEvalY);
-    // sketch.text("Eval : 1,294", offsetX/2, whiteEvalY);
+    if (game.useTime) {
+      sketch.rectMode(sketch.CENTER);
+      sketch.textSize(23*w/70);
+
+      if (!game.paused && game.board.tourDeQui == Player.White) sketch.fill(255);
+      else sketch.fill(rgb(152, 151, 149));
+      sketch.rect(offsetX/2, whiteTimeY, offsetX/1.15f, 45*w/70, 5);
+
+      if (!game.paused && game.board.tourDeQui == Player.White) sketch.fill(rgb(38, 33, 27));
+      else sketch.fill(rgb(97, 94, 91));
+      sketch.text(game.timers[Player.White].formattedTime(), offsetX/2, whiteTimeY);
+
+      if (!game.paused && game.board.tourDeQui == Player.Black) sketch.fill(rgb(38, 33, 27));
+      else sketch.fill(rgb(43, 39, 34));
+      sketch.rect(offsetX/2, blackTimeY, offsetX/1.15f, 45*w/70, 5);
+
+      if (!game.paused && game.board.tourDeQui == Player.Black) sketch.fill(rgb(255, 255, 255));
+      else sketch.fill(rgb(130, 128, 126));
+      sketch.text(game.timers[Player.Black].formattedTime(), offsetX/2, blackTimeY);
+    }
 
     showControllers();
     showOverlay();
@@ -94,8 +133,7 @@ public class GameScene extends Scene {
   private void init() {
     controllers.clear();
 
-    Board b = game.board;
-    boardDisplay = new BoardDisplay(sketch, offsetX + 4*w, offsetY + 4*w, w, b);
+    boardDisplay = new BoardDisplay(sketch, offsetX + 4*w, offsetY + 4*w, w);
     controllers.add(boardDisplay);
 
     addUpControllers();
