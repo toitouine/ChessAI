@@ -1,16 +1,18 @@
-final public class MainApplet extends Applet {
+final public class MainApplet extends SApplet {
   GameScene gameScene;
-
-  public MainApplet() {
-  }
+  MenuScene menuScene;
+  EditorScene editorScene;
 
   public void setup() {
     textFont(createFont("data/fonts/LucidaSans.ttf", 12));
 
+    menuScene = new MenuScene(this);
     gameScene = new GameScene(this);
+    editorScene = new EditorScene(this);
+
+    register(menuScene, SceneIndex.Menu);
     register(gameScene, SceneIndex.Game);
-    register(new MenuScene(this), SceneIndex.Menu);
-    register(new EditorScene(this), SceneIndex.Editor);
+    register(editorScene, SceneIndex.Editor);
     setScene(SceneIndex.Menu);
   }
 

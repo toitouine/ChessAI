@@ -1,7 +1,7 @@
 import java.util.ArrayList;
 
 public abstract class Scene {
-  protected Applet sketch;
+  protected SApplet sketch;
   protected ArrayList<Controller> controllers = new ArrayList<Controller>();
   protected int width; // Largeur de la fenêtre
   protected int height; // Hauteur de la fenêtre

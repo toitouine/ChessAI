@@ -12,7 +12,7 @@ public class TimeButton extends Widget<TimeButton> {
   private Time increment = Time.fromMillis(0);
   private ArrayList<SubTimebutton> subButtons = new ArrayList<SubTimebutton>();
 
-  TimeButton(Applet sketch, float x, float y, float h) {
+  TimeButton(SApplet sketch, float x, float y, float h) {
     me = this;
     this.sketch = sketch;
     this.x = x;

@@ -17,7 +17,7 @@ public class MenuScene extends Scene {
 
   public MenuScene(MainApplet mainApplet) {
     this.mainApplet = mainApplet;
-    sketch = (Applet) mainApplet;
+    sketch = (SApplet) mainApplet;
     width = 1100;
     height = 460;
 
@@ -29,7 +29,8 @@ public class MenuScene extends Scene {
     PSurface surface = sketch.getSurface();
     sketch.setTitle("Selection des joueurs");
     surface.setSize(width, height);
-    surface.setLocation(sketch.displayWidth/2 - width/2, 0);
+    java.awt.Rectangle bounds = sketch.getScreenBounds();
+    surface.setLocation(bounds.x + (bounds.width-width) / 2, bounds.y);
     surface.setAlwaysOnTop(false);
     surface.setVisible(true);
   }

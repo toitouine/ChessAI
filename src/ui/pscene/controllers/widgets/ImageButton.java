@@ -6,7 +6,7 @@ public class ImageButton extends CallableWidget<ImageButton> {
   private int arrondi = 5;
   private int backgroundColor;
 
-  ImageButton(Applet sketch, float x, float y, float w, float h, String imgPath) {
+  ImageButton(SApplet sketch, float x, float y, float w, float h, String imgPath) {
     me = this;
     this.sketch = sketch;
     this.x = x;

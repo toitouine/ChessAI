@@ -1,9 +1,7 @@
 // TODO :
 //
-// URGENT :
-// - TESTER PROCESSING/CORE.JAR SUR AUTRES SYSTÈMES
-//
-// - UI : Board (1/2) + Timers à droite OK
+// - Lier les toggles à des variables
+// - Raccourcis clavier
 // - Génération de coups
 // - Déroulement de la partie, Game Manager, Players, IA et Humain
 // - UI : Suite
@@ -32,7 +30,7 @@ public class Main {
 
   private static void printStartMessage() {
     System.out.println();
-    System.out.println("──────────────────────────");
+    System.out.println("─────────────────────────────────────────────");
     System.out.println(Config.General.name + ", Antoine Mechulam");
     System.out.println("(https://github.com/toitouine/ChessAI)");
     System.out.println();
@@ -42,12 +40,12 @@ public class Main {
     System.out.println("- Loic : Plutôt mauvais, préfère pater que mater");
     System.out.println("- Antoine : Un jeu aléatoire de qualité");
     System.out.println("- Stockfish : Extrêmement difficile de perdre contre lui");
-    System.out.println(" ");
+    System.out.println();
     System.out.println("Voir fichier Config.java pour les options / paramètres");
     System.out.println("Appuyer sur H pour afficher l'aide (raccourcis claviers)");
     System.out.println();
     System.out.println("/!\\ La direction rejette toute responsabilité en cas de CPU détruit par ce programme ou d'ordinateur brulé.");
-    System.out.println("──────────────────────────");
+    System.out.println("─────────────────────────────────────────────");
     System.out.println();
   }
 }

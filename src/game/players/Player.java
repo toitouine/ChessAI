@@ -14,7 +14,7 @@ abstract public class Player {
       return (Player)instance;
     }
     catch (Exception e) {
-      Debug.error("Classe du joueur introuvable [" + name + "] ! Ajout d'un humain à la place.");
+      Debug.error("Classe du joueur [" + name + "] introuvable. Ajout d'un humain à la place.");
       return new Humain(s);
     }
   }

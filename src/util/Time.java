@@ -1,5 +1,5 @@
 public class Time {
-  private static Applet sketch;
+  private static SApplet sketch;
   private int millis = 0;
 
   private Time(int millis) {
@@ -37,7 +37,7 @@ public class Time {
     return new Time(millis);
   }
 
-  static void init(Applet s) {
+  static void init(SApplet s) {
     sketch = s;
   }
 

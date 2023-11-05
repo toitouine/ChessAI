@@ -7,7 +7,7 @@ public class Slider extends Widget<Slider> {
   private int graduationNumber = 0;
   private boolean lock = false;
 
-  public Slider(Applet sketch, float x, float y, float w, float h) {
+  public Slider(SApplet sketch, float x, float y, float w, float h) {
     me = this;
     this.sketch = sketch;
     this.x = x;

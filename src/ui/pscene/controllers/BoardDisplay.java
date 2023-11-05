@@ -17,7 +17,7 @@ public class BoardDisplay extends Controller<BoardDisplay> {
   private Case lastSquareRightClicked = null;
   private Arrow drawingArrow = null;
 
-  public BoardDisplay(Applet sketch, float x, float y, int caseWidth) {
+  public BoardDisplay(SApplet sketch, float x, float y, int caseWidth) {
     this.sketch = sketch;
     this.caseWidth = caseWidth;
     this.x = (int)x;
@@ -98,16 +98,16 @@ public class BoardDisplay extends Controller<BoardDisplay> {
     sketch.pop();
 
     for (Arrow arrow : arrows) arrow.show();
-
-    Debug.log(arrows);
   }
 
   private void toggleYellow(Case s) {
+    if (rouges.contains(s)) rouges.remove(s);
     if (jaunes.contains(s)) jaunes.remove(s);
     else jaunes.add(s);
   }
 
   private void toggleRed(Case s) {
+    if (jaunes.contains(s)) jaunes.remove(s);
     if (rouges.contains(s)) rouges.remove(s);
     else rouges.add(s);
   }
@@ -161,13 +161,17 @@ public class BoardDisplay extends Controller<BoardDisplay> {
     }
     else if (e.mouseReleased()) {
       if (sketch.mouseButton == sketch.RIGHT) {
-
         if (lastSquareRightClicked == null || lastSquareRightClicked == square) {
           if (sketch.keyPressed && sketch.keyCode == sketch.CONTROL) toggleYellow(square);
           else toggleRed(square);
         }
         else {
-          // TODO: supprimer flèche si par dessus
+          for (int n = arrows.size()-1; n >= 0; n--) {
+            if (arrows.get(n).equals(drawingArrow) && drawingArrow != arrows.get(n)) {
+              arrows.remove(n);
+              arrows.remove(drawingArrow);
+            }
+          }
           drawingArrow = null;
         }
       }
@@ -248,6 +252,10 @@ public class BoardDisplay extends Controller<BoardDisplay> {
       if (pov != Player.White) sketch.rotate(sketch.PI);
       sketch.shape(shape);
       sketch.pop();
+    }
+
+    boolean equals(Arrow other) {
+      return(i == other.i && j == other.j && deltaI == other.deltaI && deltaJ == other.deltaJ);
     }
   }
 }

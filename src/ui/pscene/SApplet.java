@@ -1,5 +1,9 @@
 import processing.core.PApplet;
 import processing.core.PImage;
+import processing.awt.PSurfaceAWT;
+import java.awt.Frame;
+import java.awt.Rectangle;
+import java.awt.GraphicsDevice;
 import java.util.HashMap;
 
 enum SceneIndex {
@@ -8,7 +12,7 @@ enum SceneIndex {
   Editor
 }
 
-public abstract class Applet extends PApplet {
+public abstract class SApplet extends PApplet {
 
   private HashMap<SceneIndex, Scene> scenes = new HashMap<SceneIndex, Scene>();
   private Scene currentScene;
@@ -74,10 +78,21 @@ public abstract class Applet extends PApplet {
   final public PImage loadImage(String path) {
     PImage img = super.loadImage(path);
     if (img == null) {
-      Debug.error("Image introuvable : " + path + " --> Ajout de l'image par défaut.");
+      Debug.error("Image introuvable : " + path + ". Ajout de l'image par défaut.");
       img = super.loadImage(Config.UI.defaultImage);
     }
     return img;
   }
 
+  final public Frame getFrame() {
+    return ( (PSurfaceAWT.SmoothCanvas) ((PSurfaceAWT)surface).getNative()).getFrame();
+  }
+
+  final public GraphicsDevice getScreen() {
+    return getFrame().getGraphicsConfiguration().getDevice();
+  }
+
+  final public Rectangle getScreenBounds() {
+    return getScreen().getDefaultConfiguration().getBounds();
+  }
 }

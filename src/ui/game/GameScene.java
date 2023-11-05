@@ -18,7 +18,7 @@ public class GameScene extends Scene {
 
   private Game game;
 
-  public GameScene(Applet sketch) {
+  public GameScene(SApplet sketch) {
     this.sketch = sketch;
     width = Math.round(offsetX + 8*w);
     height = Math.round(offsetY + 8*w);
@@ -36,7 +36,8 @@ public class GameScene extends Scene {
     PSurface surface = sketch.getSurface();
     sketch.setTitle(game.getWhite().pseudo + " contre " + game.getBlack().pseudo);
     surface.setSize(width, height);
-    surface.setLocation(sketch.displayWidth-width, 0);
+    java.awt.Rectangle bounds = sketch.getScreenBounds();
+    surface.setLocation(bounds.x + bounds.width-width, bounds.y);
     surface.setAlwaysOnTop(attach);
     surface.setVisible(true);
 
@@ -152,7 +153,7 @@ public class GameScene extends Scene {
         .setState(true)
         .setAction( () -> toggleAttach() ),
 
-      new ImageToggle(sketch, calcX.apply(1), offsetY/2, iconSize, iconSize, "data/icons/varianteGris.png", "data/icons/variante.png")
+      new ImageToggle(sketch, calcX.apply(1), offsetY/2, iconSize, iconSize, "data/icons/varianteOff.png", "data/icons/variante.png")
         .setAction( () -> Debug.log("todo", "Afficher les variantes (ou pas)") ),
 
       new ImageButton(sketch, calcX.apply(2), offsetY/2, iconSize, iconSize, "data/icons/analysis.png")

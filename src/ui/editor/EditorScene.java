@@ -14,7 +14,7 @@ public class EditorScene extends Scene {
 
   private Overlay settings, fens;
 
-  public EditorScene(Applet sketch) {
+  public EditorScene(SApplet sketch) {
     this.sketch = sketch;
     width = Math.round(offsetX + 8*w);
     height = Math.round(offsetY + 8*w);
@@ -30,7 +30,8 @@ public class EditorScene extends Scene {
     PSurface surface = sketch.getSurface();
     sketch.setTitle("Editeur de position");
     surface.setSize(width, height);
-    surface.setLocation(sketch.displayWidth-width, 0);
+    java.awt.Rectangle bounds = sketch.getScreenBounds();
+    surface.setLocation(bounds.x + bounds.width-width, bounds.y);
     surface.setAlwaysOnTop(attach);
     surface.setVisible(true);
   }

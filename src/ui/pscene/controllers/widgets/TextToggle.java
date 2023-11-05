@@ -7,7 +7,7 @@ public class TextToggle extends CallableWidget<TextToggle> {
   private boolean state = false; // false = state 1, true = state 2
   private String caption1, caption2;
 
-  TextToggle(Applet sketch, float x, float y, String text1, String text2, int tSize) {
+  TextToggle(SApplet sketch, float x, float y, String text1, String text2, int tSize) {
     me = this;
     this.sketch = sketch;
     this.x = x;

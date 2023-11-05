@@ -8,6 +8,9 @@ public final class Game {
 
   public boolean paused = true;
 
+  private int number;
+  private static int totalGames = 0;
+
   public Game(Player p1, Player p2, String startFEN, Timer t1, Timer t2, boolean hacker) {
     board = new Board();
     players[0] = p1;
@@ -17,11 +20,20 @@ public final class Game {
     useHacker = hacker;
     useTime = timers[0].getTime().millis() > 0 && timers[1].getTime().millis() > 0;
     board.loadFEN(startFEN);
+
+    totalGames++;
+    number = totalGames;
     announceGame();
   }
 
   public Game(Player p1, Player p2, String startFEN, Timer t1, Timer t2) {
     this(p1, p2, startFEN, t1, t2, false);
+  }
+
+  @Override
+  public String toString() {
+    return getClass().getName() + "@" + Integer.toHexString(hashCode())
+           + "[#" + number + ", white=" + getWhite().name + ", black=" + getBlack().name + "]";
   }
 
   public Player getWhite() {
@@ -35,7 +47,7 @@ public final class Game {
   private void announceGame() {
     String hackerText = (useHacker ? " [HACKER]" : "");
     Debug.log();
-    Debug.log("game", "Nouvelle partie créée : " + getWhite().name + " contre " + getBlack().name + hackerText);
+    Debug.log("game", "Nouvelle partie créée (#" + number +  ") : " + getWhite().name + " contre " + getBlack().name + hackerText);
     if (getWhite().isBot) Debug.log("  - " + getWhite().description());
     if (getBlack().isBot) Debug.log("  - " + getBlack().description());
     Debug.log();

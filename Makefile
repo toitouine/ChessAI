@@ -14,8 +14,9 @@ CLASSES = \
 ./src/ui/menu/*.java \
 ./src/ui/editor/*.java \
 ./src/ui/game/*.java \
-./src/ui/controllers/*.java \
-./src/ui/controllers/widgets/*.java \
+./src/ui/pscene/*.java \
+./src/ui/pscene/controllers/*.java \
+./src/ui/pscene/controllers/widgets/*.java \
 ./src/game/*.java \
 ./src/game/players/*.java \
 ./src/game/hacker/*.java \

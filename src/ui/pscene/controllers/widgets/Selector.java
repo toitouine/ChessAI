@@ -6,7 +6,7 @@ public class Selector<T> extends Widget<Selector<T>> {
   private PImage leftArrow, rightArrow;
   private int index = 0;
 
-  Selector(Applet sketch, float x, float y, float w, float h, T[] inputs, PImage[] imgs) {
+  Selector(SApplet sketch, float x, float y, float w, float h, T[] inputs, PImage[] imgs) {
     me = this;
     this.sketch = sketch;
     this.x = x;

@@ -8,7 +8,7 @@
 import java.util.function.BooleanSupplier;
 
 public abstract class Controller<T> {
-  protected Applet sketch;
+  protected SApplet sketch;
   protected float x, y, w, h;
   protected BooleanSupplier condition;
   protected T me;
