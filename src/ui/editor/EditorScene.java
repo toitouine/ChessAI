@@ -14,29 +14,25 @@ public class EditorScene extends Scene {
 
   private Overlay settings, fens;
 
-  public EditorScene(SApplet sketch) {
-    this.sketch = sketch;
-    width = Math.round(offsetX + 8*w);
-    height = Math.round(offsetY + 8*w);
+  public EditorScene(SApplet sketch, int width, int height) {
+    super(sketch, width, height);
 
     settings = new SettingsOverlay(this, offsetX + 4*w, offsetY+4*w, 8*w, 8*w);
     fens = new FenOverlay(this, offsetX + 4*w, offsetY+4*w, 8*w, 8*w);
-
     init();
   }
 
-  public void awake() {
+  protected void setup() {
     Debug.log("UI", "Nouvelle scène : Editeur");
     PSurface surface = sketch.getSurface();
     sketch.setTitle("Editeur de position");
-    surface.setSize(width, height);
     java.awt.Rectangle bounds = sketch.getScreenBounds();
     surface.setLocation(bounds.x + bounds.width-width, bounds.y);
     surface.setAlwaysOnTop(attach);
     surface.setVisible(true);
   }
 
-  public void draw() {
+  protected void draw() {
     sketch.background(49, 46, 43);
     sketch.fill(rgb(201, 186, 155));
     sketch.noStroke();
@@ -49,19 +45,6 @@ public class EditorScene extends Scene {
       sketch.line(offsetX + i * w, offsetY, offsetX+i*w, sketch.height);
       sketch.line(offsetX, offsetY + i * w, sketch.width, offsetY + i * w);
     }
-
-    showControllers();
-    showOverlay();
-  }
-
-  private void toggleSettings() {
-    if (currentOverlay != settings) currentOverlay = settings;
-    else currentOverlay = null;
-  }
-
-  public void toggleFens() {
-    if (currentOverlay != fens) currentOverlay = fens;
-    else currentOverlay = null;
   }
 
   private void flipPov() {
@@ -102,13 +85,13 @@ public class EditorScene extends Scene {
         .setAction( () -> Debug.log("todo", "Afficher les informations") ),
 
       new ImageButton(sketch, calcX.apply(4), offsetY/2, iconSize, iconSize, "data/icons/pawn.png")
-        .setAction( () -> toggleFens() ),
+        .setAction( () -> toggleOverlay(fens) ),
 
       new ImageButton(sketch, calcX.apply(5), offsetY/2, iconSize, iconSize, "data/icons/paste.png")
         .setAction( () -> Debug.log("todo", "HTML de la position") ),
 
       new ImageButton(sketch, calcX.apply(6), offsetY/2, iconSize, iconSize, "data/icons/parameter.png")
-        .setAction( () -> toggleSettings() ),
+        .setAction( () -> toggleOverlay(settings) ),
 
       new ImageToggle(sketch, calcX.apply(7), offsetY/2, iconSize, iconSize, "data/icons/rotate1.png", "data/icons/rotate2.png")
         .setAction( () -> flipPov() ),

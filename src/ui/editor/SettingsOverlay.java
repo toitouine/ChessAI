@@ -4,14 +4,8 @@ public class SettingsOverlay extends Overlay {
 
   int w = Config.UI.caseWidth;
 
-  SettingsOverlay(Scene scene, float x, float y, int width, int height) {
-    this.scene = scene;
-    this.sketch = scene.sketch;
-    this.x = x;
-    this.y = y;
-    this.width = width;
-    this.height = height;
-
+  public SettingsOverlay(Scene scene, float x, float y, int width, int height) {
+    super(scene, x, y, width, height);
     init();
   }
 
@@ -19,9 +13,6 @@ public class SettingsOverlay extends Overlay {
     sketch.fill(220, 220, 220, 220);
     sketch.rectMode(sketch.CENTER);
     sketch.rect(x, y, width, height);
-
-    showControllers();
-    showOverlay();
   }
 
   private void init() {
@@ -56,38 +47,6 @@ public class SettingsOverlay extends Overlay {
         .setAction( () -> Debug.log("todo", "Grand roque noir") )
         .setCaptionSize(16.5f * w/70)
         .setCaptions("Grand roque noir désactivé", "Grand roque noir activé")
-    );
-  }
-}
-
-class TesterOverlay extends Overlay {
-  TesterOverlay(Scene scene, float x, float y, int width, int height) {
-    this.scene = scene;
-    this.sketch = scene.sketch;
-    this.x = x;
-    this.y = y;
-    this.width = width;
-    this.height = height;
-
-    init();
-  }
-
-  public void draw() {
-    sketch.fill(0);
-    sketch.stroke(255);
-    sketch.strokeWeight(2);
-    sketch.rectMode(sketch.CENTER);
-    sketch.rect(x, y, width, height);
-
-    showControllers();
-  }
-
-  private void init() {
-    controllers.clear();
-    Collections.addAll(controllers,
-      new TextButton(sketch, x, y, "Squicky", 17)
-        .setAction( () -> Debug.log("test", "hey") )
-        .setArrondi(3)
     );
   }
 }

@@ -4,7 +4,6 @@ import java.util.Collections;
 
 public class MenuScene extends Scene {
 
-  private MainApplet mainApplet;
   private boolean showWhiteID = true;
   private boolean showBlackID = true;
   private boolean useHacker = false;
@@ -15,27 +14,22 @@ public class MenuScene extends Scene {
   private Slider whiteIDSlider, blackIDSlider;
   private Slider whiteFixSlider, blackFixSlider;
 
-  public MenuScene(MainApplet mainApplet) {
-    this.mainApplet = mainApplet;
-    sketch = (SApplet) mainApplet;
-    width = 1100;
-    height = 460;
-
+  public MenuScene(SApplet sketch, int width, int height) {
+    super(sketch, width, height);
     init();
   }
 
-  public void awake() {
+  protected void setup() {
     Debug.log("UI", "Nouvelle scène : Menu");
     PSurface surface = sketch.getSurface();
     sketch.setTitle("Selection des joueurs");
-    surface.setSize(width, height);
     java.awt.Rectangle bounds = sketch.getScreenBounds();
     surface.setLocation(bounds.x + (bounds.width-width) / 2, bounds.y);
     surface.setAlwaysOnTop(false);
     surface.setVisible(true);
   }
 
-  public void draw() {
+  protected void draw() {
     sketch.background(49, 46, 43);
     sketch.fill(255);
     sketch.textSize(30);
@@ -49,9 +43,6 @@ public class MenuScene extends Scene {
     sketch.textAlign(sketch.LEFT, sketch.LEFT);
     sketch.textSize(15);
     sketch.text(startFEN, 10, height-10);
-
-    showControllers();
-    showOverlay();
   }
 
   private void startGame() {
@@ -68,16 +59,18 @@ public class MenuScene extends Scene {
     Timer t1 = new Timer(whiteTime.getTime(), whiteTime.getIncrement());
     Timer t2 = new Timer(blackTime.getTime(), blackTime.getIncrement());
 
-    mainApplet.startDisplayGame(p1, p2, startFEN, t1, t2, useHacker);
+    Game game = new Game(p1, p2, startFEN, t1, t2, useHacker);
+    ((GameScene) sketch.getScene(SceneIndex.Game)).setGame(game);
+    sketch.setScene(SceneIndex.Game);
   }
 
-  void init() {
+  private void init() {
     controllers.clear();
     addPlayerControllers();
     addOtherControllers();
   }
 
-  void addOtherControllers() {
+  private void addOtherControllers() {
     Collections.addAll(controllers,
       // Nouvelle partie
       new TextButton(sketch, width/2, height-88, "Nouvelle partie", 30, 10)
@@ -129,7 +122,7 @@ public class MenuScene extends Scene {
     );
   }
 
-  void addPlayerControllers() {
+  private void addPlayerControllers() {
     PImage[] imgs = new PImage[Config.IA.players.length];
     String[] outputs = new String[Config.IA.players.length];
     for (int i = 0; i < imgs.length; i++)  {

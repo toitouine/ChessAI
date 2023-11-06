@@ -18,15 +18,12 @@ public class GameScene extends Scene {
 
   private Game game;
 
-  public GameScene(SApplet sketch) {
-    this.sketch = sketch;
-    width = Math.round(offsetX + 8*w);
-    height = Math.round(offsetY + 8*w);
-
+  public GameScene(SApplet sketch, int width, int height) {
+    super(sketch, width, height);
     init();
   }
 
-  public void awake() {
+  protected void setup() {
     if (game == null) {
       Debug.error("Scène de partie activée mais aucune partie fournie");
       return;
@@ -35,7 +32,6 @@ public class GameScene extends Scene {
     Debug.log("UI", "Nouvelle scène : Partie");
     PSurface surface = sketch.getSurface();
     sketch.setTitle(game.getWhite().pseudo + " contre " + game.getBlack().pseudo);
-    surface.setSize(width, height);
     java.awt.Rectangle bounds = sketch.getScreenBounds();
     surface.setLocation(bounds.x + bounds.width-width, bounds.y);
     surface.setAlwaysOnTop(attach);
@@ -48,11 +44,7 @@ public class GameScene extends Scene {
     boardDisplay.setBoard(game.board);
   }
 
-  public void setGame(Game g) {
-    game = g;
-  }
-
-  public void draw() {
+  protected void draw() {
     if (game == null) {
       Debug.error("Scène de partie activée mais aucune partie fournie");
       return;
@@ -115,9 +107,10 @@ public class GameScene extends Scene {
       else sketch.fill(rgb(130, 128, 126));
       sketch.text(game.timers[Player.Black].formattedTime(), offsetX/2, blackTimeY);
     }
+  }
 
-    showControllers();
-    showOverlay();
+  public void setGame(Game g) {
+    game = g;
   }
 
   private void toggleAttach() {

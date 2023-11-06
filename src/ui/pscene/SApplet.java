@@ -25,7 +25,7 @@ public abstract class SApplet extends PApplet {
       return;
     }
 
-    currentScene.draw();
+    currentScene.show();
   }
 
   final protected void register(Scene scene, SceneIndex index) {
@@ -33,13 +33,18 @@ public abstract class SApplet extends PApplet {
   }
 
   final public void setScene(SceneIndex index) {
-    try {
-      currentScene = scenes.get(index);
-      currentScene.awake();
-    }
-    catch (Exception e) {
+    Scene scene = scenes.get(index);
+    if (scene == null) {
       Debug.error("Scène demandée introuvable (SceneIndex " + index + "). Annulation du changement de scène.");
+      return;
     }
+
+    currentScene = scene;
+    currentScene.awake();
+  }
+
+  final public Scene getScene(SceneIndex index) {
+    return scenes.get(index);
   }
 
   public void keyPressed() {
