@@ -15,10 +15,14 @@ public abstract class Piece {
   public int index; // Index de la pièce (type et couleur)
   public float value, loicValue; // Valeur de la pièce en terme de matériel
 
-  public void init(int t) {
+  public Piece(Board board, int i, int j, int c, int type) {
+    this.board = board;
+    this.i = i;
+    this.j = j;
+    this.c = c;
+    this.type = type;
     board.grid[i][j].piece = this;
-    type = t;
-    index = t + c*6;
+    index = type + c*6;
     value = Config.Eval.maireValues[type];
     loicValue = Config.Eval.loicValues[type];
   }
@@ -37,60 +41,36 @@ public abstract class Piece {
 
 class Roi extends Piece {
   public Roi(Board board, int i, int j, int c) {
-    this.board = board;
-    this.i = i;
-    this.j = j;
-    this.c = c;
-    init(Piece.Roi);
+    super(board, i, j, c, Piece.Roi);
   }
 }
 
 class Dame extends Piece {
   public Dame(Board board, int i, int j, int c) {
-    this.board = board;
-    this.i = i;
-    this.j = j;
-    this.c = c;
-    init(Piece.Dame);
+    super(board, i, j, c, Piece.Dame);
   }
 }
 
 class Tour extends Piece {
   public Tour(Board board, int i, int j, int c) {
-    this.board = board;
-    this.i = i;
-    this.j = j;
-    this.c = c;
-    init(Piece.Tour);
+    super(board, i, j, c, Piece.Tour);
   }
 }
 
 class Fou extends Piece {
   public Fou(Board board, int i, int j, int c) {
-    this.board = board;
-    this.i = i;
-    this.j = j;
-    this.c = c;
-    init(Piece.Fou);
+    super(board, i, j, c, Piece.Fou);
   }
 }
 
 class Cavalier extends Piece {
   public Cavalier(Board board, int i, int j, int c) {
-    this.board = board;
-    this.i = i;
-    this.j = j;
-    this.c = c;
-    init(Piece.Cavalier);
+    super(board, i, j, c, Piece.Cavalier);
   }
 }
 
 class Pion extends Piece {
   public Pion(Board board, int i, int j, int c) {
-    this.board = board;
-    this.i = i;
-    this.j = j;
-    this.c = c;
-    init(Piece.Pion);
+    super(board, i, j, c, Piece.Pion);
   }
 }
