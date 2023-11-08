@@ -25,7 +25,14 @@ public class Main {
 
     // Actualise GameManager pour démarrer des nouvelles parties
     // en attente, gérer les fins de parties...
-    for (;;) gameManager.update();
+    for (;;) {
+      try {
+        java.util.concurrent.TimeUnit.MILLISECONDS.sleep(20);
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+      gameManager.update();
+    }
   }
 
   private static void printStartMessage() {
