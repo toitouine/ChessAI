@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-public class EditorScene extends Scene {
+public class EditorScene extends Scene<MainApplet> {
 
   private int w = Config.UI.caseWidth;
   private float offsetX = Config.UI.offsetX;
@@ -14,7 +14,7 @@ public class EditorScene extends Scene {
 
   private Overlay settings, fens;
 
-  public EditorScene(SApplet sketch, int width, int height) {
+  public EditorScene(MainApplet sketch, int width, int height) {
     super(sketch, width, height);
 
     settings = new SettingsOverlay(this, offsetX + 4*w, offsetY+4*w, 8*w, 8*w);
@@ -97,7 +97,7 @@ public class EditorScene extends Scene {
         .setAction(this::flipPov),
 
       new ImageButton(sketch, calcX.apply(8), offsetY/2, iconSize, iconSize, "data/icons/quit.png")
-        .setAction( () -> sketch.setScene(SceneIndex.Menu) )
+        .setAction(sketch::goToMenu)
     );
   }
 

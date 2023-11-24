@@ -1,11 +1,11 @@
 // Scène particulière qui s'affiche par dessus une autre scène
 // Empêche les controllers inaccessibles d'être activé par des events
 
-public abstract class Overlay extends Scene {
+public abstract class Overlay<T extends SApplet> extends Scene<T> {
   protected Scene scene;
   protected float x, y;
 
-  public Overlay(Scene scene, float x, float y, int width, int height) {
+  public Overlay(Scene<T> scene, float x, float y, int width, int height) {
     super(scene.sketch, width, height);
     this.scene = scene;
     this.x = x;

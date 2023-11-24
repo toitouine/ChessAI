@@ -26,4 +26,10 @@ final public class MainApplet extends SApplet {
   public void goToEditor() {
     setScene(SceneIndex.Editor);
   }
+
+  public void startDisplayGame(Player p1, Player p2, String startFEN, Timer t1, Timer t2, boolean useHacker) {
+    Game game = new Game(p1, p2, startFEN, t1, t2, useHacker);
+    gameScene.setGame(game);
+    setScene(SceneIndex.Game);
+  }
 }

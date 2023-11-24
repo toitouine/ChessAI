@@ -1,10 +1,10 @@
 import java.util.Collections;
 
-public class FenOverlay extends Overlay {
+public class FenOverlay extends Overlay<MainApplet> {
 
   int w = Config.UI.caseWidth;
 
-  public FenOverlay(Scene scene, float x, float y, int width, int height) {
+  public FenOverlay(Scene<MainApplet> scene, float x, float y, int width, int height) {
     super(scene, x, y, width, height);
     init();
   }

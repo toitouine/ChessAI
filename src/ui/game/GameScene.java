@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-public class GameScene extends Scene {
+public class GameScene extends Scene<MainApplet> {
 
   private int w = Config.UI.caseWidth;
   private float offsetX = Config.UI.offsetX;
@@ -19,7 +19,7 @@ public class GameScene extends Scene {
 
   private Game game;
 
-  public GameScene(SApplet sketch, int width, int height) {
+  public GameScene(MainApplet sketch, int width, int height) {
     super(sketch, width, height);
     init();
   }
@@ -175,7 +175,7 @@ public class GameScene extends Scene {
         .setAction( () -> Debug.log("todo", "Afficher Search Controller / Stats displayer (?)") ),
 
       new ImageButton(sketch, calcX.apply(9), offsetY/2, iconSize, iconSize, "data/icons/quit.png")
-        .setAction( () -> sketch.setScene(SceneIndex.Menu) )
+        .setAction(sketch::goToMenu)
     );
   }
 

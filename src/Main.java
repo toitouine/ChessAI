@@ -1,5 +1,8 @@
 // TODO :
 //
+// - idée : interface GameDisplayer et création des objets Game dans GameManager
+// - plus : notification de game manager sur parties terminées
+// - et voir graphique (mainApplet...)
 // - Lier les toggles à des variables
 // - Raccourcis clavier
 // - Représentation de board en 1 dimension (+ pas de i,j dans pieces ?)

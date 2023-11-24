@@ -2,7 +2,7 @@ import processing.core.PSurface;
 import processing.core.PImage;
 import java.util.Collections;
 
-public class MenuScene extends Scene {
+public class MenuScene extends Scene<MainApplet> {
 
   private boolean showWhiteID = true;
   private boolean showBlackID = true;
@@ -14,7 +14,7 @@ public class MenuScene extends Scene {
   private Slider whiteIDSlider, blackIDSlider;
   private Slider whiteFixSlider, blackFixSlider;
 
-  public MenuScene(SApplet sketch, int width, int height) {
+  public MenuScene(MainApplet sketch, int width, int height) {
     super(sketch, width, height);
     init();
   }
@@ -59,9 +59,7 @@ public class MenuScene extends Scene {
     Timer t1 = new Timer(whiteTime.getTime(), whiteTime.getIncrement());
     Timer t2 = new Timer(blackTime.getTime(), blackTime.getIncrement());
 
-    Game game = new Game(p1, p2, startFEN, t1, t2, useHacker);
-    ((GameScene) sketch.getScene(SceneIndex.Game)).setGame(game);
-    sketch.setScene(SceneIndex.Game);
+    sketch.startDisplayGame(p1, p2, startFEN, t1, t2, useHacker);
   }
 
   private void init() {
@@ -114,7 +112,7 @@ public class MenuScene extends Scene {
                             whiteIDSlider.setValue(720); blackIDSlider.setValue(720); } ),
       // Éditeur de position
       new ImageButton(sketch, width-28, 38, 55, 55, "data/icons/chess.png")
-        .setAction( () -> sketch.setScene(SceneIndex.Editor) ),
+        .setAction(sketch::goToEditor),
 
       // Bouton du hacker
       new ImageToggle(sketch, width-84, 34, 45, 45, "data/icons/background.png", "data/icons/hacker.png")

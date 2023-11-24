@@ -43,10 +43,6 @@ public abstract class SApplet extends PApplet {
     currentScene.awake();
   }
 
-  final public Scene getScene(SceneIndex index) {
-    return scenes.get(index);
-  }
-
   public void keyPressed() {
     if (keyCode == ESC) key = 0;
 

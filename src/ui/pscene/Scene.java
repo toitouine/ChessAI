@@ -4,14 +4,14 @@ import java.util.ArrayList;
 // et des controllers (avec l'arraylist controllers)
 // Pour afficher une scène, utiliser show() et awake() pour la préparer avant son lancement
 
-public abstract class Scene {
-  protected SApplet sketch;
+public abstract class Scene<T extends SApplet> {
+  protected T sketch;
   protected ArrayList<Controller> controllers = new ArrayList<Controller>();
   protected int width; // Largeur de la fenêtre
   protected int height; // Hauteur de la fenêtre
   private Overlay currentOverlay = null;
 
-  public Scene(SApplet sketch, int width, int height) {
+  public Scene(T sketch, int width, int height) {
     this.sketch = sketch;
     this.width = width;
     this.height = height;

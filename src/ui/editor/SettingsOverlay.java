@@ -1,10 +1,10 @@
 import java.util.Collections;
 
-public class SettingsOverlay extends Overlay {
+public class SettingsOverlay extends Overlay<MainApplet> {
 
   int w = Config.UI.caseWidth;
 
-  public SettingsOverlay(Scene scene, float x, float y, int width, int height) {
+  public SettingsOverlay(Scene<MainApplet> scene, float x, float y, int width, int height) {
     super(scene, x, y, width, height);
     init();
   }
