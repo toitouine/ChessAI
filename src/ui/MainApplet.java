@@ -18,4 +18,12 @@ final public class MainApplet extends SApplet {
     register(editorScene, SceneIndex.Editor);
     setScene(SceneIndex.Menu);
   }
+
+  public void goToMenu() {
+    setScene(SceneIndex.Menu);
+  }
+
+  public void goToEditor() {
+    setScene(SceneIndex.Editor);
+  }
 }

@@ -47,7 +47,7 @@ public class Zobrist {
     initZobristKeys();
   }
 
-  void initZobristKeys() {
+  private void initZobristKeys() {
     rngState = 1804289383;
 
     // Initialise les clés des pièces sur chaque case (zobristIndex, i, j);
@@ -71,7 +71,7 @@ public class Zobrist {
     blackToMove = generateRandomNumber();
   }
 
-  void exportKeys() {
+  public void exportKeys() {
     ArrayList<Long> keys = new ArrayList<Long>();
 
     for (int p = 0; p < 12; p++) {
@@ -110,55 +110,55 @@ public class Zobrist {
     return this.hash;
   }
 
-  public long updateHash(Move m) {
-    // XOR out
-    hash ^= piecesOnSquare[m.piece.index][m.fromI][m.fromJ];
-    if (m.capture != null) hash ^= piecesOnSquare[m.capture.index][m.capture.i][m.capture.j];
-
-    // XOR in
-    hash ^= piecesOnSquare[m.piece.index][m.i][m.j];
-
-    // Changement de tour
-    hash ^= blackToMove;
-
-    // Déplacements du roque
-    if (m.flag == Flag.PetitRoque) {
-      int jPos = (m.piece.c == 0) ? 7 : 0;
-      int index = (m.piece.c == 0) ? Piece.Tour : (Piece.Tour + 6);
-      hash ^= piecesOnSquare[index][7][jPos];
-      hash ^= piecesOnSquare[index][5][jPos];
-    } else if (m.flag == Flag.GrandRoque) {
-      int jPos = (m.piece.c == 0) ? 7 : 0;
-      int index = (m.piece.c == 0) ? Piece.Tour : (Piece.Tour + 6);
-      hash ^= piecesOnSquare[index][0][jPos];
-      hash ^= piecesOnSquare[index][3][jPos];
-    }
-
-    // Roques (droits)
-    hash ^= castlingRights[castleState]; // Retire tous les droits au roque du hash
-
-    castleState = 0; // Actualise la variable de droits au roque (4 bits)
-    if (board.whitePetitRoque) castleState += whitePetitRoque;
-    if (board.whiteGrandRoque) castleState += whiteGrandRoque;
-    if (board.blackPetitRoque) castleState += blackPetitRoque;
-    if (board.blackGrandRoque) castleState += blackGrandRoque;
-
-    hash ^= castlingRights[castleState]; // Ajoute les droits au roques au hash
-
-    // Promotion TODO A VOIR, VALEURS DANS ENUM ??
-    // if (m.special >= 5) {
-    //   // On retire le pion du hash
-    //   hash ^= piecesOnSquare[m.piece.index][m.i][m.j];
-    //
-    //   // On ajoute la pièce de promotion au hash
-    //   int index = this.promoZobristIndex[m.piece.c][m.special-5];
-    //   this.hash ^= this.piecesOnSquare[index][m.i][m.j];
-    // }
-
-    Debug.log("test", "Hash actualisé : " + this.hash);
-
-    return hash;
-  }
+  // public long updateHash(Move m) {
+  //   // XOR out
+  //   hash ^= piecesOnSquare[m.piece.index][m.fromI][m.fromJ];
+  //   if (m.capture != null) hash ^= piecesOnSquare[m.capture.index][m.capture.i][m.capture.j];
+  //
+  //   // XOR in
+  //   hash ^= piecesOnSquare[m.piece.index][m.i][m.j];
+  //
+  //   // Changement de tour
+  //   hash ^= blackToMove;
+  //
+  //   // Déplacements du roque
+  //   if (m.flag == Flag.PetitRoque) {
+  //     int jPos = (m.piece.c == 0) ? 7 : 0;
+  //     int index = (m.piece.c == 0) ? Piece.Tour : (Piece.Tour + 6);
+  //     hash ^= piecesOnSquare[index][7][jPos];
+  //     hash ^= piecesOnSquare[index][5][jPos];
+  //   } else if (m.flag == Flag.GrandRoque) {
+  //     int jPos = (m.piece.c == 0) ? 7 : 0;
+  //     int index = (m.piece.c == 0) ? Piece.Tour : (Piece.Tour + 6);
+  //     hash ^= piecesOnSquare[index][0][jPos];
+  //     hash ^= piecesOnSquare[index][3][jPos];
+  //   }
+  //
+  //   // Roques (droits)
+  //   hash ^= castlingRights[castleState]; // Retire tous les droits au roque du hash
+  //
+  //   castleState = 0; // Actualise la variable de droits au roque (4 bits)
+  //   if (board.whitePetitRoque) castleState += whitePetitRoque;
+  //   if (board.whiteGrandRoque) castleState += whiteGrandRoque;
+  //   if (board.blackPetitRoque) castleState += blackPetitRoque;
+  //   if (board.blackGrandRoque) castleState += blackGrandRoque;
+  //
+  //   hash ^= castlingRights[castleState]; // Ajoute les droits au roques au hash
+  //
+  //   // Promotion TODO A VOIR, VALEURS DANS ENUM ??
+  //   // if (m.special >= 5) {
+  //   //   // On retire le pion du hash
+  //   //   hash ^= piecesOnSquare[m.piece.index][m.i][m.j];
+  //   //
+  //   //   // On ajoute la pièce de promotion au hash
+  //   //   int index = this.promoZobristIndex[m.piece.c][m.special-5];
+  //   //   this.hash ^= this.piecesOnSquare[index][m.i][m.j];
+  //   // }
+  //
+  //   Debug.log("test", "Hash actualisé : " + this.hash);
+  //
+  //   return hash;
+  // }
 
   // XOR-Shift (pour avoir les mêmes clés à chaque fois)
   private long generateRandomNumber() {

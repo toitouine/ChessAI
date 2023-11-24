@@ -38,7 +38,7 @@ public final class Board {
   // Crée la position à partir d'une fen
   public void loadFEN(String f) {
     fen.loadPosition(f);
-    updatePositionData();
+    calculatePositionData();
   }
 
   // Génère la fen de la position
@@ -61,7 +61,7 @@ public final class Board {
     else if (type == Piece.Pion) pieces[c].add(new Pion(this, i, j, c));
     else Debug.error("Type de pièce invalide");
 
-    updatePositionData();
+    calculatePositionData();
   }
 
   // Vide complètement le plateau et réinitialise les variables
@@ -86,7 +86,7 @@ public final class Board {
   }
 
   // Recalcule les données dépendant de la position (hash, endGameWeight...)
-  private void updatePositionData() {
+  private void calculatePositionData() {
     calcEndGameWeight();
     zobrist.calculateHash();
   }

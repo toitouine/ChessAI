@@ -42,10 +42,7 @@ public class BoardDisplay extends Controller<BoardDisplay> {
   }
 
   public void show() {
-    if (board == null) {
-      Debug.error("Aucun plateau à afficher dans " + this);
-      return;
-    }
+    if (board == null) return;
 
     sketch.push();
     sketch.translate(x-w/2, y-h/2);
@@ -123,6 +120,7 @@ public class BoardDisplay extends Controller<BoardDisplay> {
   }
 
   public void onUserEvent(UserEvent e) {
+    if (board == null) return;
     if (!contains(e.x, e.y)) {
       if (e.mouseReleased()) lastSquareRightClicked = null;
       return;

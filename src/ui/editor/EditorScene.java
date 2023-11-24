@@ -73,7 +73,7 @@ public class EditorScene extends Scene {
     Collections.addAll(controllers,
       new ImageToggle(sketch, calcX.apply(0), offsetY/2, iconSize, iconSize, "data/icons/pinOff.png", "data/icons/pin.png")
         .setState(true)
-        .setAction( () -> toggleAttach() ),
+        .setAction(this::toggleAttach),
 
       new ImageButton(sketch, calcX.apply(1), offsetY/2, iconSize, iconSize, "data/icons/delete.png")
         .setAction( () -> Debug.log("todo", "Supprimer la position") ),
@@ -94,7 +94,7 @@ public class EditorScene extends Scene {
         .setAction( () -> toggleOverlay(settings) ),
 
       new ImageToggle(sketch, calcX.apply(7), offsetY/2, iconSize, iconSize, "data/icons/rotate1.png", "data/icons/rotate2.png")
-        .setAction( () -> flipPov() ),
+        .setAction(this::flipPov),
 
       new ImageButton(sketch, calcX.apply(8), offsetY/2, iconSize, iconSize, "data/icons/quit.png")
         .setAction( () -> sketch.setScene(SceneIndex.Menu) )

@@ -15,6 +15,7 @@ public class GameScene extends Scene {
 
   private Player white, black;
   private PImage whiteImage, blackImage;
+  private PImage errorImage;
 
   private Game game;
 
@@ -45,12 +46,13 @@ public class GameScene extends Scene {
   }
 
   protected void draw() {
+    sketch.background(49, 46, 43);
+
     if (game == null) {
-      Debug.error("Scène de partie activée mais aucune partie fournie");
+      sketch.imageMode(sketch.CENTER);
+      sketch.image(errorImage, width - 4*w, height-4*w, 8*w, 8*w);
       return;
     }
-
-    sketch.background(49, 46, 43);
 
     float space = 0.19f * w;
     float whiteImgY, whiteTextY, whiteEvalY, whiteTimeY;
@@ -127,6 +129,7 @@ public class GameScene extends Scene {
   private void init() {
     controllers.clear();
 
+    errorImage = sketch.loadImage("data/icons/notfound.png");
     boardDisplay = new BoardDisplay(sketch, offsetX + 4*w, offsetY + 4*w, w);
     controllers.add(boardDisplay);
 
@@ -144,7 +147,7 @@ public class GameScene extends Scene {
     Collections.addAll(controllers,
       new ImageToggle(sketch, calcX.apply(0), offsetY/2, iconSize, iconSize, "data/icons/pinOff.png", "data/icons/pin.png")
         .setState(true)
-        .setAction( () -> toggleAttach() ),
+        .setAction(this::toggleAttach),
 
       new ImageToggle(sketch, calcX.apply(1), offsetY/2, iconSize, iconSize, "data/icons/varianteOff.png", "data/icons/variante.png")
         .setAction( () -> Debug.log("todo", "Afficher les variantes (ou pas)") ),
@@ -162,7 +165,7 @@ public class GameScene extends Scene {
         .setAction( () -> Debug.log("todo", "Sauvegarder la PGN") ),
 
       new ImageToggle(sketch, calcX.apply(6), offsetY/2, iconSize, iconSize, "data/icons/rotate1.png", "data/icons/rotate2.png")
-        .setAction( () -> flipPov() ),
+        .setAction(this::flipPov),
 
       new ImageToggle(sketch, calcX.apply(7), offsetY/2, iconSize, iconSize, "data/icons/pause.png", "data/icons/play.png")
         .setState(true)

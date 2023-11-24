@@ -27,7 +27,11 @@ public abstract class Controller<T> {
 
   final public boolean isEnabled() {
     if (condition == null) return true;
-    return condition.getAsBoolean();
+    try {
+      return condition.getAsBoolean();
+    } catch (Exception e) {
+      return true;
+    }
   }
 
   protected int rgb(float r, float g, float b) {

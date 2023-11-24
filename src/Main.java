@@ -2,6 +2,9 @@
 //
 // - Lier les toggles à des variables
 // - Raccourcis clavier
+// - Représentation de board en 1 dimension (+ pas de i,j dans pieces ?)
+// - Refaire boardDisplay (images dans la boucle)
+// - Bitboards
 // - Génération de coups
 // - Déroulement de la partie, Game Manager, Players, IA et Humain
 // - UI : Suite
@@ -22,17 +25,6 @@ public class Main {
     // Démarre l'applet principal
     String[] processingArgs = {Config.General.name};
     PApplet.runSketch(processingArgs, mainApplet);
-
-    // Actualise GameManager pour démarrer des nouvelles parties
-    // en attente, gérer les fins de parties...
-    for (;;) {
-      try {
-        java.util.concurrent.TimeUnit.MILLISECONDS.sleep(20);
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
-      gameManager.update();
-    }
   }
 
   private static void printStartMessage() {

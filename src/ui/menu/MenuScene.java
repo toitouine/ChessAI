@@ -76,7 +76,7 @@ public class MenuScene extends Scene {
       new TextButton(sketch, width/2, height-88, "Nouvelle partie", 30, 10)
         .setDimensions(380, 75)
         .setColors(rgb(141, 167, 90), rgb(255, 255, 255))
-        .setAction( () -> startGame() ),
+        .setAction(this::startGame),
 
       // Coller FEN
       new TextButton(sketch, width-60, height-25, "Coller FEN", 17)
