@@ -6,22 +6,17 @@ import static java.util.Map.Entry;
 public final class FenManager {
 
   Board board;
-  Map<Integer, Character> indexToCode = Map.ofEntries(
-    entry(0, 'K'), entry(6, 'k'),
-    entry(1, 'Q'), entry(7, 'q'),
-    entry(2, 'R'), entry(8, 'r'),
-    entry(3, 'B'), entry(9, 'b'),
-    entry(4, 'N'), entry(10, 'n'),
-    entry(5, 'P'), entry(11, 'p')
-  );
-
-  HashMap<Character, Integer> codeToIndex = new HashMap<Character, Integer>();
 
   public FenManager(Board board) {
     this.board = board;
-    for(Entry<Integer, Character> entry : indexToCode.entrySet()) {
-      codeToIndex.put(entry.getValue(), entry.getKey());
+  }
+
+  public int getIndexFromCode(char c) {
+    for (int i = 0; i < Config.Piece.codes.length; i++) {
+      if (Config.Piece.codes[i] == c) return i;
     }
+    Debug.error("Aucun index de pièce trouvé avec le caractère : " + c);
+    return -1;
   }
 
   public void loadPosition(String fen) {
@@ -49,8 +44,7 @@ public final class FenManager {
           continue;
         }
 
-        int pieceColor = Character.isLowerCase(c) ? 1 : 0;
-        board.addPiece(codeToIndex.get(c)-pieceColor*6, cursorI, cursorJ, pieceColor);
+        board.addPiece(getIndexFromCode(c), cursorI, cursorJ);
         cursorJ++;
       }
 
@@ -88,7 +82,7 @@ public final class FenManager {
         else {
           if (vide > 0) fen += vide;
           vide = 0;
-          fen += indexToCode.get(s.piece.index);
+          fen += Config.Piece.codes[s.piece.index];
         }
       }
 

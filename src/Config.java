@@ -38,6 +38,11 @@ public final class Config {
     static final String[] players = {"Humain", "LeMaire", "LesMoutons", "Loic", "Antoine", "Stockfish"};
   }
 
+  static class Piece {
+    // Code pour chaque pièces
+    static final char[] codes = {'K', 'Q', 'R', 'B', 'N', 'P', 'k', 'q', 'r', 'b', 'n', 'p'};
+  }
+
   static class Eval {
     // Valeurs des pièces
     // Ordre : Roi, Dame, Tour, Fou, Cavalier, Pion

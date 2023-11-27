@@ -156,7 +156,7 @@ public class GameScene extends Scene<MainApplet> {
         .setAction( () -> Debug.log("todo", "Afficher l'analyse (ou pas)") ),
 
       new ImageButton(sketch, calcX.apply(3), offsetY/2, iconSize, iconSize, "data/icons/info.png")
-        .setAction( () -> Debug.log("test", game.board.generateFEN()) ),
+        .setAction( () -> Debug.log(game.board) ),
 
       new ImageButton(sketch, calcX.apply(4), offsetY/2, iconSize, iconSize, "data/icons/pgn.png")
         .setAction( () -> Debug.log("todo", "Afficher la PGN") ),

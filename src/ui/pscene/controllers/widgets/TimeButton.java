@@ -74,8 +74,8 @@ public class TimeButton extends Widget<TimeButton> {
   }
 
   public void set(Time t, Time i) {
-    time.setMillis(t.millis());
-    increment.setMillis(i.millis());
+    time.set(t);
+    increment.set(i);
   }
 
   public void show() {
@@ -179,11 +179,11 @@ public class TimeButton extends Widget<TimeButton> {
         sketch.line(x + w/2, y + h/2 + arrowOffset, x + w/2 - arrowEspace, y + h/2 - arrowOffset);
       }
 
-      if (isPressed && sketch.millis() - pressedAt.millis() >= 500) updateTime();
+      if (isPressed && Time.now().millis() - pressedAt.millis() >= 500) updateTime();
     }
 
     void pressed() {
-      pressedAt = Time.getMillis();
+      pressedAt = Time.now();
       isPressed = true;
     }
 

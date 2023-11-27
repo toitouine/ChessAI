@@ -1,16 +1,23 @@
 public class Time {
-  private static SApplet sketch;
-  private int millis = 0;
+  private long millis = 0;
 
-  private Time(int millis) {
+  private Time(long millis) {
     this.millis = millis;
   }
 
-  public void setMillis(int m) {
-    millis = m;
+  public void set(Time other) {
+    millis = other.millis;
   }
 
-  public int millis() {
+  public void add(Time ts) {
+    millis += ts.millis();
+  }
+
+  public Time copy() {
+    return new Time(millis);
+  }
+
+  public long millis() {
     return millis;
   }
 
@@ -22,30 +29,18 @@ public class Time {
     return (float)millis/60000f;
   }
 
-  public void add(Time ts) {
-    millis += ts.millis();
-  }
-
   public int[] minutesSeconds() {
     int minutes = (int)millis / (int)60000;
-    int seconds = (millis % 60000) / 1000; // Valeur arrondie
+    int seconds = (int)(millis % 60000) / 1000; // Valeur arrondie
     int[] time = {minutes, seconds};
     return time;
   }
 
-  public Time copy() {
-    return new Time(millis);
+  static Time now() {
+    return new Time(System.currentTimeMillis());
   }
 
-  static void init(SApplet s) {
-    sketch = s;
-  }
-
-  static Time getMillis() {
-    return new Time(sketch.millis());
-  }
-
-  static Time fromMillis(int t) {
+  static Time fromMillis(long t) {
     return new Time(t);
   }
 
@@ -59,5 +54,10 @@ public class Time {
 
   static Time fromMinutesSeconds(int m, float s) {
     return new Time(60000*m + Math.round(1000*s));
+  }
+
+  @Override
+  public String toString() {
+    return "Time[" + millis + " ms]";
   }
 }

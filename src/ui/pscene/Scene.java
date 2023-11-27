@@ -1,8 +1,8 @@
-import java.util.ArrayList;
-
 // Une scène affiche à l'écran différents éléments (dans draw())
 // et des controllers (avec l'arraylist controllers)
 // Pour afficher une scène, utiliser show() et awake() pour la préparer avant son lancement
+
+import java.util.ArrayList;
 
 public abstract class Scene<T extends SApplet> {
   protected T sketch;
@@ -69,4 +69,9 @@ public abstract class Scene<T extends SApplet> {
   protected int rgb(float r, float g, float b) {
     return sketch.color(r, g, b);
   }
+}
+
+@FunctionalInterface
+interface Callback {
+  void call();
 }

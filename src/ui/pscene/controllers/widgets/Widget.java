@@ -86,8 +86,3 @@ abstract class CallableWidget<T> extends Widget<T> {
     if (e.mousePressed() && contains(e.x, e.y) && function != null) function.call();
   }
 }
-
-@FunctionalInterface
-interface Callback {
-  void call();
-}

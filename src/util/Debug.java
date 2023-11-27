@@ -2,7 +2,7 @@ import java.util.HashMap;
 
 public final class Debug {
 
-  private Debug () {}
+  private Debug() {}
 
   private static final String RESET = "\u001B[0m";
   private static final String BLACK = "\u001B[30m";
