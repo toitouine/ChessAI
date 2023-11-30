@@ -8,6 +8,10 @@ public class ImageToggle extends CallableWidget<ImageToggle> {
   private int backgroundColor;
   private String caption1, caption2;
 
+  // Pour lier le toggle à une autre variable, et actualiser son état selon cette variable
+  // Note : ne s'actualise que dans show()
+  MutableBoolean linkedState = null;
+
   ImageToggle(SApplet sketch, float x, float y, float w, float h, String imgPath1, String imgPath2) {
     me = this;
     this.sketch = sketch;
@@ -22,6 +26,11 @@ public class ImageToggle extends CallableWidget<ImageToggle> {
 
   public void show() {
     super.show();
+
+    if (linkedState != null && linkedState.get() != state) {
+      state = linkedState.get();
+    }
+
     sketch.imageMode(sketch.CENTER);
     PImage img = (state ? img2 : img1);
 
@@ -50,13 +59,19 @@ public class ImageToggle extends CallableWidget<ImageToggle> {
     if (e.mousePressed() && contains(e.x, e.y)) toggleState();
   }
 
+  public ImageToggle linkTo(MutableBoolean toLink) {
+    linkedState = toLink;
+    return this;
+  }
+
   public ImageToggle setState(boolean s) {
     state = s;
+    if (linkedState != null) linkedState.set(state);
     return this;
   }
 
   public ImageToggle toggleState() {
-    state = !state;
+    setState(!state);
     if (caption1 != null && caption2 != null) setCaption( (state ? caption2 : caption1) );
     return this;
   }

@@ -1,8 +1,7 @@
 // TODO :
 //
-// - Lier les toggles à des variables
 // - Raccourcis clavier
-// - Représentation de board en 1 dimension (+ pas de i,j dans pieces ?)
+// - Représentation de board en 1 dimension
 // - Refaire boardDisplay (images dans la boucle)
 // - Bitboards
 // - Génération de coups

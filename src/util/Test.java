@@ -36,6 +36,7 @@ public class Test {
 
     Debug.log("test", "───────────────────");
     Debug.log("test", "Résultat : " + String.format("%,d", moyenne) + " ± " + String.format("%,d", incertitude) + " itérations par seconde");
+    Debug.log("test", "(environ " + String.format("%,f", 1/(float)moyenne*1000000000L) + " nanosecondes par itération)");
     Debug.log();
   }
 
@@ -75,7 +76,7 @@ public class Test {
     }
 
     long itPerSeconds = 1000*count / time.millis();
-    Debug.log("test", "Itérations : " + count);
+    Debug.log("test", "Itérations : " + String.format("%,d", count));
     Debug.log("test", "--> " + String.format("%,d", itPerSeconds) + " itérations par seconde");
     return itPerSeconds;
   }

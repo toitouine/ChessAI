@@ -39,13 +39,12 @@ public final class Config {
   }
 
   static class Piece {
+    // Ordre : Roi, Dame, Tour, Fou, Cavalier, Pion
+
     // Code pour chaque pièces
     static final char[] codes = {'K', 'Q', 'R', 'B', 'N', 'P', 'k', 'q', 'r', 'b', 'n', 'p'};
-  }
 
-  static class Eval {
     // Valeurs des pièces
-    // Ordre : Roi, Dame, Tour, Fou, Cavalier, Pion
     static final float[] maireValues = {100000, 900, 500, 330, 320, 100};
     static final float[] stockfishValues = {100000, 905, 456, 300, 293, 71};
     static final float[] loicValues = {100000, 900, 150, 300, 300, 100};

@@ -11,8 +11,9 @@ public class GameScene extends Scene<MainApplet> {
   private float offsetY = Config.UI.offsetY;
   private int pov = Player.White;
   private boolean attach = true;
+  private MutableBoolean showVariante = new MutableBoolean(false); // TODO
+  private MutableBoolean play = new MutableBoolean(true); // TODO
   private BoardDisplay boardDisplay;
-
   private Player white, black;
   private PImage whiteImage, blackImage;
   private PImage errorImage;
@@ -150,7 +151,7 @@ public class GameScene extends Scene<MainApplet> {
         .setAction(this::toggleAttach),
 
       new ImageToggle(sketch, calcX.apply(1), offsetY/2, iconSize, iconSize, "data/icons/varianteOff.png", "data/icons/variante.png")
-        .setAction( () -> Debug.log("todo", "Afficher les variantes (ou pas)") ),
+        .linkTo(showVariante),
 
       new ImageButton(sketch, calcX.apply(2), offsetY/2, iconSize, iconSize, "data/icons/analysis.png")
         .setAction( () -> Debug.log("todo", "Afficher l'analyse (ou pas)") ),
@@ -169,7 +170,7 @@ public class GameScene extends Scene<MainApplet> {
 
       new ImageToggle(sketch, calcX.apply(7), offsetY/2, iconSize, iconSize, "data/icons/pause.png", "data/icons/play.png")
         .setState(true)
-        .setAction( () -> Debug.log("todo", "Pause / Play") ),
+        .linkTo(play),
 
       new ImageButton(sketch, calcX.apply(8), offsetY/2, iconSize, iconSize, "data/icons/computer.png")
         .setAction( () -> Debug.log("todo", "Afficher Search Controller / Stats displayer (?)") ),

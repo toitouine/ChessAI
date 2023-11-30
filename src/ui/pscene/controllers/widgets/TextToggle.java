@@ -7,6 +7,10 @@ public class TextToggle extends CallableWidget<TextToggle> {
   private boolean state = false; // false = state 1, true = state 2
   private String caption1, caption2;
 
+  // Pour lier le toggle à une autre variable, et actualiser son état selon cette variable
+  // Note : ne s'actualise que dans show()
+  MutableBoolean linkedState = null;
+
   TextToggle(SApplet sketch, float x, float y, String text1, String text2, int tSize) {
     me = this;
     this.sketch = sketch;
@@ -27,6 +31,11 @@ public class TextToggle extends CallableWidget<TextToggle> {
 
   public void show() {
     super.show();
+
+    if (linkedState != null && linkedState.get() != state) {
+      state = linkedState.get();
+    }
+
     sketch.noStroke();
     sketch.fill(backColor);
     sketch.rectMode(sketch.CENTER);
@@ -35,10 +44,10 @@ public class TextToggle extends CallableWidget<TextToggle> {
     sketch.textAlign(sketch.CENTER, sketch.CENTER);
     sketch.textSize(textSize);
     sketch.fill(textColor);
-    sketch.text(current(), x, y - textSize/8);
+    sketch.text(currentText(), x, y - textSize/8);
   }
 
-  public String current() {
+  public String currentText() {
     return (state ? text2 : text1);
   }
 
@@ -52,6 +61,11 @@ public class TextToggle extends CallableWidget<TextToggle> {
     if (e.mousePressed() && contains(e.x, e.y)) toggleState();
   }
 
+  public TextToggle linkTo(MutableBoolean toLink) {
+    linkedState = toLink;
+    return this;
+  }
+
   public TextToggle setCaptions(String c1, String c2) {
     caption1 = c1;
     caption2 = c2;
@@ -59,14 +73,15 @@ public class TextToggle extends CallableWidget<TextToggle> {
     return this;
   }
 
-  public TextToggle toggleState() {
-    state = !state;
-    if (caption1 != null && caption2 != null) setCaption( (state ? caption2 : caption1) );
+  public TextToggle setState(boolean s) {
+    state = s;
+    if (linkedState != null) linkedState.set(state);
     return this;
   }
 
-  public TextToggle setState(boolean s) {
-    state = s;
+  public TextToggle toggleState() {
+    setState(!state);
+    if (caption1 != null && caption2 != null) setCaption( (state ? caption2 : caption1) );
     return this;
   }
 

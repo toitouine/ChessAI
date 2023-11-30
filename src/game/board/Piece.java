@@ -23,8 +23,8 @@ public abstract class Piece {
     this.type = type;
     board.grid[i][j].piece = this;
     index = type + c*6;
-    value = Config.Eval.maireValues[type];
-    loicValue = Config.Eval.loicValues[type];
+    value = Config.Piece.maireValues[type];
+    loicValue = Config.Piece.loicValues[type];
   }
 
   public void move(int toI, int toJ) {

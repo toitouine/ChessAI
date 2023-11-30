@@ -4,8 +4,9 @@ import java.util.Collections;
 
 public class MenuScene extends Scene<MainApplet> {
 
-  private boolean showWhiteID = true;
-  private boolean showBlackID = true;
+  private MutableBoolean showWhiteID = new MutableBoolean(true);
+  private MutableBoolean showBlackID = new MutableBoolean(true);
+
   private boolean useHacker = false;
   private String startFEN = Config.General.defaultFEN;
   private Selector<String> whiteSelector, blackSelector;
@@ -47,10 +48,10 @@ public class MenuScene extends Scene<MainApplet> {
 
   private void startGame() {
     SearchSettings s1, s2;
-    s1 = (showWhiteID
+    s1 = (showWhiteID.get()
            ? new SearchSettings(Search.Iterative, Time.fromMillis(whiteIDSlider.getValue()))
            : new SearchSettings(Search.Fixed, whiteFixSlider.getValue()));
-    s2 = (showBlackID
+    s2 = (showBlackID.get()
            ? new SearchSettings(Search.Iterative, Time.fromMillis(blackIDSlider.getValue()))
            : new SearchSettings(Search.Fixed, blackFixSlider.getValue()));
 
@@ -134,45 +135,45 @@ public class MenuScene extends Scene<MainApplet> {
     whiteTime = new TimeButton(sketch, 108, height - 152, 75);
 
     blackTime = new TimeButton(sketch, width - 108, height - 152, 75)
-      .setColors(rgb(38, 33, 27), rgb(240, 240, 240), rgb(45, 45, 42));
+                  .setColors(rgb(38, 33, 27), rgb(240, 240, 240), rgb(45, 45, 42));
 
-    whiteSearchMode = (TextToggle)new TextToggle(sketch, 312, 270, "Iterative Deepening", "Profondeur fixe", 16)
-      .setAction( () -> showWhiteID = !showWhiteID )
-      .setCondition( () -> true );
+    whiteSearchMode = new TextToggle(sketch, 312, 270, "Profondeur fixe", "Iterative Deepening", 16)
+                        .setState(true)
+                        .linkTo(showWhiteID);
 
-    blackSearchMode = (TextToggle)new TextToggle(sketch, width-312, 270, "Iterative Deepening", "Profondeur fixe", 16)
-      .setAction( () -> showBlackID = !showBlackID )
-      .setCondition( () -> true );
+    blackSearchMode = new TextToggle(sketch, width-312, 270, "Profondeur fixe", "Iterative Deepening", 16)
+                        .setState(true)
+                        .linkTo(showBlackID);
 
-    whiteIDSlider = (Slider)new Slider(sketch, 60, 162, 40, 164)
-      .setMinimax(0, 10000)
-      .setValue(1000)
-      .setGraduations(10)
-      .setCaption("Temps (ms)", rgb(255, 255, 255))
-      .setCondition( () -> showWhiteID );
+    whiteIDSlider = new Slider(sketch, 60, 162, 40, 164)
+                      .setMinimax(0, 10000)
+                      .setValue(1000)
+                      .setGraduations(10)
+                      .setCaption("Temps (ms)", rgb(255, 255, 255))
+                      .setCondition( () -> showWhiteID.get() );
 
-    blackIDSlider = (Slider)new Slider(sketch, width-60, 162, 40, 164)
-      .setMinimax(0, 10000)
-      .setValue(1000)
-      .setGraduations(10)
-      .setCaption("Temps (ms)", rgb(255, 255, 255))
-      .setCondition( () -> showBlackID );
+    blackIDSlider = new Slider(sketch, width-60, 162, 40, 164)
+                      .setMinimax(0, 10000)
+                      .setValue(1000)
+                      .setGraduations(10)
+                      .setCaption("Temps (ms)", rgb(255, 255, 255))
+                      .setCondition( () -> showBlackID.get() );
 
-    whiteFixSlider = (Slider)new Slider(sketch, 60, 162, 40, 164)
-      .setMinimax(1, 30)
-      .setValue(5)
-      .setGraduations(6)
-      .setColors(rgb(93, 110, 59), rgb(141, 167, 90), rgb(171, 204, 106))
-      .setCaption("Profondeur", rgb(255, 255, 255))
-      .setCondition( () -> !showWhiteID );
+    whiteFixSlider = new Slider(sketch, 60, 162, 40, 164)
+                       .setMinimax(1, 30)
+                       .setValue(5)
+                       .setGraduations(6)
+                       .setColors(rgb(93, 110, 59), rgb(141, 167, 90), rgb(171, 204, 106))
+                       .setCaption("Profondeur", rgb(255, 255, 255))
+                       .setCondition( () -> !showWhiteID.get() );
 
-    blackFixSlider = (Slider)new Slider(sketch, width-60, 162, 40, 164)
-      .setMinimax(1, 30)
-      .setValue(5)
-      .setGraduations(6)
-      .setColors(rgb(93, 110, 59), rgb(141, 167, 90), rgb(171, 204, 106))
-      .setCaption("Profondeur", rgb(255, 255, 255))
-      .setCondition( () -> !showBlackID );
+    blackFixSlider = new Slider(sketch, width-60, 162, 40, 164)
+                       .setMinimax(1, 30)
+                       .setValue(5)
+                       .setGraduations(6)
+                       .setColors(rgb(93, 110, 59), rgb(141, 167, 90), rgb(171, 204, 106))
+                       .setCaption("Profondeur", rgb(255, 255, 255))
+                       .setCondition( () -> !showBlackID.get() );
 
     Collections.addAll(controllers,
       whiteSelector, whiteTime, whiteIDSlider, whiteFixSlider, whiteSearchMode,
