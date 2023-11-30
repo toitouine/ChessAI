@@ -46,7 +46,7 @@ public abstract class SApplet extends PApplet {
   public void keyPressed() {
     if (keyCode == ESC) key = 0;
 
-    UserEvent event = new UserEvent(EventType.KeyPressed, keyCode);
+    UserEvent event = new UserEvent(EventType.KeyPressed, key, keyCode);
     currentScene.onUserEvent(event);
   }
 

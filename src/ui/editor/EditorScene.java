@@ -9,8 +9,9 @@ public class EditorScene extends Scene<MainApplet> {
   private int w = Config.UI.caseWidth;
   private float offsetX = Config.UI.offsetX;
   private float offsetY = Config.UI.offsetY;
-  private boolean attach = true;
-  private int pov = Player.White;
+
+  private MutableBoolean attach = new MutableBoolean(true);
+  private MutableBoolean isWhitePov = new MutableBoolean(true);
 
   private Overlay settings, fens;
 
@@ -28,7 +29,7 @@ public class EditorScene extends Scene<MainApplet> {
     sketch.setTitle("Editeur de position");
     java.awt.Rectangle bounds = sketch.getScreenBounds();
     surface.setLocation(bounds.x + bounds.width-width, bounds.y);
-    surface.setAlwaysOnTop(attach);
+    surface.setAlwaysOnTop(attach.get());
     surface.setVisible(true);
   }
 
@@ -47,20 +48,25 @@ public class EditorScene extends Scene<MainApplet> {
     }
   }
 
-  private void flipPov() {
-    pov = Player.opponent(pov);
-  }
-
   private void toggleAttach() {
-    attach = !attach;
-    sketch.getSurface().setAlwaysOnTop(attach);
-    Debug.log("ui", "Fenêtre " + (attach ? "épinglée" : "désépinglée"));
+    attach.toggle();
+    sketch.getSurface().setAlwaysOnTop(attach.get());
+    Debug.log("ui", "Fenêtre " + (attach.get() ? "épinglée" : "désépinglée"));
   }
 
   private void init() {
     controllers.clear();
     addUpControllers();
     addLeftControllers();
+
+    addShortcut("lL", this::toggleAttach);
+    addShortcut('Q', sketch::goToMenu);
+    addShortcut("kK", () -> isWhitePov.toggle() );
+    // TODO
+    // addShortcut(sketch.BACKSPACE, () -> clearPosition() );
+    // addShortcut('fF', () -> Debug.log(board) );
+    // addShortcut('cC', () -> copyFEN() );
+    // addShortcut('pP', () -> pasteHTMLtoBoard() );
   }
 
   private void addUpControllers() {
@@ -73,6 +79,7 @@ public class EditorScene extends Scene<MainApplet> {
     Collections.addAll(controllers,
       new ImageToggle(sketch, calcX.apply(0), offsetY/2, iconSize, iconSize, "data/icons/pinOff.png", "data/icons/pin.png")
         .setState(true)
+        .linkTo(attach)
         .setAction(this::toggleAttach),
 
       new ImageButton(sketch, calcX.apply(1), offsetY/2, iconSize, iconSize, "data/icons/delete.png")
@@ -94,7 +101,7 @@ public class EditorScene extends Scene<MainApplet> {
         .setAction( () -> toggleOverlay(settings) ),
 
       new ImageToggle(sketch, calcX.apply(7), offsetY/2, iconSize, iconSize, "data/icons/rotate1.png", "data/icons/rotate2.png")
-        .setAction(this::flipPov),
+        .linkTo(isWhitePov),
 
       new ImageButton(sketch, calcX.apply(8), offsetY/2, iconSize, iconSize, "data/icons/quit.png")
         .setAction(sketch::goToMenu)

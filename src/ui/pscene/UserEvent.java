@@ -10,7 +10,8 @@ public class UserEvent {
   private EventType type;
   public int x;
   public int y;
-  public int key;
+  public char key;
+  public int keyCode;
 
   public UserEvent(EventType type, int x, int y) {
     this.type = type;
@@ -18,9 +19,10 @@ public class UserEvent {
     this.y = y;
   }
 
-  public UserEvent(EventType type, int key) {
+  public UserEvent(EventType type, char key, int keyCode) {
     this.type = type;
     this.key = key;
+    this.keyCode = keyCode;
   }
 
   public boolean mousePressed() {

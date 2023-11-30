@@ -31,7 +31,7 @@ abstract public class Player {
   public String description() {
     String desc = name;
     if (settings.type == Search.Iterative) {
-      desc += " : Iterative Deepening, " + settings.time.millis() + "ms";
+      desc += " : Iterative Deepening, " + settings.time.millis() + " ms";
     }
     else if (settings.type == Search.Fixed) {
       desc += " : Profondeur fixe, " + settings.depth;

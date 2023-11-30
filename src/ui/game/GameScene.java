@@ -9,8 +9,9 @@ public class GameScene extends Scene<MainApplet> {
   private int w = Config.UI.caseWidth;
   private float offsetX = Config.UI.offsetX;
   private float offsetY = Config.UI.offsetY;
-  private int pov = Player.White;
-  private boolean attach = true;
+
+  private MutableBoolean attach = new MutableBoolean(true);
+  private MutableBoolean isWhitePov = new MutableBoolean(true);
   private MutableBoolean showVariante = new MutableBoolean(false); // TODO
   private MutableBoolean play = new MutableBoolean(true); // TODO
   private BoardDisplay boardDisplay;
@@ -36,7 +37,7 @@ public class GameScene extends Scene<MainApplet> {
     sketch.setTitle(game.getWhite().pseudo + " contre " + game.getBlack().pseudo);
     java.awt.Rectangle bounds = sketch.getScreenBounds();
     surface.setLocation(bounds.x + bounds.width-width, bounds.y);
-    surface.setAlwaysOnTop(attach);
+    surface.setAlwaysOnTop(attach.get());
     surface.setVisible(true);
 
     white = game.getWhite();
@@ -54,6 +55,8 @@ public class GameScene extends Scene<MainApplet> {
       sketch.image(errorImage, width - 4*w, height-4*w, 8*w, 8*w);
       return;
     }
+
+    int pov = (isWhitePov.get() ? Player.White : Player.Black);
 
     float space = 0.19f * w;
     float whiteImgY, whiteTextY, whiteEvalY, whiteTimeY;
@@ -117,14 +120,14 @@ public class GameScene extends Scene<MainApplet> {
   }
 
   private void toggleAttach() {
-    attach = !attach;
-    sketch.getSurface().setAlwaysOnTop(attach);
-    Debug.log("ui", "Fenêtre " + (attach ? "épinglée" : "désépinglée"));
+    attach.toggle();
+    sketch.getSurface().setAlwaysOnTop(attach.get());
+    Debug.log("ui", "Fenêtre " + (attach.get() ? "épinglée" : "désépinglée"));
   }
 
   private void flipPov() {
-    pov = Player.opponent(pov);
-    boardDisplay.setPov(pov);
+    isWhitePov.toggle();
+    boardDisplay.setPov(isWhitePov.get() ? Player.White : Player.Black);
   }
 
   private void init() {
@@ -136,6 +139,25 @@ public class GameScene extends Scene<MainApplet> {
 
     addUpControllers();
     addLeftControllers();
+
+    addShortcut("kK", this::flipPov);
+    addShortcut("lL", this::toggleAttach);
+    addShortcut('Q', sketch::goToMenu);
+    addShortcut(' ', () -> play.toggle() );
+    addShortcut("fF", () -> Debug.log(game.board) );
+    addShortcut("vV", () -> showVariante.toggle() );
+    // TODO
+    // addShortcut("pP", () -> printPGN() );
+    // addShortcut("gG", () -> toggleGraph() );
+    // addShortcut("sS", () -> runPerft() );
+    // addShortcut("dD", () -> toggleSearchController() );
+    // addShortcut("bb", () -> highlightBook() );
+    // addShortcut("cC", () -> savePGN() );
+    // addShortcut(sketch.UP, () -> delayUp() );
+    // addShortcut(sketch.DOWN, () -> delayDown() );
+    // addShortcut(sketch.LEFT, () -> rewindBack() );
+    // addShortcut(sketch.RIGHT, () -> rewindForward() );
+    // (+ ceux du hacker)
   }
 
   private void addUpControllers() {
@@ -148,7 +170,8 @@ public class GameScene extends Scene<MainApplet> {
     Collections.addAll(controllers,
       new ImageToggle(sketch, calcX.apply(0), offsetY/2, iconSize, iconSize, "data/icons/pinOff.png", "data/icons/pin.png")
         .setState(true)
-        .setAction(this::toggleAttach),
+        .setAction(this::toggleAttach)
+        .linkTo(attach),
 
       new ImageToggle(sketch, calcX.apply(1), offsetY/2, iconSize, iconSize, "data/icons/varianteOff.png", "data/icons/variante.png")
         .linkTo(showVariante),
@@ -166,7 +189,8 @@ public class GameScene extends Scene<MainApplet> {
         .setAction( () -> Debug.log("todo", "Sauvegarder la PGN") ),
 
       new ImageToggle(sketch, calcX.apply(6), offsetY/2, iconSize, iconSize, "data/icons/rotate1.png", "data/icons/rotate2.png")
-        .setAction(this::flipPov),
+        .setAction(this::flipPov)
+        .linkTo(isWhitePov),
 
       new ImageToggle(sketch, calcX.apply(7), offsetY/2, iconSize, iconSize, "data/icons/pause.png", "data/icons/play.png")
         .setState(true)
@@ -185,10 +209,10 @@ public class GameScene extends Scene<MainApplet> {
     float space = (offsetX - 2*buttonSize)/3; // Espacement entre les deux boutons (abandon et aide)
     float elementsSpacing = 0.19f * w; // Espacement entre les éléments de la barre verticale gauche
 
-    Supplier<Float> whiteYPos = () -> (pov == Player.White
+    Supplier<Float> whiteYPos = () -> (isWhitePov.get()
       ? height - (elementsSpacing*3.5f + w + buttonSize/2)
       : offsetY + elementsSpacing*2.5f + w + buttonSize/2);
-    Supplier<Float> blackYPos = () -> (pov == Player.Black
+    Supplier<Float> blackYPos = () -> (!isWhitePov.get()
       ? height - (elementsSpacing*3.5f + w + buttonSize/2)
       : offsetY + elementsSpacing*2.5f + w + buttonSize/2);
 

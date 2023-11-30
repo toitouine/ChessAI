@@ -6,7 +6,6 @@ public class MenuScene extends Scene<MainApplet> {
 
   private MutableBoolean showWhiteID = new MutableBoolean(true);
   private MutableBoolean showBlackID = new MutableBoolean(true);
-
   private boolean useHacker = false;
   private String startFEN = Config.General.defaultFEN;
   private Selector<String> whiteSelector, blackSelector;
@@ -67,6 +66,9 @@ public class MenuScene extends Scene<MainApplet> {
     controllers.clear();
     addPlayerControllers();
     addOtherControllers();
+
+    addShortcut("eE", sketch::goToEditor);
+    addShortcut(sketch.ENTER, this::startGame);
   }
 
   private void addOtherControllers() {

@@ -3,6 +3,7 @@
 // Pour afficher une scène, utiliser show() et awake() pour la préparer avant son lancement
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public abstract class Scene<T extends SApplet> {
   protected T sketch;
@@ -10,11 +11,15 @@ public abstract class Scene<T extends SApplet> {
   protected int width; // Largeur de la fenêtre
   protected int height; // Hauteur de la fenêtre
   private Overlay currentOverlay = null;
+  private HashMap<Character, Callback> shortcutsChar = new HashMap<Character, Callback>();
+  private HashMap<Integer, Callback> shortcutsCode = new HashMap<Integer, Callback>();
 
   public Scene(T sketch, int width, int height) {
     this.sketch = sketch;
     this.width = width;
     this.height = height;
+
+    addShortcut("hH", Main::printHelpMenu);
   }
 
   abstract protected void setup(); // Appelée une fois au lancement de la scène
@@ -41,6 +46,20 @@ public abstract class Scene<T extends SApplet> {
     if (currentOverlay != null) currentOverlay.show();
   }
 
+  protected void addShortcut(char c, Callback callback) {
+    shortcutsChar.put(c, callback);
+  }
+
+  protected void addShortcut(String s, Callback callback) {
+    for (int i = 0; i < s.length(); i++) {
+      shortcutsChar.put(s.charAt(i), callback);
+    }
+  }
+
+  protected void addShortcut(int code, Callback callback) {
+    shortcutsCode.put(code, callback);
+  }
+
   protected void setOverlay(Overlay overlay) {
     currentOverlay = overlay;
   }
@@ -51,9 +70,20 @@ public abstract class Scene<T extends SApplet> {
   }
 
   public void onUserEvent(UserEvent e) {
-    if (currentOverlay != null && currentOverlay.contains(e.x, e.y)) {
-      currentOverlay.onUserEvent(e);
-      return;
+    if (e.keyPressed()) {
+      if (e.key != sketch.CODED) {
+        if (shortcutsChar.get(e.key) != null) shortcutsChar.get(e.key).call();
+      }
+      else {
+        if (shortcutsCode.get(e.keyCode) != null) shortcutsCode.get(e.keyCode).call();
+      }
+    }
+
+    if (currentOverlay != null) {
+      if (e.keyPressed() || currentOverlay.contains(e.x, e.y)) {
+        currentOverlay.onUserEvent(e);
+        return;
+      }
     }
 
     for (Controller c : controllers) {
