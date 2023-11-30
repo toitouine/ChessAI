@@ -19,7 +19,7 @@ public abstract class Scene<T extends SApplet> {
     this.width = width;
     this.height = height;
 
-    addShortcut("hH", Main::printHelpMenu);
+    addShortcut("hH", MainApplet::printHelpMenu);
   }
 
   abstract protected void setup(); // Appelée une fois au lancement de la scène
