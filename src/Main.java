@@ -1,6 +1,5 @@
 // TODO :
 //
-// - Représentation de board en 1 dimension
 // - Refaire boardDisplay (images dans la boucle)
 // - Bitboards
 // - Génération de coups

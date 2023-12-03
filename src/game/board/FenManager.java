@@ -44,7 +44,7 @@ public final class FenManager {
           continue;
         }
 
-        board.addPiece(getIndexFromCode(c), cursorI, cursorJ);
+        board.addPiece(getIndexFromCode(c), 8*cursorI + cursorJ);
         cursorJ++;
       }
 
@@ -74,21 +74,21 @@ public final class FenManager {
     String fen = "";
     int vide = 0;
 
-    for (int i = 0; i < 8; i++) {
-
-      for (int j = 0; j < 8; j++) {
-        Case s = board.grid[i][j];
-        if (s.piece == null) vide += 1;
-        else {
-          if (vide > 0) fen += vide;
-          vide = 0;
-          fen += Config.Piece.codes[s.piece.index];
-        }
+    for (int i = 0; i < 64; i++) {
+      Piece p = board.grid(i);
+      if (p == null) {
+        vide++;
+      } else {
+        if (vide > 0) fen += vide;
+        vide = 0;
+        fen += Config.Piece.codes[p.index];
       }
 
-      if (vide > 0) fen += vide;
-      vide = 0;
-      fen += (i < 7 ? '/' : ' ');
+      if (i != 0 && (i+1) % 8 == 0) {
+        if (vide > 0) fen += vide;
+        vide = 0;
+        fen += (i < 63 ? '/' : ' ');
+      }
     }
 
     // Trait

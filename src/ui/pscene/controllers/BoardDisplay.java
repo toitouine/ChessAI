@@ -10,11 +10,11 @@ public class BoardDisplay extends Controller<BoardDisplay> {
   private int pov = Player.White;
   private HashMap<Integer, PImage> imgs;
 
-  private ArrayList<Case> rouges = new ArrayList<Case>();
-  private ArrayList<Case> jaunes = new ArrayList<Case>();
+  private ArrayList<Integer> rouges = new ArrayList<Integer>();
+  private ArrayList<Integer> jaunes = new ArrayList<Integer>();
   private ArrayList<Arrow> arrows = new ArrayList<Arrow>();
 
-  private Case lastSquareRightClicked = null;
+  private Integer lastSquareRightClicked = null;
   private Arrow drawingArrow = null;
 
   public BoardDisplay(SApplet sketch, float x, float y, int caseWidth) {
@@ -68,11 +68,11 @@ public class BoardDisplay extends Controller<BoardDisplay> {
 
         sketch.rect(casex, casey, caseWidth, caseWidth);
 
-        if (rouges.contains(board.grid[i][j])) {
+        if (rouges.contains(8*i+j)) {
           sketch.fill(224, 76, 56, 230);
           sketch.rect(casex, casey, caseWidth, caseWidth);
         }
-        else if (jaunes.contains(board.grid[i][j])) {
+        else if (jaunes.contains(8*i+j)) {
           sketch.fill(235, 214, 35, 230);
           sketch.rect(casex, casey, caseWidth, caseWidth);
         }
@@ -83,8 +83,8 @@ public class BoardDisplay extends Controller<BoardDisplay> {
     for (int n = 0; n < 2; n++) {
       for (Piece p : board.pieces(n)) {
         if (p != null) {
-          int i = (pov == Player.White ? p.i : 7-p.i);
-          int j = (pov == Player.White ? p.j : 7-p.j);
+          int i = (pov == Player.White ? p.square/8 : 7-(p.square/8));
+          int j = (pov == Player.White ? p.square%8 : 7-(p.square%8));
           float piecex = j*caseWidth + caseWidth/2;
           float piecey = i*caseWidth + caseWidth/2;
           sketch.image(imgs.get(p.index), piecex, piecey, caseWidth, caseWidth);
@@ -97,24 +97,24 @@ public class BoardDisplay extends Controller<BoardDisplay> {
     for (Arrow arrow : arrows) arrow.show();
   }
 
-  private void toggleYellow(Case s) {
+  private void toggleYellow(Integer s) {
     if (rouges.contains(s)) rouges.remove(s);
     if (jaunes.contains(s)) jaunes.remove(s);
     else jaunes.add(s);
   }
 
-  private void toggleRed(Case s) {
+  private void toggleRed(Integer s) {
     if (jaunes.contains(s)) jaunes.remove(s);
     if (rouges.contains(s)) rouges.remove(s);
     else rouges.add(s);
   }
 
-  private int getGridI(int mx, int my) {
+  private int getGridLine(int mx, int my) {
     if (pov == Player.White) return 7+(int)(my-y-h/2)/caseWidth;
     else return -(int)(my-y-h/2)/caseWidth;
   }
 
-  private int getGridJ(int mx, int my) {
+  private int getGridColumn(int mx, int my) {
     if (pov == Player.White) return 7+(int)(mx-x-w/2)/caseWidth;
     else return -(int)(mx-x-w/2)/caseWidth;
   }
@@ -126,19 +126,20 @@ public class BoardDisplay extends Controller<BoardDisplay> {
       return;
     }
 
-    int i = getGridI(e.x, e.y);
-    int j = getGridJ(e.x, e.y);
+    int i = getGridLine(e.x, e.y);
+    int j = getGridColumn(e.x, e.y);
     if (i < 0 || i > 7 || j < 0 || j > 7) return;
 
-    Case square = board.grid[i][j];
+    int square = 8*i + j;
+    Piece piece = board.grid(square);
 
     if (e.mouseMoved()) {
-      if (square.piece != null && board.tourDeQui == square.piece.c) sketch.cursor(sketch.HAND);
+      if (piece != null && board.tourDeQui == piece.c) sketch.cursor(sketch.HAND);
       else sketch.cursor(sketch.ARROW);
     }
     else if (e.mousePressed()) {
       if (sketch.mouseButton == sketch.LEFT) {
-        if (square.piece == null || square.piece.c != board.tourDeQui) deselectAll();
+        if (piece == null || piece.c != board.tourDeQui) deselectAll();
       }
       else if (sketch.mouseButton == sketch.RIGHT) {
         lastSquareRightClicked = square;
@@ -150,7 +151,7 @@ public class BoardDisplay extends Controller<BoardDisplay> {
       if (drawingArrow == null) drawingArrow = new Arrow(i, j, i, j);
       if (lastSquareRightClicked != square) {
         if (drawingArrow.i+drawingArrow.deltaI != i || drawingArrow.j+drawingArrow.deltaJ != j) {
-          Arrow arr = new Arrow(lastSquareRightClicked.i, lastSquareRightClicked.j, i, j);
+          Arrow arr = new Arrow(lastSquareRightClicked/8, lastSquareRightClicked%8, i, j);
           arrows.remove(drawingArrow);
           arrows.add(arr);
           drawingArrow = arr;

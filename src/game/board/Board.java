@@ -12,46 +12,45 @@ public final class Board {
   public boolean blackPetitRoque = false;
   public boolean blackGrandRoque = false;
 
-  public Case[][] grid = new Case[8][8]; // Représente l'échiquier : ligne puis colonne (ex : b8 --> grid[0][1])
+  // public Case[][] grid = new Case[8][8]; // Représente l'échiquier : ligne puis colonne (ex : b8 --> grid[0][1])
+  private Piece[] grid = new Piece[64]; // Représente les pièces sur l'échiquier (8 * ligne + colonne)
   private ArrayList<Piece>[] pieces; // Pièces des blancs et des noirs
   private Piece[] rois = new Piece[2]; // Accès rapide aux rois de la partie
-  private Piece[] currentEnPassantable = {null, null}; // Pions qui peuvent être pris en passant pendant ce tour
+
+  // TODO (ne pas oublier d'ajouter dans clear())
+  // private int[] enPassantSquare = {null, null}; // Cases qui peuvent être pris en passant sur cette position
+  // int[] materials = new int[2];
 
   private FenManager fen; // Gère les fens (génération, chargement de position)
 
   @SuppressWarnings("unchecked")
   public Board() {
-    for (int i = 0; i < 8; i++) {
-      for (int j = 0; j < 8; j++) {
-        grid[i][j] = new Case(i, j);
-      }
-    }
-
     zobrist = new Zobrist(this);
     fen = new FenManager(this);
     pieces = new ArrayList[2];
     pieces[0] = new ArrayList<Piece>(16);
     pieces[1] = new ArrayList<Piece>(16);
+    clear();
   }
 
   // Vide complètement le plateau et réinitialise les variables
   public void clear() {
-    for (int i = 0; i < 8; i++) {
-      for (int j = 0; j < 8; j++) {
-        grid[i][j].piece = null;
-      }
+    for (int i = 0; i < 64; i++) {
+      grid[i] = null;
     }
     pieces[0].clear();
     pieces[1].clear();
-    rois[0] = rois[1] = null;
-    currentEnPassantable[0] = currentEnPassantable[1] = null;
-    zobrist.hash = 0;
+    rois[0] = null;
+    rois[1] = null;
     tourDeQui = Player.White;
-    endGameWeight = 0;
     whitePetitRoque = false;
     whiteGrandRoque = false;
     blackPetitRoque = false;
     blackGrandRoque = false;
+    zobrist.hash = 0;
+    endGameWeight = 0;
+
+    calculatePositionData();
   }
 
   // Crée la position à partir d'une fen
@@ -69,29 +68,48 @@ public final class Board {
     return pieces[c];
   }
 
+  public Piece grid(int index) {
+    return grid[index];
+  }
+
+  public Piece grid(int i, int j) {
+    return grid[8*i + j];
+  }
+
   // Ajoute la pièce sur le plateau et recalcule les données de la position (lent)
-  // Uniquement fait pour des modifications de positions (type éditeur de positions)
-  public void addPiece(int type, int i, int j, int c) {
+  // Uniquement fait pour des modifications de positions (type éditeur de positions ou fen)
+  // TODO square c type
+  public void addPiece(int type, int square, int c) {
+    Piece p = null;
+
     switch (type) {
       case Piece.Roi:
-        Piece roi = new Roi(this, i, j, c);
-        rois[c] = roi;
-        pieces[c].add(roi);
+        if (rois[c] != null) Debug.error("Ajout d'un deuxième roi sur le plateau");
+        p = new Roi(square, c);
+        rois[c] = p;
         break;
-      case Piece.Dame:     pieces[c].add(new Dame(this, i, j, c)); break;
-      case Piece.Tour:     pieces[c].add(new Tour(this, i, j, c)); break;
-      case Piece.Fou:      pieces[c].add(new Fou(this, i, j, c)); break;
-      case Piece.Cavalier: pieces[c].add(new Cavalier(this, i, j, c)); break;
-      case Piece.Pion:     pieces[c].add(new Pion(this, i, j, c)); break;
-      default: Debug.error("Type de pièce invalide");
+
+      case Piece.Dame: p = new Dame(square, c); break;
+      case Piece.Tour: p = new Tour(square, c); break;
+      case Piece.Fou: p = new Fou(square, c); break;
+      case Piece.Cavalier: p = new Cavalier(square, c); break;
+      case Piece.Pion: p = new Pion(square, c); break;
+
+      default:
+        Debug.error("Type de pièce invalide");
+    }
+
+    if (p != null) {
+      pieces[c].add(p);
+      grid[square] = p;
     }
 
     calculatePositionData();
   }
 
-  public void addPiece(int index, int i, int j) {
-    if (index >= 6) addPiece(index - 6, i, j, Player.Black);
-    else addPiece(index, i, j, Player.White);
+  public void addPiece(int index, int square) {
+    if (index >= 6) addPiece(index - 6, square, Player.Black);
+    else addPiece(index, square, Player.White);
   }
 
   // Recalcule les données dépendant de la position (hash, endGameWeight...)
@@ -126,7 +144,7 @@ public final class Board {
     for (int i = 0; i < 8; i++) {
       str.append(" " + (8-i) + " │");
       for (int j = 0; j < 8; j++) {
-        Piece p = grid[i][j].piece;
+        Piece p = grid(i, j);
         char c = (p == null ? ' ' : Config.Piece.codes[p.index]);
         str.append(" " + c + " │");
       }

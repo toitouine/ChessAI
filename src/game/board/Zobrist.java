@@ -19,7 +19,9 @@ public class Zobrist {
 
   public long hash = 0;
   private long rngState = 1804289383;
-  private long[][][] piecesOnSquare = new long[12][8][8];
+
+  // Clés
+  private long[][] piecesOnSquare = new long[12][64];
   private long[] castlingRights = new long[16];
   private long[] enPassantSquare = new long[16];
   private long blackToMove;
@@ -52,8 +54,8 @@ public class Zobrist {
 
     // Initialise les clés des pièces sur chaque case (zobristIndex, i, j);
     for (int p = 0; p < 12; p++) {
-      for (int j = 0; j < 8; j++) {
-        for (int i = 0; i < 8; i++) piecesOnSquare[p][i][j] = generateRandomNumber();
+      for (int i = 0; i < 64; i++) {
+        piecesOnSquare[p][i] = generateRandomNumber();
       }
     }
 
@@ -75,8 +77,8 @@ public class Zobrist {
     ArrayList<Long> keys = new ArrayList<Long>();
 
     for (int p = 0; p < 12; p++) {
-      for (int j = 0; j < 8; j++) {
-        for (int i = 0; i < 8; i++) keys.add(piecesOnSquare[p][i][j]);
+      for (int i = 0; i < 64; i++) {
+        keys.add(piecesOnSquare[p][i]);
       }
     }
 
@@ -92,7 +94,7 @@ public class Zobrist {
     // Pièces
     for (int i = 0; i < 2; i++) {
       for (Piece p : board.pieces(i)) {
-        hash ^= piecesOnSquare[p.index][p.i][p.j];
+        hash ^= piecesOnSquare[p.index][p.square];
       }
     }
 
@@ -172,5 +174,4 @@ public class Zobrist {
 
     return number;
   }
-
 }

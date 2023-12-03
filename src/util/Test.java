@@ -11,6 +11,11 @@ public class Test {
     measure(function, 0);
   }
 
+  static public void measureIterations(Callback function, long iterations) {
+    iterations(function, iterations);
+    Debug.log("test", "───────────────────");
+  }
+
   static public void measure(Callback function, long iterations) {
     Debug.log();
     Debug.log("test", "Démarrage du test");
