@@ -51,7 +51,7 @@ public class BoardDisplay extends Controller<BoardDisplay> {
     sketch.imageMode(sketch.CENTER);
     sketch.noStroke();
 
-    // Affiche le plateau
+    // Affiche le plateau et les pièces
     for (int i = 0; i < 8; i++) {
       for (int j = 0; j < 8; j++) {
         if ((i+j) % 2 == 0) sketch.fill(rgb(240, 217, 181)); // Case blanche
@@ -76,18 +76,9 @@ public class BoardDisplay extends Controller<BoardDisplay> {
           sketch.fill(235, 214, 35, 230);
           sketch.rect(casex, casey, caseWidth, caseWidth);
         }
-      }
-    }
 
-    // Affiche les pièces
-    for (int n = 0; n < 2; n++) {
-      for (Piece p : board.pieces(n)) {
-        if (p != null) {
-          int i = (pov == Player.White ? p.square/8 : 7-(p.square/8));
-          int j = (pov == Player.White ? p.square%8 : 7-(p.square%8));
-          float piecex = j*caseWidth + caseWidth/2;
-          float piecey = i*caseWidth + caseWidth/2;
-          sketch.image(imgs.get(p.index), piecex, piecey, caseWidth, caseWidth);
+        if (board.grid(i, j) != null) {
+          sketch.image(imgs.get(board.grid(i, j).index), casex+caseWidth/2, casey+caseWidth/2, caseWidth, caseWidth);
         }
       }
     }

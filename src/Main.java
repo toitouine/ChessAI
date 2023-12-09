@@ -1,6 +1,5 @@
 // TODO :
 //
-// - Refaire boardDisplay (images dans la boucle)
 // - Bitboards
 // - Génération de coups
 // - Déroulement de la partie, Game Manager, Players, IA et Humain

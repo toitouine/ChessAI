@@ -1,3 +1,6 @@
+// Représente une position à un moment donné dans la partie
+// Inclut les historiques de positions, le suivi du matériel, etc...
+
 import java.util.ArrayList;
 
 public final class Board {
@@ -78,7 +81,6 @@ public final class Board {
 
   // Ajoute la pièce sur le plateau et recalcule les données de la position (lent)
   // Uniquement fait pour des modifications de positions (type éditeur de positions ou fen)
-  // TODO square c type
   public void addPiece(int type, int square, int c) {
     Piece p = null;
 
