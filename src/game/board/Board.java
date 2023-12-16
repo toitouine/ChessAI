@@ -15,10 +15,14 @@ public final class Board {
   public boolean blackPetitRoque = false;
   public boolean blackGrandRoque = false;
 
-  // public Case[][] grid = new Case[8][8]; // Représente l'échiquier : ligne puis colonne (ex : b8 --> grid[0][1])
   private Piece[] grid = new Piece[64]; // Représente les pièces sur l'échiquier (8 * ligne + colonne)
   private ArrayList<Piece>[] pieces; // Pièces des blancs et des noirs
   private Piece[] rois = new Piece[2]; // Accès rapide aux rois de la partie
+
+  // Bitboards
+  // 1 si il y a une pièce, 0 si il n'y en a pas
+  // Associe chaque index de case (0 - 63) à un bit (0 pour 2^0, 1 pour 2^1 etc...)
+  private long[] colorBitboard = {0, 0}; // Bitboard pour chaque couleur (0 = blanc, 1 = noir)
 
   // TODO (ne pas oublier d'ajouter dans clear())
   // private int[] enPassantSquare = {null, null}; // Cases qui peuvent être pris en passant sur cette position
@@ -52,6 +56,8 @@ public final class Board {
     blackGrandRoque = false;
     zobrist.hash = 0;
     endGameWeight = 0;
+    colorBitboard[0] = 0;
+    colorBitboard[1] = 0;
 
     calculatePositionData();
   }
@@ -104,6 +110,7 @@ public final class Board {
     if (p != null) {
       pieces[c].add(p);
       grid[square] = p;
+      colorBitboard[c] |= 1L << square;
     }
 
     calculatePositionData();

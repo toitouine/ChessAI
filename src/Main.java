@@ -1,6 +1,7 @@
 // TODO :
 //
 // - Bitboards
+// - Jouer les coups
 // - Génération de coups
 // - Déroulement de la partie, Game Manager, Players, IA et Humain
 // - UI : Suite
