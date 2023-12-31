@@ -5,9 +5,11 @@
 // Permet d'obtenir une clé presque unique pour chaque position de manière rapide
 // RNG : XOR-Shift algorithm (avec rngState)
 
-// initZobristKeys : pour initialiser les clés correspondant à chaque données concernant une positin (pas pion en passant)
-// calculateHash : pour calculer la clé d'une position (au départ d'une nouvelle position par exemple)
+// initZobristKeys : pour initialiser les clés correspondant à chaque données concernant une position (pas case en passant)
+// calculateHash : pour recalculer complètement la clé d'une position (au départ d'une nouvelle position par exemple)
 // updateHash : actualise le hash en fonction du coup qui a été joué (utile pendant la recherche car s'auto-inverse)
+
+// TODO : case en passant
 
 /////////////////////////////////////////////////////////////////
 
@@ -27,25 +29,11 @@ public class Zobrist {
   private long blackToMove;
 
   private int castleState = 0;
-  private final int whitePetitRoque = 8;
-  private final int whiteGrandRoque = 4;
-  private final int blackPetitRoque = 2;
-  private final int blackGrandRoque = 1;
-
-  private int[][] promoZobristIndex = new int[2][4];
+  private int[] petitRoque = {8, 2}; // Blanc puis noir
+  private int[] grandRoque = {4, 1};
 
   public Zobrist(Board board) {
     this.board = board;
-    int[] index = {1, 2, 3, 4};
-
-    for (int i = 0; i < 2; i++) {
-      for (int j = 0; j < 4; j++) {
-        if (i == 0) promoZobristIndex[i][j] = index[j];
-        else promoZobristIndex[i][j] = index[j] + 6;
-      }
-    }
-
-
     initZobristKeys();
   }
 
@@ -64,7 +52,7 @@ public class Zobrist {
       castlingRights[i] = generateRandomNumber();
     }
 
-    // Initialise en passant (pas pour l'instant)
+    // Initialise en passant (pas utilisé pour l'instant)
     for (int i = 0; i < 16; i++) {
       enPassantSquare[i] = generateRandomNumber();
     }
@@ -100,16 +88,16 @@ public class Zobrist {
 
     // Roques
     castleState = 0;
-    if (board.whitePetitRoque) castleState += whitePetitRoque;
-    if (board.whiteGrandRoque) castleState += whiteGrandRoque;
-    if (board.blackPetitRoque) castleState += blackPetitRoque;
-    if (board.blackGrandRoque) castleState += blackGrandRoque;
+    for (int i = 0; i < 2; i++) {
+      if (board.petitRoque[i]) castleState += petitRoque[i];
+      if (board.grandRoque[i]) castleState += grandRoque[i];
+    }
     hash ^= castlingRights[castleState];
 
     // Tour de qui
     if (board.tourDeQui == Player.Black) hash ^= blackToMove;
 
-    return this.hash;
+    return hash;
   }
 
   // public long updateHash(Move m) {

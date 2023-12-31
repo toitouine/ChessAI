@@ -1,39 +1,80 @@
+/////////////////////////////////////////////////////////////////
+
+// Représente un coup (case de départ, case d'arrivée, flag) dans le format suivant :
+// 6 bits pour la case de départ, 6 bits pour la case d'arrivée, 4 bits pour le flag
+
+// Flags :
+// - Promotions (dame, tour, fou, cavalier)
+// - Roques
+// - En passant
+// - Double avance
+
+/////////////////////////////////////////////////////////////////
+
 public class Move {
-  public byte fromI, fromJ; // Case de départ
-  public byte i, j; // Case d'arrivée
-  public Piece piece; // Pièce qui bouge
-  public Piece capture; // Pièce capturée (ou pas)
-  public Flag flag; // Coup spécial
+  final public short value;
 
-  public Move(Piece piece, int i, int j, Piece capture, Flag flag) {
-    this.piece = piece;
-    this.i = (byte) i;
-    this.j = (byte) j;
-    this.capture = capture;
-    this.flag = flag;
+  static private int startMask = 0b0000000000111111;
+  static private int endMask =   0b0000111111000000;
+  static private int flagMask =  0b1111000000000000;
+
+  public Move(int startSquare, int endSquare, int flag) {
+    value = (short)(startSquare | (endSquare << 6) | (flag << 12));
   }
 
-  public Move(Piece piece, int i, int j) {
-    this(piece, i, j, null, Flag.None);
+  public Move(int startSquare, int endSquare) {
+    value = (short)(startSquare | (endSquare << 6));
   }
 
-  public Move(Piece piece, int i, int j, Piece capture) {
-    this(piece, i, j, capture, Flag.None);
+  // Pour facilement créer des coups et tester des choses (ex : "e2e4", MoveFlag.None)
+  // (ne pas utiliser quand il faut être rapide)
+  public Move(String moveString, int flag) {
+    this(BoardUtility.nameToIndex(moveString.substring(0, 2)), BoardUtility.nameToIndex(moveString.substring(2, 4)), flag);
   }
 
-  public Move(Piece piece, int i, int j, Flag flag) {
-    this(piece, i, j, null, flag);
+  public Move(String moveString) {
+    this(moveString, MoveFlag.None);
+  }
+
+  public int startSquare() {
+    return value & startMask;
+  }
+
+  public int endSquare() {
+    return (value & endMask) >> 6;
+  }
+
+  public int flag() {
+    return (value & flagMask) >> 12;
+  }
+
+  public boolean equals(Move otherMove) {
+    return value == otherMove.value;
+  }
+
+  @Override
+  public String toString() {
+    return BoardUtility.caseName(startSquare()) + BoardUtility.caseName(endSquare())
+           + (flag() != 0 ? "[" + flag() + "]" : "");
   }
 }
 
-enum Flag {
-  None,
-  DoubleAvance,
-  EnPassant,
-  PetitRoque,
-  GrandRoque,
-  PromotionDame,
-  PromotionCavalier,
-  PromotionTour,
-  PromotionFou
+// Flag pour les coups spéciaux
+// Note : il ne peut y avoir que 16 flags maximum, et les flags de promotion doivent être placés en dernier
+final class MoveFlag {
+  private MoveFlag() {}
+
+  static final public int None = 0;
+  static final public int EnPassant = 1;
+  static final public int DoubleAvance = 2;
+  static final public int PetitRoque = 3;
+  static final public int GrandRoque = 4;
+  static final public int PromotionDame = 5;
+  static final public int PromotionCavalier = 6;
+  static final public int PromotionTour = 7;
+  static final public int PromotionFou = 8;
+
+  static final public boolean isPromotion(int flag) {
+    return flag >= PromotionDame;
+  }
 }

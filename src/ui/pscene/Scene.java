@@ -1,6 +1,10 @@
+/////////////////////////////////////////////////////////////////
+
 // Une scène affiche à l'écran différents éléments (dans draw())
 // et des controllers (avec l'arraylist controllers)
-// Pour afficher une scène, utiliser show() et awake() pour la préparer avant son lancement
+// Note : pour afficher une scène, utiliser show() et awake() pour la préparer avant son lancement
+
+/////////////////////////////////////////////////////////////////
 
 import java.util.ArrayList;
 import java.util.HashMap;

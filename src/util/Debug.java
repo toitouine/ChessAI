@@ -22,9 +22,7 @@ public final class Debug {
     colorMap.put("erreur", RED);
     colorMap.put("test", RED);
     colorMap.put("todo", PURPLE);
-    colorMap.put("ui", YELLOW);
-    colorMap.put("menu", YELLOW);
-    colorMap.put("éditeur", YELLOW);
+    colorMap.put("ui", GREEN);
     colorMap.put("game", CYAN);
     disableLogs = Config.General.disableLogs;
   }
@@ -60,5 +58,23 @@ public final class Debug {
     }
     if (!tag.equals("")) header += "[" + tag.toUpperCase() + "] ";
     System.out.println(header + message + (Config.General.terminalColor ? RESET : ""));
+  }
+
+  public static void printBinary(int binary) {
+    System.out.println(Integer.toBinaryString(0xFFFF & binary));
+  }
+
+  public static void printBinary(long binary) {
+    System.out.println(Long.toBinaryString(binary));
+  }
+
+  public static void printBinary(int binary, int minDigit) {
+    String s = String.format("%" + minDigit + "s", Integer.toBinaryString(0xFFFF & binary)).replace(' ', '0');
+    System.out.println(s);
+  }
+
+  public static void printBinary(long binary, int minDigit) {
+    String s = String.format("%" + minDigit + "s", Long.toBinaryString(binary)).replace(' ', '0');
+    System.out.println(s);
   }
 }

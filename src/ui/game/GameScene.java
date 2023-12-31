@@ -99,7 +99,7 @@ public class GameScene extends Scene<MainApplet> {
 
       if (!game.paused && game.board.tourDeQui == Player.White) sketch.fill(255);
       else sketch.fill(rgb(152, 151, 149));
-      sketch.rect(offsetX/2, whiteTimeY, offsetX/1.15f, 45*w/70, 5);
+      sketch.rect(offsetX/2, whiteTimeY, offsetX/1.15f, 45*w/70, 4);
 
       if (!game.paused && game.board.tourDeQui == Player.White) sketch.fill(rgb(38, 33, 27));
       else sketch.fill(rgb(97, 94, 91));
@@ -107,7 +107,7 @@ public class GameScene extends Scene<MainApplet> {
 
       if (!game.paused && game.board.tourDeQui == Player.Black) sketch.fill(rgb(38, 33, 27));
       else sketch.fill(rgb(43, 39, 34));
-      sketch.rect(offsetX/2, blackTimeY, offsetX/1.15f, 45*w/70, 5);
+      sketch.rect(offsetX/2, blackTimeY, offsetX/1.15f, 45*w/70, 4);
 
       if (!game.paused && game.board.tourDeQui == Player.Black) sketch.fill(rgb(255, 255, 255));
       else sketch.fill(rgb(130, 128, 126));

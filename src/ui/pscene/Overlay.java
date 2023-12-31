@@ -1,5 +1,9 @@
+/////////////////////////////////////////////////////////////////
+
 // Scène particulière qui s'affiche par dessus une autre scène
 // Empêche les controllers inaccessibles d'être activé par des events
+
+/////////////////////////////////////////////////////////////////
 
 public abstract class Overlay<T extends SApplet> extends Scene<T> {
   protected Scene scene;

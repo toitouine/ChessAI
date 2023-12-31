@@ -1,7 +1,6 @@
 // TODO :
 //
-// - Bitboards
-// - Jouer les coups
+// - Jouer les coups --> retirer l'array piece
 // - Génération de coups
 // - Déroulement de la partie, Game Manager, Players, IA et Humain
 // - UI : Suite
@@ -19,5 +18,13 @@ public class Main {
     // Démarre l'applet principal
     String[] processingArgs = {Config.General.name};
     PApplet.runSketch(processingArgs, mainApplet);
+
+    try {
+      Thread.sleep(100);
+    } catch (Exception e) {
+    }
+
+    // Board board = new Board();
+    // board.loadFEN("r3k2r/pppppppp/8/8/8/8/PPPPPPPP/R3K2R w KQkq");
   }
 }

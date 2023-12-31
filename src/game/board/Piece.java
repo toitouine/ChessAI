@@ -9,7 +9,7 @@ public abstract class Piece {
   static final int Cavalier = 4;
   static final int Pion = 5;
 
-  public int square, c; // Position (square) et couleur (0 ou 1)
+  public int square, c; // Position (index de la case) et couleur (0 ou 1)
   public int type; // Type de pièce (roi, dame, pion...)
   public int index; // Index de la pièce (type et couleur)
   public float value, loicValue; // Valeur de la pièce en terme de matériel
@@ -27,9 +27,38 @@ public abstract class Piece {
     square = destination;
   }
 
-  // public abstract ArrayList<Move> getMoves(); // Coups pseudo-légaux
-  // public abstract ArrayList<Move> getLegalMoves(); // Coups légaux
-  // public abstract ArrayList<Move> getLegalCaptures(); // Captures légales
+  static public Piece create(int type, int square, int c) {
+    switch (type) {
+      case Piece.Roi: return new Roi(square, c);
+      case Piece.Dame: return new Dame(square, c);
+      case Piece.Tour: return new Tour(square, c);
+      case Piece.Fou: return new Fou(square, c);
+      case Piece.Cavalier: return new Cavalier(square, c);
+      case Piece.Pion: return new Pion(square, c);
+    }
+
+    Debug.error("Type de pièce invalide");
+    return null;
+  }
+
+  static public Piece promote(int promotionFlag, int square, int c) {
+    switch (promotionFlag) {
+      case MoveFlag.PromotionDame: return new Dame(square, c);
+      case MoveFlag.PromotionCavalier: return new Cavalier(square, c);
+      case MoveFlag.PromotionTour: return new Tour(square, c);
+      case MoveFlag.PromotionFou: return new Fou(square, c);
+    }
+
+    Debug.error("Flag de promotion invalide");
+    return null;
+  }
+
+  @Override
+  public String toString() {
+    return getClass().getName() + "("
+           + (c == Player.White ? "b" : "n") + ", "
+           + BoardUtility.caseName(square) + ")";
+  }
 }
 
 class Roi extends Piece {

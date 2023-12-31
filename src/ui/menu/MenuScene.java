@@ -82,14 +82,12 @@ public class MenuScene extends Scene<MainApplet> {
       // Coller FEN
       new TextButton(sketch, width-60, height-25, "Coller FEN", 17)
         .setDimensions(100, 30)
-        .setAction( () -> { startFEN = Clipboard.paste();
-                            Debug.log("menu", "FEN collée (" + startFEN + ")"); } ),
+        .setAction( () -> startFEN = Clipboard.paste() ),
 
       // Copier FEN
       new TextButton(sketch, width-170, height-25, "Copier FEN", 17)
         .setDimensions(100, 30)
-        .setAction( () -> { Clipboard.copy(startFEN);
-                            Debug.log("menu", "FEN copiée (" + startFEN + ")"); } ),
+        .setAction( () -> Clipboard.copy(startFEN) ),
 
       // Joueurs aléatoires
       new TextButton(sketch, width-91, height-65, "Joueurs aléatoires", 17)

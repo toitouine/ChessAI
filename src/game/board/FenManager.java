@@ -15,7 +15,6 @@ public final class FenManager {
     for (int i = 0; i < Config.Piece.codes.length; i++) {
       if (Config.Piece.codes[i] == c) return i;
     }
-    Debug.error("Aucun index de pièce trouvé avec le caractère : " + c);
     return -1;
   }
 
@@ -54,17 +53,18 @@ public final class FenManager {
       else throw new Exception("FEN invalide : Trait");
 
       // Roques
+      // TODO : vérifier si ils sont vraiment possibles, désactiver sinon
       for (int i = endOfPosition+3; i < fen.length(); i++) {
         char c = fen.charAt(i);
-        if (c == 'K') board.whitePetitRoque = true;
-        else if (c == 'Q') board.whiteGrandRoque = true;
-        else if (c == 'k') board.blackPetitRoque = true;
-        else if (c == 'q') board.blackGrandRoque = true;
+        if (c == 'K') board.petitRoque[Player.White] = true;
+        else if (c == 'Q') board.grandRoque[Player.White] = true;
+        else if (c == 'k') board.petitRoque[Player.Black] = true;
+        else if (c == 'q') board.grandRoque[Player.Black] = true;
       }
 
     }
     catch (Exception e) {
-      Debug.error("FEN non valide (" + fen + "). Importation de la FEN par défaut.");
+      Debug.error("FEN non valide (" + fen + "). Chargement de la FEN par défaut.");
       loadPosition(Config.General.defaultFEN);
     }
   }
@@ -95,14 +95,14 @@ public final class FenManager {
     fen += (board.tourDeQui == Player.White ? "w" : "b");
 
     // Roques
-    boolean areAnyRoques = (board.whitePetitRoque || board.whiteGrandRoque
-                         || board.blackPetitRoque || board.blackGrandRoque);
+    boolean areAnyRoques = (board.petitRoque[Player.White] || board.grandRoque[Player.White]
+                         || board.petitRoque[Player.Black] || board.grandRoque[Player.Black]);
     if (areAnyRoques) {
       fen += " ";
-      if (board.whitePetitRoque) fen += "K";
-      if (board.whiteGrandRoque) fen += "Q";
-      if (board.blackPetitRoque) fen += "k";
-      if (board.blackGrandRoque) fen += "q";
+      if (board.petitRoque[Player.White]) fen += "K";
+      if (board.grandRoque[Player.White]) fen += "Q";
+      if (board.petitRoque[Player.Black]) fen += "k";
+      if (board.grandRoque[Player.Black]) fen += "q";
     }
 
     return fen;

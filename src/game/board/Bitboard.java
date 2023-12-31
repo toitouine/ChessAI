@@ -1,7 +1,7 @@
 public final class Bitboard {
   private Bitboard() {}
 
-  public static void printBitboard(long bitboard) {
+  public static void print(long bitboard) {
     String str = getBinaryString(bitboard);
     str = new StringBuilder(str).reverse().toString();
     for (int i = 0; i < 8; i++) {
