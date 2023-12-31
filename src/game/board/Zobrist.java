@@ -80,10 +80,8 @@ public class Zobrist {
     hash = 0;
 
     // Pièces
-    for (int i = 0; i < 2; i++) {
-      for (Piece p : board.pieces(i)) {
-        hash ^= piecesOnSquare[p.index][p.square];
-      }
+    for (int i = 0; i < 64; i++) {
+      if (board.grid(i) != null) hash ^= piecesOnSquare[board.grid(i).index][i];
     }
 
     // Roques

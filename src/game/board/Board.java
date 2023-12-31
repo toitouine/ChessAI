@@ -26,7 +26,6 @@ public final class Board {
   public boolean[] grandRoque = {false, false};
 
   private Piece[] grid = new Piece[64]; // Représente les pièces sur l'échiquier
-  private ArrayList<Piece>[] pieces; // Pièces des blancs et des noirs
   private Piece[] rois = new Piece[2]; // Accès rapide aux rois de la partie
 
   // Bitboards
@@ -38,15 +37,11 @@ public final class Board {
   // TODO (ne pas oublier d'ajouter dans clear, calculatePositionData...)
   // int[] materials = new int[2];
 
-  private FenManager fen; // Gère les fens (génération, chargement de position)
+  private FenManager fenManager; // Gère les fens (génération, chargement de position)
 
-  @SuppressWarnings("unchecked")
   public Board() {
     zobrist = new Zobrist(this);
-    fen = new FenManager(this);
-    pieces = new ArrayList[2];
-    pieces[0] = new ArrayList<Piece>(16);
-    pieces[1] = new ArrayList<Piece>(16);
+    fenManager = new FenManager(this);
     clear();
   }
 
@@ -54,18 +49,13 @@ public final class Board {
 
   // Crée la position à partir d'une fen
   public void loadFEN(String f) {
-    fen.loadPosition(f);
+    fenManager.loadPosition(f);
     calculatePositionData();
   }
 
   // Génère la fen de la position
   public String generateFEN() {
-    return fen.generateFEN();
-  }
-
-  // Renvoie la liste des pièces de couleur c
-  public ArrayList<Piece> pieces(int c) {
-    return pieces[c];
+    return fenManager.generateFEN();
   }
 
   // Renvoie la pièce située sur une case
@@ -101,7 +91,6 @@ public final class Board {
       rois[c] = p;
     }
 
-    pieces[c].add(p);
     grid[square] = p;
     colorBitboard[c] |= 1L << square;
     calculatePositionData();
@@ -122,9 +111,9 @@ public final class Board {
   private float calcEndGameWeight() {
     endGameWeight = 0;
 
-    for (int c = 0; c < 2; c++) {
-      for (Piece p : pieces[c]) {
-        if (p != rois[c] && p.type != Piece.Pion) endGameWeight += p.value/2;
+    for (int i = 0; i < 64; i++) {
+      if (grid[i] != null && grid[i].type != Piece.Pion && grid[i].type != Piece.Roi) {
+        endGameWeight += grid[i].value/2;
       }
     }
 
@@ -141,7 +130,6 @@ public final class Board {
     }
 
     for (int i = 0; i < 2; i++) {
-      pieces[i].clear();
       rois[i] = null;
       colorBitboard[i] = 0;
       petitRoque[i] = false;
@@ -178,7 +166,6 @@ public final class Board {
     grid[startSquare] = null;
     grid[endSquare] = piece;
     piece.move(endSquare);
-    if (capture != null) pieces[capture.c].remove(capture);
 
     // Met la case en passantable
     if (flag == MoveFlag.DoubleAvance) enPassantSquare = startSquare + 16*piece.c - 8;
@@ -186,7 +173,6 @@ public final class Board {
     // Capture le pion pris en passant
     else if (flag == MoveFlag.EnPassant) {
       int capturedSquare = endSquare - 16*piece.c + 8;
-      pieces[Player.opponent(piece.c)].remove(grid[capturedSquare]);
       grid[capturedSquare] = null;
     }
 
@@ -204,10 +190,7 @@ public final class Board {
 
     // Promotion (TODO: promotion humain)
     else if (MoveFlag.isPromotion(flag)) {
-      pieces[piece.c].remove(piece);
-      Piece promotion = Piece.promote(flag, endSquare, piece.c);
-      pieces[piece.c].add(promotion);
-      grid[endSquare] = promotion;
+      grid[endSquare] = Piece.promote(flag, endSquare, piece.c);;
     }
 
     // Droits au roques
