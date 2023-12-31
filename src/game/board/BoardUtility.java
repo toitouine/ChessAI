@@ -23,7 +23,7 @@ final public class BoardUtility {
       str.append(" " + (8-i) + " │");
       for (int j = 0; j < 8; j++) {
         Piece p = board.grid(i, j);
-        char c = (p == null ? ' ' : Config.Piece.codes[p.index]);
+        char c = (p == null ? ' ' : p.getCode());
         str.append(" " + c + " │");
       }
       str.append("\n");

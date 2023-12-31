@@ -43,14 +43,15 @@ public final class FenManager {
           continue;
         }
 
-        board.addPiece(getIndexFromCode(c), 8*cursorI + cursorJ);
+        int index = getIndexFromCode(c);
+        if (index != -1) board.addPiece(index, 8*cursorI + cursorJ);
         cursorJ++;
       }
 
       // Trait
       if (fen.charAt(endOfPosition+1) == 'w') board.tourDeQui = Player.White;
       else if (fen.charAt(endOfPosition+1) == 'b') board.tourDeQui = Player.Black;
-      else throw new Exception("FEN invalide : Trait");
+      else throw new Exception("FEN non valide : Trait");
 
       // Roques
       // TODO : vérifier si ils sont vraiment possibles, désactiver sinon
@@ -81,7 +82,7 @@ public final class FenManager {
       } else {
         if (vide > 0) fen += vide;
         vide = 0;
-        fen += Config.Piece.codes[p.index];
+        fen += p.getCode();
       }
 
       if (i != 0 && (i+1) % 8 == 0) {

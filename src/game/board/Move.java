@@ -74,7 +74,13 @@ final class MoveFlag {
   static final public int PromotionTour = 7;
   static final public int PromotionFou = 8;
 
+  static final private int[] promotionTable = {Piece.Dame, Piece.Cavalier, Piece.Tour, Piece.Fou};
+
   static final public boolean isPromotion(int flag) {
     return flag >= PromotionDame;
+  }
+
+  static final public int getPromotionPieceType(int promotionFlag) {
+    return promotionTable[promotionFlag - PromotionDame];
   }
 }

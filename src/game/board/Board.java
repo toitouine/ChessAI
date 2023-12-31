@@ -26,7 +26,7 @@ public final class Board {
   public boolean[] grandRoque = {false, false};
 
   private Piece[] grid = new Piece[64]; // Représente les pièces sur l'échiquier
-  private Piece[] rois = new Piece[2]; // Accès rapide aux rois de la partie
+  private Piece[] rois = new Piece[2]; // Accès rapide aux rois de la partie (TODO : peut-être uniquement la case des rois)
 
   // Bitboards
   // 1 si il y a une pièce, 0 si il n'y en a pas
@@ -83,8 +83,7 @@ public final class Board {
       return;
     }
 
-    Piece p = Piece.create(type, square, c);
-    if (p == null) return;
+    Piece p = new Piece(type, c);
 
     if (p.type == Piece.Roi) {
       if (rois[c] != null) Debug.error("Ajout d'un deuxième roi sur le plateau");
@@ -108,12 +107,13 @@ public final class Board {
   }
 
   // Calcule le coefficient indiquant la phase de jeu (0 pour l'ouverture et 1 pour la finale)
+  // TODO: compter le matériel avec les bitboards
   private float calcEndGameWeight() {
     endGameWeight = 0;
 
     for (int i = 0; i < 64; i++) {
       if (grid[i] != null && grid[i].type != Piece.Pion && grid[i].type != Piece.Roi) {
-        endGameWeight += grid[i].value/2;
+        endGameWeight += Config.Piece.maireValues[grid[i].type]/2;
       }
     }
 
@@ -151,7 +151,6 @@ public final class Board {
   private void movePiece(int pieceSquare, int destination) {
     grid[destination] = grid[pieceSquare];
     grid[pieceSquare] = null;
-    grid[destination].move(destination);
   }
 
   // Joue un coup sur le plateau
@@ -165,32 +164,32 @@ public final class Board {
     // Déplacement et capture
     grid[startSquare] = null;
     grid[endSquare] = piece;
-    piece.move(endSquare);
 
     // Met la case en passantable
-    if (flag == MoveFlag.DoubleAvance) enPassantSquare = startSquare + 16*piece.c - 8;
+    if (flag == MoveFlag.DoubleAvance) enPassantSquare = startSquare + 16*piece.color - 8;
 
     // Capture le pion pris en passant
     else if (flag == MoveFlag.EnPassant) {
-      int capturedSquare = endSquare - 16*piece.c + 8;
+      int capturedSquare = endSquare - 16*piece.color + 8;
       grid[capturedSquare] = null;
     }
 
     // Roques
     else if (flag == MoveFlag.PetitRoque) {
-      petitRoque[piece.c] = false;
-      grandRoque[piece.c] = false;
+      petitRoque[piece.color] = false;
+      grandRoque[piece.color] = false;
       movePiece(startSquare+3, startSquare+1);
     }
     else if (flag == MoveFlag.GrandRoque) {
-      petitRoque[piece.c] = false;
-      grandRoque[piece.c] = false;
+      petitRoque[piece.color] = false;
+      grandRoque[piece.color] = false;
       movePiece(startSquare-4, startSquare-1);
     }
 
     // Promotion (TODO: promotion humain)
     else if (MoveFlag.isPromotion(flag)) {
-      grid[endSquare] = Piece.promote(flag, endSquare, piece.c);;
+      int type = MoveFlag.getPromotionPieceType(flag);
+      grid[endSquare] = new Piece(type, piece.color);
     }
 
     // Droits au roques

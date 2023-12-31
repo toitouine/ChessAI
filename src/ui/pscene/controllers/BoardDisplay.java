@@ -125,12 +125,12 @@ public class BoardDisplay extends Controller<BoardDisplay> {
     Piece piece = board.grid(square);
 
     if (e.mouseMoved()) {
-      if (piece != null && board.tourDeQui == piece.c) sketch.cursor(sketch.HAND);
+      if (piece != null && board.tourDeQui == piece.color) sketch.cursor(sketch.HAND);
       else sketch.cursor(sketch.ARROW);
     }
     else if (e.mousePressed()) {
       if (sketch.mouseButton == sketch.LEFT) {
-        if (piece == null || piece.c != board.tourDeQui) deselectAll();
+        if (piece == null || piece.color != board.tourDeQui) deselectAll();
       }
       else if (sketch.mouseButton == sketch.RIGHT) {
         lastSquareRightClicked = square;

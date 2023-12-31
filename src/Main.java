@@ -25,6 +25,6 @@ public class Main {
     }
 
     // Board board = new Board();
-    // board.loadFEN("r3k2r/pppppppp/8/8/8/8/PPPPPPPP/R3K2R w KQkq");
+    // board.loadFEN("r3k2r/pP1ppppp/8/8/8/8/PpPPPPPP/R3K2R w KQkq");
   }
 }
