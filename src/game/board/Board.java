@@ -175,6 +175,9 @@ public final class Board {
       zobrist ^= Zobrist.piecesOnSquare[capture.index][endSquare]; // XOR out la capture
     }
 
+    // Enlève tous les droits du roque du hash
+    zobrist ^= Zobrist.getCastlingKey(petitRoque, grandRoque);
+
     // Met la case en passantable
     if (flag == MoveFlag.DoubleAvance) enPassantSquare[color] = startSquare + 16*color - 8;
 
@@ -202,8 +205,10 @@ public final class Board {
 
     // Promotion
     else if (MoveFlag.isPromotion(flag)) {
-      int type = MoveFlag.getPromotionPieceType(flag);
-      grid[endSquare] = new Piece(type, color);
+      Piece promotion = new Piece(MoveFlag.getPromotionPieceType(flag), color);
+      grid[endSquare] = promotion;
+      zobrist ^= Zobrist.piecesOnSquare[piece.index][endSquare]; // Retire le pion du hash
+      zobrist ^= Zobrist.piecesOnSquare[promotion.index][endSquare]; // Ajoute la pièce de promotion au hash
     }
 
     // Droits au roques
@@ -224,6 +229,9 @@ public final class Board {
     // Changement de tour
     tourDeQui = 1 - tourDeQui;
     zobrist ^= Zobrist.blackToMove;
+
+    // Ajoute les droits du roque du hash
+    zobrist ^= Zobrist.getCastlingKey(petitRoque, grandRoque);
 
     // TODO : endGameWeight, zobrist, historique de positions et bitboards
   }
