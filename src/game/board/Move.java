@@ -29,7 +29,9 @@ public class Move {
   // Pour facilement créer des coups et tester des choses (ex : "e2e4", MoveFlag.None)
   // (ne pas utiliser quand il faut être rapide)
   public Move(String moveString, int flag) {
-    this(BoardUtility.nameToIndex(moveString.substring(0, 2)), BoardUtility.nameToIndex(moveString.substring(2, 4)), flag);
+    this(BoardUtility.nameToCase(moveString.substring(0, 2)),
+         BoardUtility.nameToCase(moveString.substring(2, 4)),
+         flag);
   }
 
   public Move(String moveString) {
@@ -60,7 +62,7 @@ public class Move {
 }
 
 // Flag pour les coups spéciaux
-// Note : il ne peut y avoir que 16 flags maximum, et les flags de promotion doivent être placés en dernier
+// Note : il ne peut y avoir que 16 flags maximum et les flags de promotion doivent être placés dans l'ordre et en dernier
 final class MoveFlag {
   private MoveFlag() {}
 

@@ -34,6 +34,19 @@ public final class Debug {
     System.out.println();
   }
 
+  public static <T>void printArray(T[] array) {
+    String str = "[";
+    for (int i = 0; i < array.length; i++) {
+      str += array[i];
+      if (i == array.length-1) {
+        str += "]";
+        continue;
+      }
+      str += ", ";
+    }
+    Debug.log(str);
+  }
+
   public static void error(Object message) {
     log("erreur", message);
   }

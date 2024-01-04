@@ -15,29 +15,25 @@
 
 import java.util.ArrayList;
 
-public class Zobrist {
+final public class Zobrist {
 
-  private Board board;
+  private Zobrist() {}
 
-  public long hash = 0;
-  private long rngState = 1804289383;
+  private static long rngState = 1804289383;
 
   // Clés
-  private long[][] piecesOnSquare = new long[12][64];
-  private long[] castlingRights = new long[16];
-  private long[] enPassantSquare = new long[16];
-  private long blackToMove;
+  public static final long[][] piecesOnSquare = new long[Piece.NumberOfPiece][64];
+  public static final long[] castlingRights = new long[16];
+  public static final long[] enPassantSquare = new long[16];
+  public static final long blackToMove;
 
-  private int castleState = 0;
-  private int[] petitRoque = {8, 2}; // Blanc puis noir
-  private int[] grandRoque = {4, 1};
+  // Permet de représenter les droits du roque en une seule variable allant de 0 à 15 (somme des droits)
+  private static int castleState = 0;
+  private static final int[] petitRoque = {8, 2}; // Blanc puis noir
+  private static final int[] grandRoque = {4, 1};
 
-  public Zobrist(Board board) {
-    this.board = board;
-    initZobristKeys();
-  }
-
-  private void initZobristKeys() {
+  // Initialisation des clés
+  static {
     rngState = 1804289383;
 
     // Initialise les clés des pièces sur chaque case (zobristIndex, i, j);
@@ -61,7 +57,7 @@ public class Zobrist {
     blackToMove = generateRandomNumber();
   }
 
-  public void exportKeys() {
+  static public void printKeys() {
     ArrayList<Long> keys = new ArrayList<Long>();
 
     for (int p = 0; p < 12; p++) {
@@ -76,8 +72,8 @@ public class Zobrist {
     System.out.println(keys);
   }
 
-  public long calculateHash() {
-    hash = 0;
+  static public long calculateHash(Board board) {
+    long hash = 0;
 
     // Pièces
     for (int i = 0; i < 64; i++) {
@@ -99,17 +95,17 @@ public class Zobrist {
   }
 
   // public long updateHash(Move m) {
-  //   // XOR out
+  //   // XOR out DONE
   //   hash ^= piecesOnSquare[m.piece.index][m.fromI][m.fromJ];
   //   if (m.capture != null) hash ^= piecesOnSquare[m.capture.index][m.capture.i][m.capture.j];
   //
-  //   // XOR in
+  //   // XOR in DONE
   //   hash ^= piecesOnSquare[m.piece.index][m.i][m.j];
   //
-  //   // Changement de tour
+  //   // Changement de tour DONE
   //   hash ^= blackToMove;
   //
-  //   // Déplacements du roque
+  //   // Déplacements du roque DONE
   //   if (m.flag == Flag.PetitRoque) {
   //     int jPos = (m.piece.c == 0) ? 7 : 0;
   //     int index = (m.piece.c == 0) ? Piece.Tour : (Piece.Tour + 6);
@@ -148,8 +144,8 @@ public class Zobrist {
   //   return hash;
   // }
 
-  // XOR-Shift (pour avoir les mêmes clés à chaque fois)
-  private long generateRandomNumber() {
+  // Algorithme : XOR-Shift (pour avoir les mêmes clés à chaque fois)
+  static private long generateRandomNumber() {
     long number = rngState;
 
     number ^= number << 13;

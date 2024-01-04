@@ -1,6 +1,7 @@
 // TODO :
 //
-// - Jouer les coups --> retirer l'array piece
+// - Jouer les coups
+// - Annuler les coups
 // - Génération de coups
 // - Déroulement de la partie, Game Manager, Players, IA et Humain
 // - UI : Suite

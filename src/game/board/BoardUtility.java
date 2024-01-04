@@ -7,7 +7,7 @@ final public class BoardUtility {
   }
 
   // Renvoie l'index d'une case à partir de son nom (e4...)
-  static public int nameToIndex(String name) {
+  static public int nameToCase(String name) {
     int colonne = (name.charAt(0) - '0') - 49;
     int ligne = 8 - Integer.parseInt(String.valueOf(name.charAt(1)));
     return 8 * ligne + colonne;
@@ -43,7 +43,7 @@ final public class BoardUtility {
     str.append("\n   [Roques : " + roqueString + "]");
     str.append("\n   [En passant : " + enPassantString + "]");
     str.append("\n   [Endgame Weight : " + board.endGameWeight + "]");
-    str.append("\n   [Zobrist key : " + board.zobrist.hash + "]");
+    str.append("\n   [Zobrist key : " + board.zobrist + "]");
     str.append("\n   [FEN : " + board.generateFEN() + "]\n");
     return str.toString();
   }

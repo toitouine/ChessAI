@@ -3,9 +3,14 @@ abstract public class Player {
   static int White = 0;
   static int Black = 1;
 
-  static int opponent(int player) {
-    return (player == White ? Black : White);
-  }
+  public String name;
+  public String pseudo;
+  public String elo;
+  public String title;
+  public String victoryTitle;
+  public int ouvertureNumber;
+  public boolean isBot;
+  public SearchSettings settings;
 
   static Player create(String name, SearchSettings s) {
     try {
@@ -18,15 +23,6 @@ abstract public class Player {
       return new Humain(s);
     }
   }
-
-  public String name;
-  public String pseudo;
-  public String elo;
-  public String title;
-  public String victoryTitle;
-  public int ouvertureNumber;
-  public boolean isBot = true;
-  public SearchSettings settings;
 
   public String description() {
     String desc = name;

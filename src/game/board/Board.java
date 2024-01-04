@@ -1,7 +1,8 @@
 /////////////////////////////////////////////////////////////////
 
-// Représente une position à un moment donné dans la partie
-// (pièces, informations, historique de positions, suivi du matériel...)
+// Représente une position à un moment donné dans la partie (pièces, informations, suivi du matériel...)
+// Contient également les informations nécessaires pour passer à la position d'avant en annulant un coup
+// Note : pour annuler un coup, il est nécessaire de l'annuler dans la position obtenue juste après avoir joué le coup
 // Chaque case est représentée par un nombre (de 0 à 63,  8 * ligne + colonne)
 // La case en haut à gauche correspond à 0, et celle en bas à droite à 63
 
@@ -18,7 +19,6 @@ public final class Board {
   // public boolean playingBoard = false;
 
   public int tourDeQui = Player.White; // Joueur qui doit jouer
-  public Zobrist zobrist; // Hash et calculs de hash de la position
   public float endGameWeight = 0; // Représente l'avancement de la partie (0 = ouverture, 1 = finale)
 
   // Roques (blanc puis noir)
@@ -33,14 +33,19 @@ public final class Board {
   // Associe chaque index de case (0 - 63) à un bit (0 pour 2^0, 1 pour 2^1, n pour 2^n)
   private long[] colorBitboard = {0, 0}; // Bitboard pour chaque couleur (blanc puis noir)
 
-  private Integer enPassantSquare = null; // Case en passantable sur cette position
-  // TODO (ne pas oublier d'ajouter dans clear, calculatePositionData...)
-  // int[] materials = new int[2];
+  public long zobrist; // Hash de la position (zobrist)
+
+  // Case en passantable sur cette position
+  // (une pour les noirs et une pour les blancs pour faciliter l'expiration des cases)
+  private Integer[] enPassantSquare = new Integer[2];
+
+  // Cases de départ des tours pour le petit et grand roque (blanc et noir)
+  private final int[] petitRoqueSquare = {63, 7};
+  private final int[] grandRoqueSquare = {56, 0};
 
   private FenManager fenManager; // Gère les fens (génération, chargement de position)
 
   public Board() {
-    zobrist = new Zobrist(this);
     fenManager = new FenManager(this);
     clear();
   }
@@ -70,40 +75,46 @@ public final class Board {
 
   // Renvoie la case en passantable si il y en a une
   public Integer getEnPassantSquare() {
-    return enPassantSquare;
+    if (enPassantSquare[0] != null) return enPassantSquare[0];
+    return enPassantSquare[1];
+  }
+
+  // Renvoie si la case square est la case de départ de la tour de petit roque du joueur color
+  private boolean isPetitRoqueSquare(int square, int color) {
+    return petitRoqueSquare[color] == square;
+  }
+
+  // Renvoie si la case square est la case de départ de la tour de grand roque du joueur color
+  private boolean isGrandRoqueSquare(int square, int color) {
+    return grandRoqueSquare[color] == square;
   }
 
   /////////////////////////////////////////////////////////////////
 
   // Ajoute la pièce sur le plateau et recalcule les données de la position (lent)
   // Uniquement fait pour des modifications de positions (type éditeur de positions ou fen)
-  public void addPiece(int type, int square, int c) {
+  public void addPiece(int index, int square) {
     if (grid[square] != null) {
       Debug.error("Ajout d'une pièce par dessus une autre");
       return;
     }
 
-    Piece p = new Piece(type, c);
+    Piece p = new Piece(index);
 
     if (p.type == Piece.Roi) {
-      if (rois[c] != null) Debug.error("Ajout d'un deuxième roi sur le plateau");
-      rois[c] = p;
+      if (rois[p.color] != null) Debug.error("Ajout d'un deuxième roi sur le plateau");
+      rois[p.color] = p;
     }
 
     grid[square] = p;
-    colorBitboard[c] |= 1L << square;
+    colorBitboard[p.color] |= 1L << square;
     calculatePositionData();
   }
 
-  public void addPiece(int index, int square) {
-    if (index >= 6) addPiece(index - 6, square, Player.Black);
-    else addPiece(index, square, Player.White);
-  }
-
-  // Recalcule les données dépendant de la position (hash, endGameWeight...)
+  // Recalcule complètement les données dépendant de la position (hash, endGameWeight...)
   private void calculatePositionData() {
     calcEndGameWeight();
-    zobrist.calculateHash();
+    zobrist = Zobrist.calculateHash(this);
   }
 
   // Calcule le coefficient indiquant la phase de jeu (0 pour l'ouverture et 1 pour la finale)
@@ -134,24 +145,17 @@ public final class Board {
       colorBitboard[i] = 0;
       petitRoque[i] = false;
       grandRoque[i] = false;
+      enPassantSquare[i] = null;
     }
 
     tourDeQui = Player.White;
-    zobrist.hash = 0;
+    zobrist = 0;
     endGameWeight = 0;
-    enPassantSquare = null;
 
     calculatePositionData();
   }
 
   /////////////////////////////////////////////////////////////////
-
-  // Déplace une pièce
-  // Note : si on est dans le cas d'une capture, il faut gérer la capture en dehors
-  private void movePiece(int pieceSquare, int destination) {
-    grid[destination] = grid[pieceSquare];
-    grid[pieceSquare] = null;
-  }
 
   // Joue un coup sur le plateau
   public void make(Move move) {
@@ -160,44 +164,68 @@ public final class Board {
     int flag = move.flag();
     Piece piece = grid[startSquare];
     Piece capture = grid[endSquare];
+    int color = piece.color;
 
     // Déplacement et capture
+    grid[endSquare] = grid[startSquare];
     grid[startSquare] = null;
-    grid[endSquare] = piece;
+    zobrist ^= Zobrist.piecesOnSquare[piece.index][startSquare]; // XOR out la pièce
+    zobrist ^= Zobrist.piecesOnSquare[piece.index][endSquare]; // XOR in la pièce
+    if (capture != null) {
+      zobrist ^= Zobrist.piecesOnSquare[capture.index][endSquare]; // XOR out la capture
+    }
 
     // Met la case en passantable
-    if (flag == MoveFlag.DoubleAvance) enPassantSquare = startSquare + 16*piece.color - 8;
+    if (flag == MoveFlag.DoubleAvance) enPassantSquare[color] = startSquare + 16*color - 8;
 
     // Capture le pion pris en passant
     else if (flag == MoveFlag.EnPassant) {
-      int capturedSquare = endSquare - 16*piece.color + 8;
+      int capturedSquare = endSquare - 16*color + 8;
       grid[capturedSquare] = null;
     }
 
     // Roques
     else if (flag == MoveFlag.PetitRoque) {
-      petitRoque[piece.color] = false;
-      grandRoque[piece.color] = false;
-      movePiece(startSquare+3, startSquare+1);
+      Piece tour = grid[startSquare+3];
+      grid[startSquare+1] = tour;
+      grid[startSquare+3] = null;
+      zobrist ^= Zobrist.piecesOnSquare[tour.index][startSquare+3]; // Enlève la tour de la case de départ
+      zobrist ^= Zobrist.piecesOnSquare[tour.index][startSquare+1]; // Place la tour à la case d'arrivée
     }
     else if (flag == MoveFlag.GrandRoque) {
-      petitRoque[piece.color] = false;
-      grandRoque[piece.color] = false;
-      movePiece(startSquare-4, startSquare-1);
+      Piece tour = grid[startSquare-4];
+      grid[startSquare-1] = tour;
+      grid[startSquare-4] = null;
+      zobrist ^= Zobrist.piecesOnSquare[tour.index][startSquare-4]; // Enlève la tour de la case de départ
+      zobrist ^= Zobrist.piecesOnSquare[tour.index][startSquare-1]; // Place la tour à la case d'arrivée
     }
 
-    // Promotion (TODO: promotion humain)
+    // Promotion
     else if (MoveFlag.isPromotion(flag)) {
       int type = MoveFlag.getPromotionPieceType(flag);
-      grid[endSquare] = new Piece(type, piece.color);
+      grid[endSquare] = new Piece(type, color);
     }
 
     // Droits au roques
-    // Expiration d'une case en passant éventuelle
+    if (petitRoque[color] || grandRoque[color]) {
+      if (piece.type == Piece.Roi) {
+        petitRoque[color] = false;
+        grandRoque[color] = false;
+      }
+      else if (piece.type == Piece.Tour) {
+        if (isPetitRoqueSquare(startSquare, color)) petitRoque[color] = false;
+        else if (isGrandRoqueSquare(startSquare, color)) grandRoque[color] = false;
+      }
+    }
 
-    // Update : tourDeQui, nbTour, recalculer endGameWeight, materials éventuellement
-    // Update : zobrist, et historique de positions
-    // Bitboards
+    // Expiration d'une case en passant éventuelle
+    enPassantSquare[1-color] = null;
+
+    // Changement de tour
+    tourDeQui = 1 - tourDeQui;
+    zobrist ^= Zobrist.blackToMove;
+
+    // TODO : endGameWeight, zobrist, historique de positions et bitboards
   }
 
   // Annule un coup sur le plateau
