@@ -57,10 +57,10 @@ public final class FenManager {
       // TODO : vérifier si ils sont vraiment possibles, désactiver sinon
       for (int i = endOfPosition+3; i < fen.length(); i++) {
         char c = fen.charAt(i);
-        if (c == 'K') board.petitRoque[Player.White] = true;
-        else if (c == 'Q') board.grandRoque[Player.White] = true;
-        else if (c == 'k') board.petitRoque[Player.Black] = true;
-        else if (c == 'q') board.grandRoque[Player.Black] = true;
+        if (c == 'K') board.enablePetitRoque(Player.White);
+        else if (c == 'Q') board.enableGrandRoque(Player.White);
+        else if (c == 'k') board.enablePetitRoque(Player.Black);
+        else if (c == 'q') board.enableGrandRoque(Player.Black);
       }
 
     }
@@ -96,14 +96,14 @@ public final class FenManager {
     fen += (board.tourDeQui == Player.White ? "w" : "b");
 
     // Roques
-    boolean areAnyRoques = (board.petitRoque[Player.White] || board.grandRoque[Player.White]
-                         || board.petitRoque[Player.Black] || board.grandRoque[Player.Black]);
+    boolean areAnyRoques = (board.petitRoque(Player.White) || board.grandRoque(Player.White)
+                         || board.petitRoque(Player.Black) || board.grandRoque(Player.Black));
     if (areAnyRoques) {
       fen += " ";
-      if (board.petitRoque[Player.White]) fen += "K";
-      if (board.grandRoque[Player.White]) fen += "Q";
-      if (board.petitRoque[Player.Black]) fen += "k";
-      if (board.grandRoque[Player.Black]) fen += "q";
+      if (board.petitRoque(Player.White)) fen += "K";
+      if (board.grandRoque(Player.White)) fen += "Q";
+      if (board.petitRoque(Player.Black)) fen += "k";
+      if (board.grandRoque(Player.Black)) fen += "q";
     }
 
     return fen;

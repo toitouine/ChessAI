@@ -80,21 +80,12 @@ final public class Zobrist {
     }
 
     // Roques
-    hash ^= getCastlingKey(board.petitRoque, board.grandRoque);
+    hash ^= castlingRights[board.castleState];
 
     // Tour de qui
     if (board.tourDeQui == Player.Black) hash ^= blackToMove;
 
     return hash;
-  }
-
-  static public long getCastlingKey(boolean[] petitRoque, boolean[] grandRoque) {
-    int castleState = 0;
-    for (int i = 0; i < 2; i++) {
-      if (petitRoque[i]) castleState += petitRoqueIndex[i];
-      if (grandRoque[i]) castleState += grandRoqueIndex[i];
-    }
-    return castlingRights[castleState];
   }
 
   // Algorithme : XOR-Shift (pour avoir les mêmes clés à chaque fois)

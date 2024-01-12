@@ -1,7 +1,7 @@
 abstract public class Player {
 
-  static int White = 0;
-  static int Black = 1;
+  public static int White = 0;
+  public static int Black = 1;
 
   public String name;
   public String pseudo;

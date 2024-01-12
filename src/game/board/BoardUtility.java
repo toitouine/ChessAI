@@ -31,10 +31,10 @@ final public class BoardUtility {
     }
     str.append("   └───┴───┴───┴───┴───┴───┴───┴───┘\n");
 
-    String roqueString = (board.petitRoque[Player.White] ? "K" : "")
-                       + (board.grandRoque[Player.White] ? "Q" : "")
-                       + (board.petitRoque[Player.Black] ? "k" : "")
-                       + (board.grandRoque[Player.Black] ? "q" : "");
+    String roqueString = (board.petitRoque(Player.White) ? "K" : "")
+                       + (board.grandRoque(Player.White) ? "Q" : "")
+                       + (board.petitRoque(Player.Black) ? "k" : "")
+                       + (board.grandRoque(Player.Black) ? "q" : "");
     if (roqueString.equals("")) roqueString = "None";
 
     Integer enPassantSquare = board.getEnPassantSquare();
@@ -42,7 +42,7 @@ final public class BoardUtility {
     str.append("\n   [Trait aux " + (board.tourDeQui == Player.White ? "blancs" : "noirs") + "]");
     str.append("\n   [Roques : " + roqueString + "]");
     str.append("\n   [En passant : " + enPassantString + "]");
-    str.append("\n   [Endgame Weight : " + board.endGameWeight + "]");
+    str.append("\n   [Phase : " + board.phase + "]");
     str.append("\n   [Zobrist key : " + board.zobrist + "]");
     str.append("\n   [FEN : " + board.generateFEN() + "]\n");
     return str.toString();

@@ -19,31 +19,25 @@ public final class Board {
   // public boolean playingBoard = false;
 
   public int tourDeQui = Player.White; // Joueur qui doit jouer
-  public float endGameWeight = 0; // Représente l'avancement de la partie (0 = ouverture, 1 = finale)
+  public float phase = 0; // Représente l'avancement de la partie (0 = ouverture, 1 = finale)
+  public long zobrist; // Hash de la position (zobrist)
+  private FenManager fenManager; // Gère les fens (génération, chargement de position)
 
-  // Roques (blanc puis noir)
-  public boolean[] petitRoque = {false, false};
-  public boolean[] grandRoque = {false, false};
+  // Représente les droits au roques (0 si non et 1 si oui, voir les masks pour l'ordre)
+  public int castleState;
+  private final int[] petitRoqueMask = {0b1000, 0b0010};
+  private final int[] grandRoqueMask = {0b0100, 0b0001};
 
   private Piece[] grid = new Piece[64]; // Représente les pièces sur l'échiquier
   private Piece[] rois = new Piece[2]; // Accès rapide aux rois de la partie (TODO : peut-être uniquement la case des rois)
 
-  // Bitboards
-  // 1 si il y a une pièce, 0 si il n'y en a pas
+  // Bitboards (1 si il y a une pièce, 0 si il n'y en a pas)
   // Associe chaque index de case (0 - 63) à un bit (0 pour 2^0, 1 pour 2^1, n pour 2^n)
   private long[] colorBitboard = {0, 0}; // Bitboard pour chaque couleur (blanc puis noir)
-
-  public long zobrist; // Hash de la position (zobrist)
 
   // Case en passantable sur cette position
   // (une pour les noirs et une pour les blancs pour faciliter l'expiration des cases)
   private Integer[] enPassantSquare = new Integer[2];
-
-  // Cases de départ des tours pour le petit et grand roque (blanc et noir)
-  private final int[] petitRoqueSquare = {63, 7};
-  private final int[] grandRoqueSquare = {56, 0};
-
-  private FenManager fenManager; // Gère les fens (génération, chargement de position)
 
   public Board() {
     fenManager = new FenManager(this);
@@ -79,14 +73,26 @@ public final class Board {
     return enPassantSquare[1];
   }
 
-  // Renvoie si la case square est la case de départ de la tour de petit roque du joueur color
-  private boolean isPetitRoqueSquare(int square, int color) {
-    return petitRoqueSquare[color] == square;
+  // Renvoie si le joueur color a droit au petit roque ou non
+  public boolean petitRoque(int color) {
+    return (castleState & petitRoqueMask[color]) != 0;
   }
 
-  // Renvoie si la case square est la case de départ de la tour de grand roque du joueur color
-  private boolean isGrandRoqueSquare(int square, int color) {
-    return grandRoqueSquare[color] == square;
+  // Renvoie si le joueur color a droit au grand roque ou non
+  public boolean grandRoque(int color) {
+    return (castleState & grandRoqueMask[color]) != 0;
+  }
+
+  // Active le petit roque chez color
+  public void enablePetitRoque(int color) {
+    int shift = (color == Player.White ? 3 : 1);
+    castleState |= 1 << shift;
+  }
+
+  // Active le grand roque chez color
+  public void enableGrandRoque(int color) {
+    int shift = (color == Player.White ? 2 : 0);
+    castleState |= 1 << shift;
   }
 
   /////////////////////////////////////////////////////////////////
@@ -111,27 +117,23 @@ public final class Board {
     calculatePositionData();
   }
 
-  // Recalcule complètement les données dépendant de la position (hash, endGameWeight...)
+  // Recalcule complètement les données dépendant de la position (hash, phase...)
   private void calculatePositionData() {
-    calcEndGameWeight();
+    calculatePhase();
     zobrist = Zobrist.calculateHash(this);
   }
 
   // Calcule le coefficient indiquant la phase de jeu (0 pour l'ouverture et 1 pour la finale)
   // TODO: compter le matériel avec les bitboards
-  private float calcEndGameWeight() {
-    endGameWeight = 0;
+  private float calculatePhase() {
+    phase = 0;
 
     for (int i = 0; i < 64; i++) {
-      if (grid[i] != null && grid[i].type != Piece.Pion && grid[i].type != Piece.Roi) {
-        endGameWeight += Config.Piece.maireValues[grid[i].type]/2;
-      }
+      if (grid[i] != null) phase += Config.Piece.phases[grid[i].type];
     }
 
-    endGameWeight = 1 - (endGameWeight / 3200f);
-    if (endGameWeight < 0) endGameWeight = 0;
-    else if (endGameWeight > 1) endGameWeight = 1;
-    return endGameWeight;
+    phase = Math.clamp(1 - (phase / Config.Piece.totalPhase), 0, 1);
+    return phase;
   }
 
   // Vide complètement le plateau et réinitialise les variables
@@ -143,14 +145,13 @@ public final class Board {
     for (int i = 0; i < 2; i++) {
       rois[i] = null;
       colorBitboard[i] = 0;
-      petitRoque[i] = false;
-      grandRoque[i] = false;
       enPassantSquare[i] = null;
     }
 
     tourDeQui = Player.White;
     zobrist = 0;
-    endGameWeight = 0;
+    phase = 0;
+    castleState = 0;
 
     calculatePositionData();
   }
@@ -176,7 +177,7 @@ public final class Board {
     }
 
     // Enlève tous les droits du roque du hash
-    zobrist ^= Zobrist.getCastlingKey(petitRoque, grandRoque);
+    zobrist ^= Zobrist.castlingRights[castleState];
 
     // Met la case en passantable
     if (flag == MoveFlag.DoubleAvance) enPassantSquare[color] = startSquare + 16*color - 8;
@@ -211,16 +212,16 @@ public final class Board {
       zobrist ^= Zobrist.piecesOnSquare[promotion.index][endSquare]; // Ajoute la pièce de promotion au hash
     }
 
-    // Droits au roques
-    if (petitRoque[color] || grandRoque[color]) {
-      if (piece.type == Piece.Roi) {
-        petitRoque[color] = false;
-        grandRoque[color] = false;
-      }
-      else if (piece.type == Piece.Tour) {
-        if (isPetitRoqueSquare(startSquare, color)) petitRoque[color] = false;
-        else if (isGrandRoqueSquare(startSquare, color)) grandRoque[color] = false;
-      }
+    // Actualise les droits au roque
+    if (piece.type == Piece.Roi) {
+      castleState &= ~petitRoqueMask[color];
+      castleState &= ~grandRoqueMask[color];
+    }
+    if (castleState != 0) {
+      if (startSquare == 63 || endSquare == 63) castleState &= ~petitRoqueMask[Player.White];
+      if (startSquare == 56 || endSquare == 56) castleState &= ~grandRoqueMask[Player.White];
+      if (startSquare == 7 || endSquare == 7) castleState &= ~petitRoqueMask[Player.Black];
+      if (startSquare == 0 || endSquare == 0) castleState &= ~grandRoqueMask[Player.Black];
     }
 
     // Expiration d'une case en passant éventuelle
@@ -231,9 +232,9 @@ public final class Board {
     zobrist ^= Zobrist.blackToMove;
 
     // Ajoute les droits du roque du hash
-    zobrist ^= Zobrist.getCastlingKey(petitRoque, grandRoque);
+    zobrist ^= Zobrist.castlingRights[castleState];
 
-    // TODO : endGameWeight, zobrist, historique de positions et bitboards
+    // TODO : phase, historique de positions et bitboards
   }
 
   // Annule un coup sur le plateau

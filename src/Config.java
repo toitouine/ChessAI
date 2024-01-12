@@ -44,9 +44,15 @@ public final class Config {
     // Code pour chaque pièces
     static final char[] codes = {'K', 'Q', 'R', 'B', 'N', 'P', 'k', 'q', 'r', 'b', 'n', 'p'};
 
+    // Phase de chaque type de pièce (à quel point la pièce affecte la phase du jeu)
+    // Ex : la capture d'une dame fait beaucoup avancer le jeu vers la finale, alors que la capture d'un pion non
+    static final int[] phases = {0, 6, 3, 2, 2, 0};
+
+    // Représente la somme des phases de chaque pièce au début de la partie
+    static final int totalPhase = 2*phases[1] + 4*(phases[2] + phases[3] + phases[4]) + 16*phases[5];
+
     // Valeurs des pièces
     static final float[] maireValues = {100000, 900, 500, 330, 320, 100};
-    static final float[] stockfishValues = {100000, 905, 456, 300, 293, 71};
     static final float[] loicValues = {100000, 900, 150, 300, 300, 100};
   }
 }

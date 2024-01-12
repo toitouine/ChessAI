@@ -19,13 +19,5 @@ public class Main {
     // Démarre l'applet principal
     String[] processingArgs = {Config.General.name};
     PApplet.runSketch(processingArgs, mainApplet);
-
-    try {
-      Thread.sleep(100);
-    } catch (Exception e) {
-    }
-
-    // Board board = new Board();
-    // board.loadFEN("r3k2r/pP1ppppp/8/8/8/8/PpPPPPPP/R3K2R w KQkq");
   }
 }
