@@ -7,18 +7,16 @@ public final class FenManager {
 
   Board board;
 
-  public FenManager(Board board) {
-    this.board = board;
-  }
+  private FenManager() { }
 
-  public int getIndexFromCode(char c) {
+  private static int getIndexFromCode(char c) {
     for (int i = 0; i < Config.Piece.codes.length; i++) {
       if (Config.Piece.codes[i] == c) return i;
     }
     return -1;
   }
 
-  public void loadPosition(String fen) {
+  public static void loadPosition(Board board, String fen) {
     board.clear();
 
     try {
@@ -66,11 +64,11 @@ public final class FenManager {
     }
     catch (Exception e) {
       Debug.error("FEN non valide (" + fen + "). Chargement de la FEN par défaut.");
-      loadPosition(Config.General.defaultFEN);
+      loadPosition(board, Config.General.defaultFEN);
     }
   }
 
-  public String generateFEN() {
+  public static String generateFEN(Board board) {
     //Position des pièces
     String fen = "";
     int vide = 0;

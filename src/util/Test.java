@@ -59,7 +59,7 @@ public final class Test {
 
     long itPerSeconds = 1000000000*iterations/timeNano;
     Debug.log("test", "Temps : " + String.format("%,f", (float)timeNano/1000000) + " ms");
-    Debug.log("test", "--> " + String.format("%,d", itPerSeconds) + " itérations par seconde");
+    Debug.log("test", "⟶  " + String.format("%,d", itPerSeconds) + " itérations par seconde");
     return itPerSeconds;
   }
 
@@ -82,7 +82,7 @@ public final class Test {
 
     long itPerSeconds = 1000*count / time.millis();
     Debug.log("test", "Itérations : " + String.format("%,d", count));
-    Debug.log("test", "--> " + String.format("%,d", itPerSeconds) + " itérations par seconde");
+    Debug.log("test", "⟶  " + String.format("%,d", itPerSeconds) + " itérations par seconde");
     return itPerSeconds;
   }
 }

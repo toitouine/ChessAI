@@ -15,13 +15,9 @@ import java.util.ArrayList;
 
 public final class Board {
 
-  // Plateau utilisé pour la partie ou non
-  // public boolean playingBoard = false;
-
   public int tourDeQui = Player.White; // Joueur qui doit jouer
   public float phase = 0; // Représente l'avancement de la partie (0 = ouverture, 1 = finale)
   public long zobrist; // Hash de la position (zobrist)
-  private FenManager fenManager; // Gère les fens (génération, chargement de position)
 
   // Représente les droits au roques (0 si non et 1 si oui, voir les masks pour l'ordre)
   public int castleState;
@@ -33,14 +29,16 @@ public final class Board {
 
   // Bitboards (1 si il y a une pièce, 0 si il n'y en a pas)
   // Associe chaque index de case (0 - 63) à un bit (0 pour 2^0, 1 pour 2^1, n pour 2^n)
-  private long[] colorBitboard = {0, 0}; // Bitboard pour chaque couleur (blanc puis noir)
+  public long[] colorBitboard; // Bitboard pour chaque couleur (blanc puis noir)
+  public long[] pieceBitboard; // Bitboard pour chaque index de pièce (voir piece.index)
 
   // Case en passantable sur cette position
   // (une pour les noirs et une pour les blancs pour faciliter l'expiration des cases)
   private Integer[] enPassantSquare = new Integer[2];
 
   public Board() {
-    fenManager = new FenManager(this);
+    colorBitboard = new long[2];
+    pieceBitboard = new long[Piece.NumberOfPiece];
     clear();
   }
 
@@ -48,13 +46,13 @@ public final class Board {
 
   // Crée la position à partir d'une fen
   public void loadFEN(String f) {
-    fenManager.loadPosition(f);
+    FenManager.loadPosition(this, f);
     calculatePositionData();
   }
 
   // Génère la fen de la position
   public String generateFEN() {
-    return fenManager.generateFEN();
+    return FenManager.generateFEN(this);
   }
 
   // Renvoie la pièce située sur une case
@@ -114,6 +112,7 @@ public final class Board {
 
     grid[square] = p;
     colorBitboard[p.color] |= 1L << square;
+    pieceBitboard[index] |= 1L << square;
     calculatePositionData();
   }
 
@@ -148,6 +147,10 @@ public final class Board {
       enPassantSquare[i] = null;
     }
 
+    for (long bitboard : pieceBitboard) {
+      bitboard = 0;
+    }
+
     tourDeQui = Player.White;
     zobrist = 0;
     phase = 0;
@@ -166,14 +169,26 @@ public final class Board {
     Piece piece = grid[startSquare];
     Piece capture = grid[endSquare];
     int color = piece.color;
+    int opponent = 1 - color;
 
-    // Déplacement et capture
+    // Déplacement de la pièce
     grid[endSquare] = grid[startSquare];
     grid[startSquare] = null;
-    zobrist ^= Zobrist.piecesOnSquare[piece.index][startSquare]; // XOR out la pièce
-    zobrist ^= Zobrist.piecesOnSquare[piece.index][endSquare]; // XOR in la pièce
+
+    // Actualise la clé de la position (XOR out et in)
+    zobrist ^= Zobrist.piecesOnSquare[piece.index][startSquare];
+    zobrist ^= Zobrist.piecesOnSquare[piece.index][endSquare];
+
+    // Actualise les bitboards
+    long movingMask = (1L << startSquare | 1L << endSquare);
+    colorBitboard[color] ^= movingMask;
+    pieceBitboard[piece.index] ^= movingMask;
+
+    // Dans le cas d'une capture
     if (capture != null) {
       zobrist ^= Zobrist.piecesOnSquare[capture.index][endSquare]; // XOR out la capture
+      colorBitboard[opponent] ^= (1L << endSquare);
+      pieceBitboard[capture.index] ^= (1L << endSquare);
     }
 
     // Enlève tous les droits du roque du hash
@@ -185,6 +200,8 @@ public final class Board {
     // Capture le pion pris en passant
     else if (flag == MoveFlag.EnPassant) {
       int capturedSquare = endSquare - 16*color + 8;
+      colorBitboard[opponent] ^= (1L << capturedSquare);
+      pieceBitboard[grid[capturedSquare].index] ^= (1L << capturedSquare);
       grid[capturedSquare] = null;
     }
 
@@ -195,6 +212,8 @@ public final class Board {
       grid[startSquare+3] = null;
       zobrist ^= Zobrist.piecesOnSquare[tour.index][startSquare+3]; // Enlève la tour de la case de départ
       zobrist ^= Zobrist.piecesOnSquare[tour.index][startSquare+1]; // Place la tour à la case d'arrivée
+      pieceBitboard[tour.index] ^= (1L << (startSquare+3) | 1L << (startSquare+1));
+      colorBitboard[color] ^= (1L << (startSquare+3) | 1L << (startSquare+1));
     }
     else if (flag == MoveFlag.GrandRoque) {
       Piece tour = grid[startSquare-4];
@@ -202,6 +221,8 @@ public final class Board {
       grid[startSquare-4] = null;
       zobrist ^= Zobrist.piecesOnSquare[tour.index][startSquare-4]; // Enlève la tour de la case de départ
       zobrist ^= Zobrist.piecesOnSquare[tour.index][startSquare-1]; // Place la tour à la case d'arrivée
+      pieceBitboard[tour.index] ^= (1L << (startSquare-4) | 1L << (startSquare-1));
+      colorBitboard[color] ^= (1L << (startSquare-4) | 1L << (startSquare-1));
     }
 
     // Promotion
@@ -210,6 +231,10 @@ public final class Board {
       grid[endSquare] = promotion;
       zobrist ^= Zobrist.piecesOnSquare[piece.index][endSquare]; // Retire le pion du hash
       zobrist ^= Zobrist.piecesOnSquare[promotion.index][endSquare]; // Ajoute la pièce de promotion au hash
+      // Ajoute la pièce de promotion au bitboard, et retire le pion
+      // (colorBitboard n'est pas modifié car il y a toujours une pièce sur la case de promotion)
+      pieceBitboard[piece.index] ^= (1L << endSquare);
+      pieceBitboard[promotion.index] ^= (1L << endSquare);
     }
 
     // Actualise les droits au roque
@@ -225,7 +250,7 @@ public final class Board {
     }
 
     // Expiration d'une case en passant éventuelle
-    enPassantSquare[1-color] = null;
+    enPassantSquare[opponent] = null;
 
     // Changement de tour
     tourDeQui = 1 - tourDeQui;
@@ -234,7 +259,7 @@ public final class Board {
     // Ajoute les droits du roque du hash
     zobrist ^= Zobrist.castlingRights[castleState];
 
-    // TODO : phase, historique de positions et bitboards
+    // TODO : phase, historique de positions
   }
 
   // Annule un coup sur le plateau

@@ -1,5 +1,3 @@
-import java.util.ArrayList;
-
 public class Piece {
 
   // Type des pièces
@@ -11,7 +9,7 @@ public class Piece {
   static final public int Pion = 5;
 
   static final public int NumberOfType = 6; // Nombre total de type de pièce
-  static final public int NumberOfPiece = 12; // Nombre total de pièces différentes
+  static final public int NumberOfPiece = 2*NumberOfType; // Nombre total de pièces différentes
 
   // Couleur des pièces
   static final public int White = 0;
