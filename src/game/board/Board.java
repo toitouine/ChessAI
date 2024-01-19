@@ -12,6 +12,8 @@
 /////////////////////////////////////////////////////////////////
 
 import java.util.ArrayList;
+import java.util.Deque;
+import java.util.ArrayDeque;
 
 public final class Board {
 
@@ -20,7 +22,7 @@ public final class Board {
   public long zobrist; // Hash de la position (zobrist)
 
   // Représente les droits au roques (0 si non et 1 si oui, voir les masks pour l'ordre)
-  public int castleState;
+  public byte castleState;
   private final int[] petitRoqueMask = {0b1000, 0b0010};
   private final int[] grandRoqueMask = {0b0100, 0b0001};
 
@@ -36,6 +38,8 @@ public final class Board {
   // (une pour les noirs et une pour les blancs pour faciliter l'expiration des cases)
   private Integer[] enPassantSquare = new Integer[2];
 
+  public Deque<MoveSave> saves = new ArrayDeque<MoveSave>();
+
   public Board() {
     colorBitboard = new long[2];
     pieceBitboard = new long[Piece.NumberOfPiece];
@@ -48,6 +52,10 @@ public final class Board {
   public void loadFEN(String f) {
     FenManager.loadPosition(this, f);
     calculatePositionData();
+  }
+
+  public void loadStartPosition() {
+    loadFEN(Config.General.defaultFEN);
   }
 
   // Génère la fen de la position
@@ -123,12 +131,13 @@ public final class Board {
   }
 
   // Calcule le coefficient indiquant la phase de jeu (0 pour l'ouverture et 1 pour la finale)
-  // TODO: compter le matériel avec les bitboards
   private float calculatePhase() {
     phase = 0;
 
-    for (int i = 0; i < 64; i++) {
-      if (grid[i] != null) phase += Config.Piece.phases[grid[i].type];
+    for (int c = 0; c < 2; c++) {
+      for (int i = 0; i < Piece.NumberOfType; i++) {
+        phase += Bitboard.popCount(pieceBitboard[i + c*6]) * Config.Piece.phases[i];
+      }
     }
 
     phase = Math.clamp(1 - (phase / Config.Piece.totalPhase), 0, 1);
@@ -170,6 +179,10 @@ public final class Board {
     Piece capture = grid[endSquare];
     int color = piece.color;
     int opponent = 1 - color;
+
+    // Sauvegarde les données de la position dans l'historique
+    MoveSave save = new MoveSave(capture, castleState, phase, zobrist);
+    saves.push(save);
 
     // Déplacement de la pièce
     grid[endSquare] = grid[startSquare];
@@ -259,7 +272,10 @@ public final class Board {
     // Ajoute les droits du roque du hash
     zobrist ^= Zobrist.castlingRights[castleState];
 
-    // TODO : phase, historique de positions
+    // Actualise la phase du jeu si nécessaire
+    if (capture != null || flag == MoveFlag.EnPassant || MoveFlag.isPromotion(flag)) {
+      phase = calculatePhase();
+    }
   }
 
   // Annule un coup sur le plateau
