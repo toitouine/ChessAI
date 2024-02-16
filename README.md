@@ -1,4 +1,5 @@
 # Chess AI
+This version is currently under development, and many things have not yet been implemented. See version 1 for a (working) version.
 Multiple chess AIs using processing. They are based on the negamax algorithm with alpha-beta pruning, transposition table and quiet move search.
 
 ## Bots
