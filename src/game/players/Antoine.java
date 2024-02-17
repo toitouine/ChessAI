@@ -7,6 +7,7 @@ public class Antoine extends Player {
     title = "";
     victoryTitle = "Tu t'es fait mater !";
     ouvertureNumber = 0;
+    isBot = true;
     this.settings = settings;
   }
 

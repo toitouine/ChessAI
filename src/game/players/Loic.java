@@ -7,6 +7,7 @@ public class Loic extends Player {
     title = "IM";
     victoryTitle = "Tu t'es fait mater !";
     ouvertureNumber = 0;
+    isBot = true;
     this.settings = settings;
   }
 

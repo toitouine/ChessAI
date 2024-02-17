@@ -14,8 +14,13 @@
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.ArrayDeque;
+import java.io.Serializable;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectOutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ObjectInputStream;
 
-public final class Board {
+public final class Board implements Serializable {
 
   public int tourDeQui = Player.White; // Joueur qui doit jouer
   public float phase = 0; // Représente l'avancement de la partie (0 = ouverture, 1 = finale)
@@ -181,7 +186,7 @@ public final class Board {
     int opponent = 1 - color;
 
     // Sauvegarde les données de la position dans l'historique
-    MoveSave save = new MoveSave(capture, castleState, phase, zobrist);
+    MoveSave save = new MoveSave(capture, castleState, phase, zobrist, enPassantSquare[opponent]);
     saves.push(save);
 
     // Déplacement de la pièce
@@ -247,7 +252,7 @@ public final class Board {
       // Ajoute la pièce de promotion au bitboard, et retire le pion
       // (colorBitboard n'est pas modifié car il y a toujours une pièce sur la case de promotion)
       pieceBitboard[piece.index] ^= (1L << endSquare);
-      pieceBitboard[promotion.index] ^= (1L << endSquare);
+      pieceBitboard[promotion.index] |= (1L << endSquare);
     }
 
     // Actualise les droits au roque
@@ -281,6 +286,92 @@ public final class Board {
   // Annule un coup sur le plateau
   // Note : doit être fait dans la position obtenue immédiatement après avoir joué le coup
   public void unmake(Move move) {
+    // On se place du point de vue de celui qui a joué le coup move
+    // C'est donc maintenant le tour de l'adversaire
+    int startSquare = move.startSquare();
+    int endSquare = move.endSquare();
+    int flag = move.flag();
+    Piece piece = grid[endSquare]; // Pièce qui a bougé (ou dans le cas d'une promotion, pièce de promotion)
+    int color = piece.color;
+    int opponent = tourDeQui;
+
+    // Retour des sauvegardes
+    MoveSave save = saves.pop();
+    phase = save.phase;
+    zobrist = save.zobrist;
+    castleState = save.castleState;
+    enPassantSquare[opponent] = save.opponentEnPassant;
+    Piece capture = save.capture;
+
+    // Déplacement de la pièce
+    // Note : si on est dans le cas d'une promotion, la pièce qui a bougé est la pièce de promotion
+    grid[startSquare] = grid[endSquare];
+    grid[endSquare] = capture;
+
+    // Actualise les bitboards
+    long movingMask = (1L << startSquare | 1L << endSquare);
+    colorBitboard[color] ^= movingMask;
+    pieceBitboard[piece.index] ^= movingMask;
+
+    // Si c'est une capture, ajoute la pièce retirée
+    if (capture != null) {
+      colorBitboard[opponent] |= (1L << endSquare);
+      pieceBitboard[capture.index] |= (1L << endSquare);
+    }
+
+    // Enlève éventuellement un case en passant
+    if (flag == MoveFlag.DoubleAvance) enPassantSquare[color] = null;
+
+    // Ajoute le pion pris en passant
+    else if (flag == MoveFlag.EnPassant) {
+      int capturedSquare = endSquare - 16*color + 8;
+      grid[capturedSquare] = new Piece(Piece.Pion, opponent);
+      colorBitboard[opponent] |= (1L << capturedSquare);
+      pieceBitboard[grid[capturedSquare].index] |= (1L << capturedSquare);
+    }
+
+    // Replace la tour dans le cas d'un roque
+    else if (flag == MoveFlag.PetitRoque) {
+      Piece tour = grid[startSquare+1];
+      grid[startSquare+3] = tour;
+      grid[startSquare+1] = null;
+      pieceBitboard[tour.index] ^= (1L << (startSquare+3) | 1L << (startSquare+1));
+      colorBitboard[color] ^= (1L << (startSquare+3) | 1L << (startSquare+1));
+    }
+    else if (flag == MoveFlag.GrandRoque) {
+      Piece tour = grid[startSquare-1];
+      grid[startSquare-4] = tour;
+      grid[startSquare-1] = null;
+      pieceBitboard[tour.index] ^= (1L << (startSquare-4) | 1L << (startSquare-1));
+      colorBitboard[color] ^= (1L << (startSquare-4) | 1L << (startSquare-1));
+    }
+
+    // Promotion
+    else if (MoveFlag.isPromotion(flag)) {
+      // Dans le cas de la promotion, piece représente la pièce de promotion
+      // On remplace la pièce déplacée (de la case d'arrivée à la case de départ) par un pion
+      grid[startSquare] = new Piece(Piece.Pion, color);
+      pieceBitboard[piece.index] ^= (1L << startSquare); // Retire la pièce de promotion de la case de départ
+      pieceBitboard[grid[startSquare].index] |= (1L << startSquare); // Ajoute le pion sur la case de départ
+    }
+
+    // Changement de tour
+    tourDeQui = 1 - tourDeQui;
+  }
+
+  public Board copy() {
+    try {
+      ByteArrayOutputStream byteOutput = new ByteArrayOutputStream();
+      ObjectOutputStream objectOutput = new ObjectOutputStream(byteOutput);
+      objectOutput.writeObject(this);
+      ByteArrayInputStream byteInput = new ByteArrayInputStream(byteOutput.toByteArray());
+      ObjectInputStream objectInput = new ObjectInputStream(byteInput);
+      return (Board) objectInput.readObject();
+    }
+    catch (Exception e) {
+      Debug.error("Impossible de copier le plateau : " + e);
+      return null;
+    }
   }
 
   @Override

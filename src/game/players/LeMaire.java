@@ -7,6 +7,7 @@ public class LeMaire extends Player {
     title = "GM";
     victoryTitle = "Cmaire";
     ouvertureNumber = 10;
+    isBot = true;
     this.settings = settings;
   }
 

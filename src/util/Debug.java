@@ -28,23 +28,11 @@ public final class Debug {
   }
 
   public static void println(Object... logs) {
+    if (disableLogs) return;
     for (int i = 0; i < logs.length; i++) {
       System.out.print(logs[i] + (i == logs.length-1 ? "" : " " ) );
     }
     System.out.println();
-  }
-
-  public static <T>void printArray(T[] array) {
-    String str = "[";
-    for (int i = 0; i < array.length; i++) {
-      str += array[i];
-      if (i == array.length-1) {
-        str += "]";
-        continue;
-      }
-      str += ", ";
-    }
-    Debug.log(str);
   }
 
   public static void error(Object message) {

@@ -62,7 +62,8 @@ public class Move {
 }
 
 // Flag pour les coups spéciaux
-// Note : il ne peut y avoir que 16 flags maximum et les flags de promotion doivent être placés dans l'ordre et en dernier
+// Note : il ne peut y avoir que 16 flags maximum et les
+// flags de promotion doivent être placés dans l'ordre et en dernier
 final class MoveFlag {
   private MoveFlag() {}
 

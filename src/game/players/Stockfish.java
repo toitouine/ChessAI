@@ -7,6 +7,7 @@ public class Stockfish extends Player {
     title = "Noob";
     victoryTitle = "??!?";
     ouvertureNumber = 0;
+    isBot = true;
     this.settings = settings;
   }
 

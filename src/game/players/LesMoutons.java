@@ -7,6 +7,7 @@ public class LesMoutons extends Player {
     title = "Mouton";
     victoryTitle = "YOU LOUSE";
     ouvertureNumber = 5;
+    isBot = true;
     this.settings = settings;
   }
 
