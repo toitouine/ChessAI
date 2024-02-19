@@ -43,11 +43,16 @@ public final class Board implements Serializable {
   // (une pour les noirs et une pour les blancs pour faciliter l'expiration des cases)
   private Integer[] enPassantSquare = new Integer[2];
 
+  // Sauvegardes pour pouvoir annuler correctement un coup
   public Deque<MoveSave> saves = new ArrayDeque<MoveSave>();
+
+  // Générateur de coups
+  private MoveGenerator generator;
 
   public Board(String fen) {
     colorBitboard = new long[2];
     pieceBitboard = new long[Piece.NumberOfPiece];
+    generator = new MoveGenerator(this);
     loadFEN(fen);
   }
 
@@ -217,23 +222,26 @@ public final class Board implements Serializable {
     zobrist ^= Zobrist.castlingRights[castleState];
 
     // Met la case en passantable
-    if (flag == MoveFlag.DoubleAvance) enPassantSquare[color] = startSquare + 16*color - 8;
+    if (flag == MoveFlag.DoubleAvance) {
+      enPassantSquare[color] = startSquare + (color == Player.White ? -8 : 8);
+    }
 
     // Capture le pion pris en passant
     else if (flag == MoveFlag.EnPassant) {
-      int capturedSquare = endSquare - 16*color + 8;
+      int capturedSquare = endSquare + (color == Player.White ? 8 : -8);
       colorBitboard[opponent] ^= (1L << capturedSquare);
       pieceBitboard[grid[capturedSquare].index] ^= (1L << capturedSquare);
       grid[capturedSquare] = null;
     }
 
     // Roques
+    // (déplace la tour au bon endroit)
     else if (flag == MoveFlag.PetitRoque) {
       Piece tour = grid[startSquare+3];
       grid[startSquare+1] = tour;
       grid[startSquare+3] = null;
-      zobrist ^= Zobrist.piecesOnSquare[tour.index][startSquare+3]; // Enlève la tour de la case de départ
-      zobrist ^= Zobrist.piecesOnSquare[tour.index][startSquare+1]; // Place la tour à la case d'arrivée
+      zobrist ^= Zobrist.piecesOnSquare[tour.index][startSquare+3];
+      zobrist ^= Zobrist.piecesOnSquare[tour.index][startSquare+1];
       pieceBitboard[tour.index] ^= (1L << (startSquare+3) | 1L << (startSquare+1));
       colorBitboard[color] ^= (1L << (startSquare+3) | 1L << (startSquare+1));
     }
@@ -241,8 +249,8 @@ public final class Board implements Serializable {
       Piece tour = grid[startSquare-4];
       grid[startSquare-1] = tour;
       grid[startSquare-4] = null;
-      zobrist ^= Zobrist.piecesOnSquare[tour.index][startSquare-4]; // Enlève la tour de la case de départ
-      zobrist ^= Zobrist.piecesOnSquare[tour.index][startSquare-1]; // Place la tour à la case d'arrivée
+      zobrist ^= Zobrist.piecesOnSquare[tour.index][startSquare-4];
+      zobrist ^= Zobrist.piecesOnSquare[tour.index][startSquare-1];
       pieceBitboard[tour.index] ^= (1L << (startSquare-4) | 1L << (startSquare-1));
       colorBitboard[color] ^= (1L << (startSquare-4) | 1L << (startSquare-1));
     }
@@ -328,7 +336,7 @@ public final class Board implements Serializable {
 
     // Ajoute le pion pris en passant
     else if (flag == MoveFlag.EnPassant) {
-      int capturedSquare = endSquare - 16*color + 8;
+      int capturedSquare = endSquare + (color == Player.White ? 8 : -8);
       grid[capturedSquare] = new Piece(Piece.Pion, opponent);
       colorBitboard[opponent] |= (1L << capturedSquare);
       pieceBitboard[grid[capturedSquare].index] |= (1L << capturedSquare);
@@ -361,6 +369,12 @@ public final class Board implements Serializable {
 
     // Changement de tour
     tourDeQui = 1 - tourDeQui;
+  }
+
+  /////////////////////////////////////////////////////////////////
+
+  public ArrayList<Move> generateMoves() {
+    return generator.getLegalMoves();
   }
 
   public Board copy() {
