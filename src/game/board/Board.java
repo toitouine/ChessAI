@@ -45,10 +45,14 @@ public final class Board implements Serializable {
 
   public Deque<MoveSave> saves = new ArrayDeque<MoveSave>();
 
-  public Board() {
+  public Board(String fen) {
     colorBitboard = new long[2];
     pieceBitboard = new long[Piece.NumberOfPiece];
-    clear();
+    loadFEN(fen);
+  }
+
+  public Board() {
+    this(Config.General.defaultFEN);
   }
 
   /////////////////////////////////////////////////////////////////
