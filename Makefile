@@ -20,7 +20,8 @@ CLASSES = \
 ./src/game/*.java \
 ./src/game/players/*.java \
 ./src/game/hacker/*.java \
-./src/game/board/*.java
+./src/game/board/*.java \
+./src/game/board/move/*.java
 
 all:
 	make build

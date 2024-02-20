@@ -140,18 +140,17 @@ public final class Board implements Serializable {
 
   // Recalcule complètement les données dépendant de la position (hash, phase...)
   private void calculatePositionData() {
-    calculatePhase();
+    phase = calculatePhase();
     zobrist = Zobrist.calculateHash(this);
   }
 
   // Calcule le coefficient indiquant la phase de jeu (0 pour l'ouverture et 1 pour la finale)
-  private float calculatePhase() {
+  public float calculatePhase() {
     phase = 0;
 
-    for (int c = 0; c < 2; c++) {
-      for (int i = 0; i < Piece.NumberOfType; i++) {
-        phase += Bitboard.popCount(pieceBitboard[i + c*6]) * Config.Piece.phases[i];
-      }
+    for (int i = 0; i < Piece.NumberOfType; i++) {
+      long bitboard = pieceBitboard[i] | pieceBitboard[i+Piece.NumberOfType];
+      phase += Long.bitCount(bitboard) * Config.Piece.phases[i];
     }
 
     phase = Math.clamp(1 - (phase / Config.Piece.totalPhase), 0, 1);
@@ -373,7 +372,7 @@ public final class Board implements Serializable {
 
   /////////////////////////////////////////////////////////////////
 
-  public ArrayList<Move> generateMoves() {
+  public ArrayList<Move> getLegalMoves() {
     return generator.getLegalMoves();
   }
 

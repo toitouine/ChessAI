@@ -17,14 +17,4 @@ public final class Bitboard {
   private static String getBinaryString(long bitboard) {
     return String.format("%64s", Long.toBinaryString(bitboard)).replace(' ', '0');
   }
-
-  // Renvoie le nombre de bits 1 dans le bitboard
-  public static int popCount(long bitboard) {
-    int count = 0;
-    while (bitboard != 0) {
-      count++;
-      bitboard &= bitboard - 1;
-    }
-    return count;
-  }
 }
