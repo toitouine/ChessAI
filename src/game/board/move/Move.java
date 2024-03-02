@@ -7,7 +7,7 @@
 // - Promotions (dame, tour, fou, cavalier)
 // - Roques
 // - En passant
-// - Double avance
+// - Double avance (pion qui avance de deux cases)
 
 /////////////////////////////////////////////////////////////////
 
@@ -68,8 +68,8 @@ final class MoveFlag {
   private MoveFlag() {}
 
   static final public int None = 0;
-  static final public int EnPassant = 1;
-  static final public int DoubleAvance = 2;
+  static final public int DoubleAvance = 1;
+  static final public int EnPassant = 2;
   static final public int PetitRoque = 3;
   static final public int GrandRoque = 4;
   static final public int PromotionDame = 5;

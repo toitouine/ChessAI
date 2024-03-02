@@ -1,15 +1,14 @@
 public final class MoveGenerationData {
   private MoveGenerationData() {}
 
-  // Colonnes et lignes utiles de l'échiquier
-  static final public long Afile = 0x0101010101010101L;
-  static final public long Bfile = Afile << 1;
-  static final public long Gfile = Afile << 6;
-  static final public long Hfile = Afile << 7;
-  static final public long rank1 = 0b11111111L << 56;
-  static final public long rank2 = 0b11111111L << 48;
-  static final public long rank7 = 0b11111111L << 8;
-  static final public long rank8 = 0b11111111L;
+  static final public long Afile = Bitboard.Afile;
+  static final public long Bfile = Bitboard.Bfile;
+  static final public long Gfile = Bitboard.Gfile;
+  static final public long Hfile = Bitboard.Hfile;
+  static final public long rank1 = Bitboard.rank1;
+  static final public long rank2 = Bitboard.rank2;
+  static final public long rank7 = Bitboard.rank7;
+  static final public long rank8 = Bitboard.rank8;
 
   // Attaques d'un cavalier sur une case sous forme de bitboard
   static public long knightAttacks[];

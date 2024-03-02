@@ -41,7 +41,7 @@ public final class Board implements Serializable {
 
   // Case en passantable sur cette position
   // (une pour les noirs et une pour les blancs pour faciliter l'expiration des cases)
-  private Integer[] enPassantSquare = new Integer[2];
+  public Integer[] enPassantSquare = new Integer[2];
 
   // Sauvegardes pour pouvoir annuler correctement un coup
   public Deque<MoveSave> saves = new ArrayDeque<MoveSave>();
@@ -372,8 +372,12 @@ public final class Board implements Serializable {
 
   /////////////////////////////////////////////////////////////////
 
+  public ArrayList<Move> getLegalMoves(int color) {
+    return generator.getLegalMoves(color);
+  }
+
   public ArrayList<Move> getLegalMoves() {
-    return generator.getLegalMoves();
+    return getLegalMoves(tourDeQui);
   }
 
   public Board copy() {
