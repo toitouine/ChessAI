@@ -18,6 +18,7 @@ public class MoveGenerator {
   public ArrayList<Move> getLegalMoves(int color) {
     ArrayList<Move> moves = new ArrayList<Move>(45);
 
+    addKingMoves(moves, color);
     addKnightMoves(moves, color);
     if (color == Player.White) addWhitePawnMoves(moves);
     else addBlackPawnMoves(moves);
@@ -27,9 +28,46 @@ public class MoveGenerator {
 
   /////////////////////////////////////////////////////////////////
 
+  // Coups du roi
+
+  private long getKingAttacks(int square) {
+    return MoveGenerationData.kingAttacks[square];
+  }
+
+  private void addKingMoves(ArrayList<Move> moves, int color) {
+    // On suppose qu'il n'y a qu'un seul roi de couleur color en jeu
+    int startSquare = board.roi(color);
+
+    // Récupère les attaques du roi
+    long attacks = getKingAttacks(startSquare);
+
+    // Convertit le bitboard des attaques en coups
+    long endSquares = attacks & ~board.colorBitboard[color];
+    while (endSquares != 0) {
+      moves.add(new Move(startSquare, Long.numberOfTrailingZeros(endSquares)));
+      endSquares &= endSquares - 1;
+    }
+
+    // Ajoute éventuellement les roques
+    if (board.petitRoque(color)) {
+      long allPieces = board.colorBitboard[Player.White] | board.colorBitboard[Player.Black];
+      if ((MoveGenerationData.petitRoquePiecesMask[color] & allPieces) == 0) {
+        moves.add(new Move(startSquare, startSquare+2, MoveFlag.PetitRoque));
+      }
+    }
+    if (board.grandRoque(color)) {
+      long allPieces = board.colorBitboard[Player.White] | board.colorBitboard[Player.Black];
+      if ((MoveGenerationData.grandRoquePiecesMask[color] & allPieces) == 0) {
+        moves.add(new Move(startSquare, startSquare-2, MoveFlag.GrandRoque));
+      }
+    }
+  }
+
+  /////////////////////////////////////////////////////////////////
+
   // Coups des cavaliers
 
-  private long getKnightAttack(int square) {
+  private long getKnightAttacks(int square) {
     return MoveGenerationData.knightAttacks[square];
   }
 
@@ -39,7 +77,7 @@ public class MoveGenerator {
     while (cavaliers != 0) {
       // Récupère la case de départ du cavalier et ses attaques
       int startSquare = Long.numberOfTrailingZeros(cavaliers);
-      long attacks = getKnightAttack(startSquare);
+      long attacks = getKnightAttacks(startSquare);
 
       // Convertit le bitboard des attaques en coups
       long endSquares = attacks & ~board.colorBitboard[color];

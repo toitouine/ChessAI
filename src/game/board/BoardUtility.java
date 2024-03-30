@@ -39,8 +39,10 @@ final public class BoardUtility {
 
     Integer enPassantSquare = board.getEnPassantSquare();
     String enPassantString = (enPassantSquare != null ? caseName(enPassantSquare) : "None");
+    String kings = caseName(board.roi(Player.White)) + ", " + caseName(board.roi(Player.Black));
     str.append("\n   [Trait aux " + (board.tourDeQui == Player.White ? "blancs" : "noirs") + "]");
     str.append("\n   [Roques : " + roqueString + "]");
+    str.append("\n   [Rois : " + kings + "]");
     str.append("\n   [En passant : " + enPassantString + "]");
     str.append("\n   [Phase : " + board.phase + "]");
     str.append("\n   [Zobrist key : " + board.zobrist + "]");

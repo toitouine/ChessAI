@@ -32,7 +32,7 @@ public final class Board implements Serializable {
   private final int[] grandRoqueMask = {0b0100, 0b0001};
 
   private Piece[] grid = new Piece[64]; // Représente les pièces sur l'échiquier
-  private Piece[] rois = new Piece[2]; // Accès rapide aux rois de la partie (TODO : peut-être uniquement la case des rois)
+  private int[] rois = {-1, -1}; // Accès rapide à la case des rois de la partie
 
   // Bitboards (1 si il y a une pièce, 0 si il n'y en a pas)
   // Associe chaque index de case (0 - 63) à un bit (0 pour 2^0, 1 pour 2^1, n pour 2^n)
@@ -62,10 +62,11 @@ public final class Board implements Serializable {
 
   /////////////////////////////////////////////////////////////////
 
-  // Crée la position à partir d'une fen
+  // Génère la position à partir d'une fen
   public void loadFEN(String f) {
     FenManager.loadPosition(this, f);
-    calculatePositionData();
+    zobrist = Zobrist.calculateHash(this);
+    phase = calculatePhase();
   }
 
   public void loadStartPosition() {
@@ -85,6 +86,11 @@ public final class Board implements Serializable {
   // Renvoie la pièce située sur une case (ligne puis colonne)
   public Piece grid(int i, int j) {
     return grid[8*i + j];
+  }
+
+  // Renvoie la case du roi color
+  public int roi(int color) {
+    return rois[color];
   }
 
   // Renvoie la case en passantable si il y en a une
@@ -128,18 +134,13 @@ public final class Board implements Serializable {
     Piece p = new Piece(index);
 
     if (p.type == Piece.Roi) {
-      if (rois[p.color] != null) Debug.error("Ajout d'un deuxième roi sur le plateau");
-      rois[p.color] = p;
+      if (pieceBitboard[index] != 0) Debug.error("Ajout d'un deuxième roi sur le plateau");
+      rois[p.color] = square;
     }
 
     grid[square] = p;
     colorBitboard[p.color] |= 1L << square;
     pieceBitboard[index] |= 1L << square;
-    calculatePositionData();
-  }
-
-  // Recalcule complètement les données dépendant de la position (hash, phase...)
-  private void calculatePositionData() {
     phase = calculatePhase();
     zobrist = Zobrist.calculateHash(this);
   }
@@ -164,21 +165,19 @@ public final class Board implements Serializable {
     }
 
     for (int i = 0; i < 2; i++) {
-      rois[i] = null;
+      rois[i] = -1;
       colorBitboard[i] = 0;
       enPassantSquare[i] = null;
     }
 
-    for (long bitboard : pieceBitboard) {
-      bitboard = 0;
+    for (int i = 0; i < Piece.NumberOfPiece; i++) {
+      pieceBitboard[i] = 0;
     }
 
     tourDeQui = Player.White;
-    zobrist = 0;
-    phase = 0;
     castleState = 0;
-
-    calculatePositionData();
+    phase = calculatePhase();
+    zobrist = Zobrist.calculateHash(this);
   }
 
   /////////////////////////////////////////////////////////////////
@@ -200,6 +199,7 @@ public final class Board implements Serializable {
     // Déplacement de la pièce
     grid[endSquare] = grid[startSquare];
     grid[startSquare] = null;
+    if (piece.type == Piece.Roi) rois[color] = endSquare;
 
     // Actualise la clé de la position (XOR out et in)
     zobrist ^= Zobrist.piecesOnSquare[piece.index][startSquare];
@@ -318,6 +318,7 @@ public final class Board implements Serializable {
     // Note : si on est dans le cas d'une promotion, la pièce qui a bougé est la pièce de promotion
     grid[startSquare] = grid[endSquare];
     grid[endSquare] = capture;
+    if (piece.type == Piece.Roi) rois[color] = startSquare;
 
     // Actualise les bitboards
     long movingMask = (1L << startSquare | 1L << endSquare);

@@ -1,8 +1,3 @@
-import java.util.HashMap;
-import java.util.Map;
-import static java.util.Map.entry;
-import static java.util.Map.Entry;
-
 public final class FenManager {
 
   Board board;

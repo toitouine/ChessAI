@@ -89,6 +89,11 @@ public class MenuScene extends Scene<MainApplet> {
         .setDimensions(100, 30)
         .setAction( () -> Clipboard.copy(startFEN) ),
 
+      // Copier FEN
+      new TextButton(sketch, width-280, height-25, "Par défaut", 17)
+        .setDimensions(100, 30)
+        .setAction( () -> startFEN = Config.General.defaultFEN ),
+
       // Joueurs aléatoires
       new TextButton(sketch, width-91, height-65, "Joueurs aléatoires", 17)
         .setAction( () -> { whiteSelector.randomize(); blackSelector.randomize(); } ),

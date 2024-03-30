@@ -10,10 +10,18 @@ public final class MoveGenerationData {
   static final public long rank7 = Bitboard.rank7;
   static final public long rank8 = Bitboard.rank8;
 
+  // Attaques d'un roi sur une case sous forme de bitboard
+  static public long kingAttacks[];
+
   // Attaques d'un cavalier sur une case sous forme de bitboard
   static public long knightAttacks[];
 
-  static {
+  // Cases des pièces entre le roi et la tour pour tester la possibilité des roques
+  static final public long[] petitRoquePiecesMask = {0b1100000L << 56, 0b1100000L};
+  static final public long[] grandRoquePiecesMask = {0b1110L << 56, 0b1110L};
+
+  public static void initialize() {
+    generateKingAttacks();
     generateKnightAttacks();
   }
 
@@ -34,5 +42,20 @@ public final class MoveGenerationData {
     }
   }
 
+  private static void generateKingAttacks() {
+    kingAttacks = new long[64];
 
+    for (int i = 0; i < 64; i++) {
+      long attacks = 0;
+      attacks |= (1L << (i-9)) & ~Hfile & ~rank1;
+      attacks |= (1L << (i-8)) & ~rank1;
+      attacks |= (1L << (i-7)) & ~Afile & ~rank1;
+      attacks |= (1L << (i-1)) & ~Hfile;
+      attacks |= (1L << (i+1)) & ~Afile;
+      attacks |= (1L << (i+7)) & ~Hfile & ~rank8;
+      attacks |= (1L << (i+8)) & ~rank8;
+      attacks |= (1L << (i+9)) & ~Afile & ~rank8;
+      kingAttacks[i] = attacks;
+    }
+  }
 }

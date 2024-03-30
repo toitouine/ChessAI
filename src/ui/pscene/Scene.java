@@ -74,6 +74,7 @@ public abstract class Scene<T extends SApplet> {
   }
 
   public void onUserEvent(UserEvent e) {
+    // Gère les raccourcis clavier
     if (e.keyPressed()) {
       if (e.key != sketch.CODED) {
         if (shortcutsChar.get(e.key) != null) shortcutsChar.get(e.key).call();
@@ -83,6 +84,7 @@ public abstract class Scene<T extends SApplet> {
       }
     }
 
+    // Transmet éventuellement l'event à l'overlay
     if (currentOverlay != null) {
       if (e.keyPressed() || currentOverlay.contains(e.x, e.y)) {
         currentOverlay.onUserEvent(e);
@@ -90,6 +92,7 @@ public abstract class Scene<T extends SApplet> {
       }
     }
 
+    // Transmet aux controllers
     for (Controller c : controllers) {
       if (c.isEnabled()) {
         c.onUserEvent(e);

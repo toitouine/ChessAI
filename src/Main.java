@@ -13,6 +13,7 @@ public class Main {
     // Initialisation
     GameManager gameManager = GameManager.getInstance();
     MainApplet mainApplet = new MainApplet();
+    MoveGenerationData.initialize();
 
     // Démarre l'applet principal
     String[] processingArgs = {Config.General.name};
