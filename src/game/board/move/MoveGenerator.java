@@ -7,7 +7,9 @@
 import java.util.ArrayList;
 
 public class MoveGenerator {
+
   private Board board; // Plateau sur lequel générer les coups
+  private long occupied = 0; // Bitboard avec toutes les pièces du plateau
 
   public MoveGenerator(Board board) {
     this.board = board;
@@ -17,13 +19,51 @@ public class MoveGenerator {
 
   public ArrayList<Move> getLegalMoves(int color) {
     ArrayList<Move> moves = new ArrayList<Move>(45);
+    occupied = board.colorBitboard[Player.White] | board.colorBitboard[Player.Black];
 
     addKingMoves(moves, color);
     addKnightMoves(moves, color);
+    addRookMoves(moves, color);
     if (color == Player.White) addWhitePawnMoves(moves);
     else addBlackPawnMoves(moves);
 
     return moves;
+  }
+
+  /////////////////////////////////////////////////////////////////
+
+  // Coups de la tour
+
+  private long getRookMask(int square) {
+    return MoveGenerationData.rookAttackMask[square];
+  }
+
+  private long getRookTargets(int square, long blockers) {
+    return MoveGenerationData.rookMoves[square].get(blockers);
+  }
+
+  private void addRookMoves(ArrayList<Move> moves, int color) {
+    long tours = board.pieceBitboard[Piece.Tour + Piece.NumberOfType*color];
+
+    while (tours != 0) {
+      // Récupère la case de départ de la tour et le mask
+      int startSquare = Long.numberOfTrailingZeros(tours);
+      long mask = getRookMask(startSquare);
+
+      // Génère le bitboard des bloqueurs
+      long blockers = mask & occupied;
+
+      // Récupère les attaques pré-calculées et les convertit en coups
+      long attacks = getRookTargets(startSquare, blockers);
+      attacks &= ~(attacks & board.colorBitboard[color]);
+
+      while (attacks != 0) {
+        moves.add(new Move(startSquare, Long.numberOfTrailingZeros(attacks)));
+        attacks &= attacks - 1;
+      }
+
+      tours &= tours - 1;
+    }
   }
 
   /////////////////////////////////////////////////////////////////
@@ -50,14 +90,12 @@ public class MoveGenerator {
 
     // Ajoute éventuellement les roques
     if (board.petitRoque(color)) {
-      long allPieces = board.colorBitboard[Player.White] | board.colorBitboard[Player.Black];
-      if ((MoveGenerationData.petitRoquePiecesMask[color] & allPieces) == 0) {
+      if ((MoveGenerationData.petitRoquePiecesMask[color] & occupied) == 0) {
         moves.add(new Move(startSquare, startSquare+2, MoveFlag.PetitRoque));
       }
     }
     if (board.grandRoque(color)) {
-      long allPieces = board.colorBitboard[Player.White] | board.colorBitboard[Player.Black];
-      if ((MoveGenerationData.grandRoquePiecesMask[color] & allPieces) == 0) {
+      if ((MoveGenerationData.grandRoquePiecesMask[color] & occupied) == 0) {
         moves.add(new Move(startSquare, startSquare-2, MoveFlag.GrandRoque));
       }
     }
@@ -95,7 +133,7 @@ public class MoveGenerator {
 
   private void addWhitePawnMoves(ArrayList<Move> moves) {
     long pions = board.pieceBitboard[Piece.Pion];
-    long empty = ~board.colorBitboard[0] & ~board.colorBitboard[1];
+    long empty = ~occupied;
 
     // Avance simple des pions (et promotion)
     long onepush = (pions >> 8) & empty;
@@ -147,7 +185,7 @@ public class MoveGenerator {
 
   private void addBlackPawnMoves(ArrayList<Move> moves) {
     long pions = board.pieceBitboard[Piece.Pion + Piece.NumberOfType];
-    long empty = ~board.colorBitboard[0] & ~board.colorBitboard[1];
+    long empty = ~occupied;
 
     // Avance simple des pions (et promotion)
     long onepush = (pions << 8) & empty;
