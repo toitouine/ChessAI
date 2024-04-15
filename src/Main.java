@@ -1,5 +1,6 @@
 // TODO :
 //
+// - Debug : tag pour ligne vide
 // - Génération de coups
 // - Déroulement de la partie, Game Manager, Players, IA et Humain
 // - UI : Suite
@@ -13,7 +14,6 @@ public class Main {
     // Initialisation
     GameManager gameManager = GameManager.getInstance();
     MainApplet mainApplet = new MainApplet();
-    MoveGenerationData.initialize();
 
     // Démarre l'applet principal
     String[] processingArgs = {Config.General.name};

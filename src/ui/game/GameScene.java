@@ -32,7 +32,7 @@ public class GameScene extends Scene<MainApplet> {
       return;
     }
 
-    Debug.log("UI", "Nouvelle scène : Partie");
+    Debug.log("ui", "Nouvelle scène : Partie");
     PSurface surface = sketch.getSurface();
     sketch.setTitle(game.getWhite().pseudo + " contre " + game.getBlack().pseudo);
     java.awt.Rectangle bounds = sketch.getScreenBounds();

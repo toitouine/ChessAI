@@ -24,7 +24,7 @@ public class EditorScene extends Scene<MainApplet> {
   }
 
   protected void setup() {
-    Debug.log("UI", "Nouvelle scène : Editeur");
+    Debug.log("ui", "Nouvelle scène : Editeur");
     PSurface surface = sketch.getSurface();
     sketch.setTitle("Editeur de position");
     java.awt.Rectangle bounds = sketch.getScreenBounds();

@@ -20,7 +20,7 @@ public class MenuScene extends Scene<MainApplet> {
   }
 
   protected void setup() {
-    Debug.log("UI", "Nouvelle scène : Menu");
+    Debug.log("ui", "Nouvelle scène : Menu");
     PSurface surface = sketch.getSurface();
     sketch.setTitle("Selection des joueurs");
     java.awt.Rectangle bounds = sketch.getScreenBounds();

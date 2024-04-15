@@ -43,11 +43,11 @@ public class Move {
   }
 
   public int endSquare() {
-    return (value & endMask) >> 6;
+    return (value & endMask) >>> 6;
   }
 
   public int flag() {
-    return (value & flagMask) >> 12;
+    return (value & flagMask) >>> 12;
   }
 
   public boolean equals(Move otherMove) {

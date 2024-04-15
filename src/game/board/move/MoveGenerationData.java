@@ -1,39 +1,75 @@
+/////////////////////////////////////////////////////////////////
+
+// MoveGenerationData
+// Contient les données pré-calculées utiles pour générer
+// les coups des pièces (voir MoveGenerator.java), comme par
+// exemple les masks, nombres magiques...
+
+/////////////////////////////////////////////////////////////////
+
 import java.util.HashMap;
 
 public final class MoveGenerationData {
   private MoveGenerationData() {}
 
-  static final public long Afile = Bitboard.Afile;
-  static final public long Bfile = Bitboard.Bfile;
-  static final public long Gfile = Bitboard.Gfile;
-  static final public long Hfile = Bitboard.Hfile;
-  static final public long rank1 = Bitboard.rank1;
-  static final public long rank2 = Bitboard.rank2;
-  static final public long rank7 = Bitboard.rank7;
-  static final public long rank8 = Bitboard.rank8;
+  // Raccourcis pour les colonnes et lignes de l'échiquier
+  static final private long Afile = Bitboard.Afile;
+  static final private long Bfile = Bitboard.Bfile;
+  static final private long Gfile = Bitboard.Gfile;
+  static final private long Hfile = Bitboard.Hfile;
+  static final private long rank1 = Bitboard.rank1;
+  static final private long rank2 = Bitboard.rank2;
+  static final private long rank7 = Bitboard.rank7;
+  static final private long rank8 = Bitboard.rank8;
 
   // Attaques de différentes pièces depuis une case sous forme de bitboard
-  static public long kingAttacks[];
-  static public long knightAttacks[];
+  static private long kingAttacks[];
+  static private long knightAttacks[];
 
   // Masks pour la génération des coups des sliders (tour, fou, dame)
-  static public long rookAttackMask[];
+  static private long rookAttackMask[];
 
-  // Table des coups possibles pour une tour sur une case selon les arrangements de bloqueurs
-  static public HashMap<Long, Long>[] rookMoves;
+  // Table des coups par case pour la génération des coups des sliders
+  // (voir MoveGenerator.java)
+  static private long rookMoveTable[][];
+
 
   // Cases des pièces entre le roi et la tour pour tester la possibilité des roques
   static final public long[] petitRoquePiecesMask = {0b1100000L << 56, 0b1100000L};
   static final public long[] grandRoquePiecesMask = {0b1110L << 56, 0b1110L};
 
-  public static void initialize() {
+  // Intialise toutes les données
+  static {
     generateKingAttacks();
     generateKnightAttacks();
     generateRookMasks();
-    generateRookMoveMap();
+    generateRookMoveTable();
   }
 
   /////////////////////////////////////////////////////////////////
+
+  // Méthodes pour récupérer les données
+
+  public static long kingAttacks(int square) {
+    return kingAttacks[square];
+  }
+
+  public static long knightAttacks(int square) {
+    return knightAttacks[square];
+  }
+
+  public static long rookMask(int square) {
+    return rookAttackMask[square];
+  }
+
+  public static long rookMoves(int square, int index) {
+    return rookMoveTable[square][index];
+  }
+
+  /////////////////////////////////////////////////////////////////
+
+  // Les trois méthodes suivantes génèrent les attaques (ou masks) des
+  // pièces pour générer les coups (ou les masks si la pièce est un slider)
 
   private static void generateKnightAttacks() {
     knightAttacks = new long[64];
@@ -74,7 +110,7 @@ public final class MoveGenerationData {
 
     for (int i = 0; i < 64; i++) {
       int file = i & 7; // Colonne de la case
-      int rank = i >> 3; // Ligne de la case
+      int rank = i >>> 3; // Ligne de la case
       long remove = 1L << i; // Cases à retirer du mask
       if (file != 0) remove |= Afile;
       if (file != 7) remove |= Hfile;
@@ -87,35 +123,40 @@ public final class MoveGenerationData {
 
   /////////////////////////////////////////////////////////////////
 
-  // Pour chaque case, regarde tous les arrangements de bloqueurs possibles
-  // et génère les coups en conséquence. Un bitboard des bloqueurs sert alors
-  // de clés pour accéder aux coups.
+  // Initialise les coups dans les tables correspondant aux nombres magiques
+  // (voir MoveGenerator.java pour l'explication et MagicFinder.java pour l'algorithme)
 
-  @SuppressWarnings("unchecked")
-  private static void generateRookMoveMap() {
-    rookMoves = new HashMap[64];
+  private static void generateRookMoveTable() {
+    rookMoveTable = new long[64][];
 
     for (int square = 0; square < 64; square++) {
-      rookMoves[square] = new HashMap<Long, Long>();
-      long mask = rookAttackMask[square];
+      long magic = Magic.rookMagics[square];
+      int shift = Magic.rookShifts[square];
+      int tableSize = 1 << (64 - shift);
+      rookMoveTable[square] = new long[tableSize];
+
+      long mask = MoveGenerationData.rookAttackMask[square];
       long blockers = 0;
-      do { // Énumère tous les arrangements de bloqueurs dans le mask (voir Carry-Rippler trick)
-        long moves = getRookMoves(square, blockers);
-        rookMoves[square].put(blockers, moves);
+      do {
+        long moves = MoveGenerationData.getSlowRookMoves(square, blockers);
+        int index = Magic.index(magic, blockers, shift);
+        rookMoveTable[square][index] = moves;
         blockers = (blockers - mask) & mask;
       } while (blockers != 0);
     }
   }
 
-  // Calcule les coups d'une tour sur une case et connaissant les blockers
-  // Utilisé pour pré-calculer les coups de la tour selon les bloqueurs
+  /////////////////////////////////////////////////////////////////
 
-  private static long getRookMoves(int square, long blockers) {
+  // Renvoie le bitboard des coups pour une tour sur une case, étant
+  // donné un arrangement de bloqueur
+  // Note : ne doit être utilisé que pour initialiser, la méthode des nombres
+  // magiques est bien plus rapide
+
+  public static long getSlowRookMoves(int square, long blockers) {
     long moves = 0;
-    // Directions possibles de la tour
-    int[] dirs = {-8, 1, 8, -1};
-    // Biboard du côté de la direction dans dirs (pour l'arret)
-    long[] edges = {rank8, Hfile, rank1, Afile};
+    int[] dirs = {-8, 1, 8, -1}; // Directions possibles de la tour
+    long[] edges = {rank8, Hfile, rank1, Afile}; // Biboard opposé à la direction
 
     for (int i = 0; i < dirs.length; i++) {
       int dir = dirs[i];

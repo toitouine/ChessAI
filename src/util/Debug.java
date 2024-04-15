@@ -24,6 +24,7 @@ public final class Debug {
     colorMap.put("todo", PURPLE);
     colorMap.put("ui", GREEN);
     colorMap.put("game", CYAN);
+    colorMap.put("magic", YELLOW);
     disableLogs = Config.General.disableLogs;
   }
 

@@ -1,6 +1,31 @@
 /////////////////////////////////////////////////////////////////
 
-// Classe qui s'occupe de générer les coups pour un plateau donné
+// Génération des coups pour un plateau donné.
+// On utilise principalement les bitboards, et on s’appuie sur les données
+// initialisées dans MoveGenerationData.java. On distingue deux types de pièces :
+
+// - Roi, Cavalier, Pion :
+// Ces pièces ont un mouvement suffisamment "simple" pour pouvoir générer
+// les coups rapidement avec des masks des attaques ou des opératons simples.
+
+// - Les sliders (Dame, Tour, Fou) :
+// On utilise la technique des "magic bitboards". On obtient assez simplement
+// un bitboard des pièces qui bloquent (bloqueurs). On effectue alors des opérations
+// sur ce bitboard (faisant intervenir des "nombres magiques") pour obtenir un index
+// d'un tableau (où les coups sont pré-calculés selon chaque configuration de
+// bloqueurs). Au démarrage du programme, on peut donc générer un tel tableau par
+// case (donc 64 tableaux pour la tour, et 64 pour le fou), et calculer en avance
+// les coups sur une case donnée pour chaque arrangement de bloqueurs possible
+// (voir MoveGenerationData.java).
+
+// Magic bitboard :
+// L'opération effectuée est : index = (blockers * magic) >>> (64 - n)
+// où blocker correspond au bitboard des bloqueurs, magic au nombre magique de la case
+// et n au nombre de bits utiles associés au nombre magique (déterminé en même
+// temps que le nombre magique)
+// Pour éviter une soustraction, on sauvegarde 64 - n (shift) et non n dans les tableaux.
+// La liste des nombres magiques et des shifts (déterminés avec MagicFinder.java)
+// se trouve dans Magic.java
 
 /////////////////////////////////////////////////////////////////
 
@@ -21,11 +46,11 @@ public class MoveGenerator {
     ArrayList<Move> moves = new ArrayList<Move>(45);
     occupied = board.colorBitboard[Player.White] | board.colorBitboard[Player.Black];
 
-    addKingMoves(moves, color);
-    addKnightMoves(moves, color);
+    // addKingMoves(moves, color);
+    // addKnightMoves(moves, color);
     addRookMoves(moves, color);
-    if (color == Player.White) addWhitePawnMoves(moves);
-    else addBlackPawnMoves(moves);
+    // if (color == Player.White) addWhitePawnMoves(moves);
+    // else addBlackPawnMoves(moves);
 
     return moves;
   }
@@ -34,27 +59,22 @@ public class MoveGenerator {
 
   // Coups de la tour
 
-  private long getRookMask(int square) {
-    return MoveGenerationData.rookAttackMask[square];
-  }
-
-  private long getRookTargets(int square, long blockers) {
-    return MoveGenerationData.rookMoves[square].get(blockers);
-  }
-
   private void addRookMoves(ArrayList<Move> moves, int color) {
     long tours = board.pieceBitboard[Piece.Tour + Piece.NumberOfType*color];
 
     while (tours != 0) {
       // Récupère la case de départ de la tour et le mask
       int startSquare = Long.numberOfTrailingZeros(tours);
-      long mask = getRookMask(startSquare);
+      long mask = MoveGenerationData.rookMask(startSquare);
 
       // Génère le bitboard des bloqueurs
       long blockers = mask & occupied;
 
-      // Récupère les attaques pré-calculées et les convertit en coups
-      long attacks = getRookTargets(startSquare, blockers);
+      // Récupère les attaques pré-calculées et les convertit en coups (magic bitboard)
+      long magic = Magic.rookMagics[startSquare];
+      int shift = Magic.rookShifts[startSquare];
+      int index = Magic.index(magic, blockers, shift);
+      long attacks = MoveGenerationData.rookMoves(startSquare, index);
       attacks &= ~(attacks & board.colorBitboard[color]);
 
       while (attacks != 0) {
@@ -70,16 +90,12 @@ public class MoveGenerator {
 
   // Coups du roi
 
-  private long getKingAttacks(int square) {
-    return MoveGenerationData.kingAttacks[square];
-  }
-
   private void addKingMoves(ArrayList<Move> moves, int color) {
     // On suppose qu'il n'y a qu'un seul roi de couleur color en jeu
     int startSquare = board.roi(color);
 
     // Récupère les attaques du roi
-    long attacks = getKingAttacks(startSquare);
+    long attacks = MoveGenerationData.kingAttacks(startSquare);
 
     // Convertit le bitboard des attaques en coups
     long endSquares = attacks & ~board.colorBitboard[color];
@@ -105,17 +121,13 @@ public class MoveGenerator {
 
   // Coups des cavaliers
 
-  private long getKnightAttacks(int square) {
-    return MoveGenerationData.knightAttacks[square];
-  }
-
   private void addKnightMoves(ArrayList<Move> moves, int color) {
     long cavaliers = board.pieceBitboard[Piece.Cavalier + Piece.NumberOfType*color];
 
     while (cavaliers != 0) {
       // Récupère la case de départ du cavalier et ses attaques
       int startSquare = Long.numberOfTrailingZeros(cavaliers);
-      long attacks = getKnightAttacks(startSquare);
+      long attacks = MoveGenerationData.knightAttacks(startSquare);
 
       // Convertit le bitboard des attaques en coups
       long endSquares = attacks & ~board.colorBitboard[color];
@@ -136,7 +148,7 @@ public class MoveGenerator {
     long empty = ~occupied;
 
     // Avance simple des pions (et promotion)
-    long onepush = (pions >> 8) & empty;
+    long onepush = (pions >>> 8) & empty;
     while (onepush != 0) {
       int endSquare = Long.numberOfTrailingZeros(onepush);
       if (endSquare <= 7) addPromotionMoves(moves, endSquare+8, endSquare);
@@ -145,7 +157,7 @@ public class MoveGenerator {
     }
 
     // Avance double des pions
-    long doublepush = (((pions & Bitboard.rank2) >> 8) & empty) >> 8 & empty;
+    long doublepush = (((pions & Bitboard.rank2) >>> 8) & empty) >>> 8 & empty;
     while (doublepush != 0) {
       int endSquare = Long.numberOfTrailingZeros(doublepush);
       moves.add(new Move(endSquare + 16, endSquare, MoveFlag.DoubleAvance));
@@ -153,7 +165,7 @@ public class MoveGenerator {
     }
 
     // Capture gauche (et promotion)
-    long captureLeft = ((~Bitboard.Afile & pions) >> 9) & board.colorBitboard[Player.Black];
+    long captureLeft = ((~Bitboard.Afile & pions) >>> 9) & board.colorBitboard[Player.Black];
     while (captureLeft != 0) {
       int endSquare = Long.numberOfTrailingZeros(captureLeft);
       if (endSquare <= 7) addPromotionMoves(moves, endSquare + 9, endSquare);
@@ -162,7 +174,7 @@ public class MoveGenerator {
     }
 
     // Capture droite (et promotion)
-    long captureRight = ((~Bitboard.Hfile & pions) >> 7) & board.colorBitboard[Player.Black];
+    long captureRight = ((~Bitboard.Hfile & pions) >>> 7) & board.colorBitboard[Player.Black];
     while (captureRight != 0) {
       int endSquare = Long.numberOfTrailingZeros(captureRight);
       if (endSquare <= 7) addPromotionMoves(moves, endSquare + 7, endSquare);
