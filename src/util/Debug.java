@@ -54,6 +54,11 @@ public final class Debug {
       if (s.toUpperCase().equals(tag.toUpperCase())) return;
     }
 
+    if (message.equals("")) {
+      System.out.println(message);
+      return;
+    }
+
     String header = "";
     if (Config.General.terminalColor && colorMap.get(tag.toLowerCase()) != null) {
       header = colorMap.get(tag.toLowerCase());

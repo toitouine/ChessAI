@@ -5,10 +5,6 @@
 // Permet d'obtenir une clé presque unique pour chaque position de manière rapide
 // RNG : XOR-Shift algorithm (avec rngState)
 
-// initZobristKeys : pour initialiser les clés correspondant à chaque données concernant une position (pas case en passant)
-// calculateHash : pour recalculer complètement la clé d'une position (au départ d'une nouvelle position par exemple)
-// updateHash : actualise le hash en fonction du coup qui a été joué (utile pendant la recherche car s'auto-inverse)
-
 // TODO : case en passant
 
 /////////////////////////////////////////////////////////////////
@@ -35,7 +31,7 @@ final public class Zobrist {
   static {
     rngState = 1804289383;
 
-    // Initialise les clés des pièces sur chaque case (zobristIndex, i, j);
+    // Initialise les clés des pièces sur chaque case (index de la pièce, i, j)
     for (int p = 0; p < 12; p++) {
       for (int i = 0; i < 64; i++) {
         piecesOnSquare[p][i] = generateRandomNumber();

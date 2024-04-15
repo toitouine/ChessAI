@@ -17,7 +17,7 @@ public final class Test {
   }
 
   static public void measure(Callback function, long iterations) {
-    Debug.log();
+    Debug.log("test", "");
     Debug.log("test", "Démarrage du test");
 
     ArrayList<Long> itsPerSeconds = new ArrayList<Long>();
@@ -42,7 +42,7 @@ public final class Test {
     Debug.log("test", "───────────────────");
     Debug.log("test", "Résultat : " + String.format("%,d", moyenne) + " ± " + String.format("%,d", incertitude) + " itérations par seconde");
     Debug.log("test", "(environ " + String.format("%,f", 1/(float)moyenne*1000000000L) + " nanosecondes par itération)");
-    Debug.log();
+    Debug.log("test", "");
   }
 
   // Mesure le temps d'éxecution de la fonction pendant un certain nombre d'itérations

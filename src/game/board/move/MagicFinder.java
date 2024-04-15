@@ -39,7 +39,7 @@ public final class MagicFinder {
     int[] shifts = new int[64];
 
     Debug.log("magic", "Recherche de nombres magiques pour " + (isRook ? "la tour" : "le fou"));
-    Debug.log();
+    Debug.log("magic", "");
 
     // Recherche un nombre magique pour chaque case
     for (int square = 0; square < 64; square++) {
@@ -55,10 +55,10 @@ public final class MagicFinder {
           Debug.log("magic", "  - Nouveau magique trouvé avec " + bits + " bits (shift : " + (64 - bits) + ")");
         } else break;
       }
-      Debug.log();
+      Debug.log("magic", "");
     }
 
-    Debug.log();
+    Debug.log("magic", "");
     printResults(magics, shifts);
   }
 
@@ -70,7 +70,7 @@ public final class MagicFinder {
     }
     Debug.log(magicString);
 
-    Debug.log();
+    Debug.log("magic", "");
     String shiftString = "public static final int[] shifts = {";
     for (int square = 0; square < 64; square++) {
       shiftString += shifts[square] + (square != 63 ? ", " : "};");

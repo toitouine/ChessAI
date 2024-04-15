@@ -46,10 +46,10 @@ public final class Game {
 
   private void announceGame() {
     String hackerText = (useHacker ? " [HACKER]" : "");
-    Debug.log();
+    Debug.log("game", "");
     Debug.log("game", "Nouvelle partie créée (#" + number +  ") : " + getWhite().name + " contre " + getBlack().name + hackerText);
     if (getWhite().isBot) Debug.log("  - " + getWhite().description());
     if (getBlack().isBot) Debug.log("  - " + getBlack().description());
-    Debug.log();
+    Debug.log("game", "");
   }
 }

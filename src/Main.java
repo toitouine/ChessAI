@@ -1,6 +1,5 @@
 // TODO :
 //
-// - Debug : tag pour ligne vide
 // - Génération de coups
 // - Déroulement de la partie, Game Manager, Players, IA et Humain
 // - UI : Suite
