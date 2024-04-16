@@ -55,7 +55,7 @@ public final class Debug {
     }
 
     if (message.equals("")) {
-      System.out.println(message);
+      System.out.println();
       return;
     }
 

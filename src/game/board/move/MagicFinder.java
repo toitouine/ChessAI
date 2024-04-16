@@ -96,7 +96,7 @@ public final class MagicFinder {
     // Récupère le mask
     long mask;
     if (isRook) mask = MoveGenerationData.rookMask(square);
-    else mask = MoveGenerationData.rookMask(square); // TODO avec le fou
+    else mask = MoveGenerationData.bishopMask(square);
 
     // Tableau des coups (tableau d'objets pour avoir null, il faut utiliser .equals())
     Long[] moveTable = new Long[1 << bits];
@@ -107,7 +107,7 @@ public final class MagicFinder {
       // Récupère les coups et l'index
       long moves;
       if (isRook) moves = MoveGenerationData.getSlowRookMoves(square, blockers);
-      else moves = MoveGenerationData.getSlowRookMoves(square, blockers); // TODO avec le fou
+      else moves = MoveGenerationData.getSlowBishopMoves(square, blockers);
       int index = Magic.index(magic, blockers, 64-bits);
 
       // Si il n'y a rien à l'index, où si il y a une collision qui nous

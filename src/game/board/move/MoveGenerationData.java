@@ -28,10 +28,12 @@ public final class MoveGenerationData {
 
   // Masks pour la génération des coups des sliders (tour, fou, dame)
   static private long rookAttackMask[];
+  static private long bishopAttackMask[];
 
   // Table des coups par case pour la génération des coups des sliders
   // (voir MoveGenerator.java)
   static private long rookMoveTable[][];
+  static private long bishopMoveTable[][];
 
 
   // Cases des pièces entre le roi et la tour pour tester la possibilité des roques
@@ -43,7 +45,9 @@ public final class MoveGenerationData {
     generateKingAttacks();
     generateKnightAttacks();
     generateRookMasks();
+    generateBishopMasks();
     generateRookMoveTable();
+    generateBishopMoveTable();
   }
 
   /////////////////////////////////////////////////////////////////
@@ -62,14 +66,22 @@ public final class MoveGenerationData {
     return rookAttackMask[square];
   }
 
+  public static long bishopMask(int square) {
+    return bishopAttackMask[square];
+  }
+
   public static long rookMoves(int square, int index) {
     return rookMoveTable[square][index];
   }
 
+  public static long bishopMoves(int square, int index) {
+    return bishopMoveTable[square][index];
+  }
+
   /////////////////////////////////////////////////////////////////
 
-  // Les trois méthodes suivantes génèrent les attaques (ou masks) des
-  // pièces pour générer les coups (ou les masks si la pièce est un slider)
+  // Les quatre méthodes suivantes génèrent les attaques (ou masks)
+  // des pièces pour générer les coups
 
   private static void generateKnightAttacks() {
     knightAttacks = new long[64];
@@ -121,10 +133,33 @@ public final class MoveGenerationData {
     }
   }
 
+  private static void generateBishopMasks() {
+    bishopAttackMask = new long[64];
+    int[] dirs = {-9, -7, 7, 9};
+    long edges = Afile | Hfile | rank1 | rank8;
+
+    for (int square = 0; square < 64; square++) {
+      long mask = 0L;
+
+      for (int i = 0; i < dirs.length; i++) {
+        int dir = dirs[i];
+        int currentSquare = square + dir;
+        long squareBitboard = (1L << currentSquare);
+        while ((edges & squareBitboard) == 0) {
+          mask |= squareBitboard;
+          currentSquare += dir;
+          squareBitboard = (1L << currentSquare);
+        }
+      }
+
+      bishopAttackMask[square] = mask;
+    }
+  }
+
   /////////////////////////////////////////////////////////////////
 
   // Initialise les coups dans les tables correspondant aux nombres magiques
-  // (voir MoveGenerator.java pour l'explication et MagicFinder.java pour l'algorithme)
+  // (voir MoveGenerator.java pour l'explication)
 
   private static void generateRookMoveTable() {
     rookMoveTable = new long[64][];
@@ -146,12 +181,32 @@ public final class MoveGenerationData {
     }
   }
 
+  private static void generateBishopMoveTable() {
+    bishopMoveTable = new long[64][];
+
+    for (int square = 0; square < 64; square++) {
+      long magic = Magic.bishopMagics[square];
+      int shift = Magic.bishopShifts[square];
+      int tableSize = 1 << (64 - shift);
+      bishopMoveTable[square] = new long[tableSize];
+
+      long mask = MoveGenerationData.bishopAttackMask[square];
+      long blockers = 0;
+      do {
+        long moves = MoveGenerationData.getSlowBishopMoves(square, blockers);
+        int index = Magic.index(magic, blockers, shift);
+        bishopMoveTable[square][index] = moves;
+        blockers = (blockers - mask) & mask;
+      } while (blockers != 0);
+    }
+  }
+
   /////////////////////////////////////////////////////////////////
 
-  // Renvoie le bitboard des coups pour une tour sur une case, étant
-  // donné un arrangement de bloqueur
-  // Note : ne doit être utilisé que pour initialiser, la méthode des nombres
-  // magiques est bien plus rapide
+  // Renvoie le bitboard des coups pour une tour ou un fou sur une
+  // case, étant donné un arrangement de bloqueurs
+  // Note : ne doit être utilisé que pour initialiser, la méthode
+  // des nombres magiques est plus rapide
 
   public static long getSlowRookMoves(int square, long blockers) {
     long moves = 0;
@@ -177,6 +232,35 @@ public final class MoveGenerationData {
       // Retire la case de la tour
       moves &= ~(1L << square);
     }
+    return moves;
+  }
+
+  public static long getSlowBishopMoves(int square, long blockers) {
+    long moves = 0L;
+    int[] dirs = {-9, -7, 7, 9};
+    long edges = Afile | Hfile | rank1 | rank8;
+
+    for (int i = 0; i < dirs.length; i++) {
+      int dir = dirs[i];
+
+      // Si c'est une case du bord, on vérifie que la direction soit bonne
+      if ((1L << square & edges) != 0) {
+        if ((Afile & (1L << square)) != 0 && (dir == -9 || dir == 7))  continue;
+        if ((Hfile & (1L << square)) != 0 && (dir == 9  || dir == -7)) continue;
+        if ((rank8 & (1L << square)) != 0 && (dir == -9 || dir == -7)) continue;
+        if ((rank1 & (1L << square)) != 0 && (dir == 9  || dir == 7))  continue;
+      }
+
+      int currentSquare = square + dir;
+      long squareBitboard = (1L << currentSquare);
+      while ((edges & squareBitboard) == 0 && (squareBitboard & blockers) == 0) {
+        moves |= squareBitboard;
+        currentSquare += dir;
+        squareBitboard = (1L << currentSquare);
+      }
+      moves |= squareBitboard;
+    }
+
     return moves;
   }
 }

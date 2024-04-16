@@ -46,18 +46,50 @@ public class MoveGenerator {
     ArrayList<Move> moves = new ArrayList<Move>(45);
     occupied = board.colorBitboard[Player.White] | board.colorBitboard[Player.Black];
 
-    // addKingMoves(moves, color);
-    // addKnightMoves(moves, color);
+    addKingMoves(moves, color);
+    addKnightMoves(moves, color);
     addRookMoves(moves, color);
-    // if (color == Player.White) addWhitePawnMoves(moves);
-    // else addBlackPawnMoves(moves);
+    addBishopMoves(moves, color);
+    if (color == Player.White) addWhitePawnMoves(moves);
+    else addBlackPawnMoves(moves);
 
     return moves;
   }
 
   /////////////////////////////////////////////////////////////////
 
-  // Coups de la tour
+  // Coups des fous
+
+  private void addBishopMoves(ArrayList<Move> moves, int color) {
+    long fous = board.pieceBitboard[Piece.Fou + Piece.NumberOfType*color];
+
+    while (fous != 0) {
+      // Récupère la case de départ du fou et le mask
+      int startSquare = Long.numberOfTrailingZeros(fous);
+      long mask = MoveGenerationData.bishopMask(startSquare);
+
+      // Génère le bitboard des bloqueurs
+      long blockers = mask & occupied;
+
+      // Récupère les attaques pré-calculées et les convertit en coups (magic bitboard)
+      long magic = Magic.bishopMagics[startSquare];
+      int shift = Magic.bishopShifts[startSquare];
+      int index = Magic.index(magic, blockers, shift);
+      long attacks = MoveGenerationData.bishopMoves(startSquare, index);
+      attacks &= ~(attacks & board.colorBitboard[color]);
+
+      while (attacks != 0) {
+        moves.add(new Move(startSquare, Long.numberOfTrailingZeros(attacks)));
+        attacks &= attacks - 1;
+      }
+
+      fous &= fous - 1;
+    }
+  }
+
+  /////////////////////////////////////////////////////////////////
+
+  // Coups des tours
 
   private void addRookMoves(ArrayList<Move> moves, int color) {
     long tours = board.pieceBitboard[Piece.Tour + Piece.NumberOfType*color];
