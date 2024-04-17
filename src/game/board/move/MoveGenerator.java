@@ -69,20 +69,12 @@ public class MoveGenerator {
       int startSquare = Long.numberOfTrailingZeros(dames);
 
       // Récupère les coups de la tour
-      long rookMask = MoveGenerationData.rookMask(startSquare);
-      long rookBlockers = rookMask & occupied;
-      long rookMagic = Magic.rookMagics[startSquare];
-      int rookShift = Magic.rookShifts[startSquare];
-      int rookIndex = Magic.index(rookMagic, rookBlockers, rookShift);
-      long attacks = MoveGenerationData.rookMoves(startSquare, rookIndex);
+      long rookBlockers = occupied & MoveGenerationData.rookMask(startSquare);
+      long attacks = Magic.getRookAttacks(startSquare, rookBlockers);
 
       // Récupère les coups du fou
-      long bishopMask = MoveGenerationData.bishopMask(startSquare);
-      long bishopBlockers = bishopMask & occupied;
-      long bishopMagic = Magic.bishopMagics[startSquare];
-      int bishopShift = Magic.bishopShifts[startSquare];
-      int bishopIndex = Magic.index(bishopMagic, bishopBlockers, bishopShift);
-      attacks |= MoveGenerationData.bishopMoves(startSquare, bishopIndex);
+      long bishopBlockers = occupied & MoveGenerationData.bishopMask(startSquare);
+      attacks |= Magic.getBishopAttacks(startSquare, bishopBlockers);
 
       // Enlève les pièces alliées
       attacks &= ~(attacks & board.colorBitboard[color]);
@@ -104,18 +96,12 @@ public class MoveGenerator {
     long fous = board.pieceBitboard[Piece.Fou + Piece.NumberOfType*color];
 
     while (fous != 0) {
-      // Récupère la case de départ du fou et le mask
+      // Récupère la case de départ du fou
       int startSquare = Long.numberOfTrailingZeros(fous);
-      long mask = MoveGenerationData.bishopMask(startSquare);
-
-      // Génère le bitboard des bloqueurs
-      long blockers = mask & occupied;
 
       // Récupère les attaques pré-calculées et les convertit en coups (magic bitboard)
-      long magic = Magic.bishopMagics[startSquare];
-      int shift = Magic.bishopShifts[startSquare];
-      int index = Magic.index(magic, blockers, shift);
-      long attacks = MoveGenerationData.bishopMoves(startSquare, index);
+      long blockers = occupied & MoveGenerationData.bishopMask(startSquare);
+      long attacks = Magic.getBishopAttacks(startSquare, blockers);
       attacks &= ~(attacks & board.colorBitboard[color]);
 
       while (attacks != 0) {
@@ -135,18 +121,12 @@ public class MoveGenerator {
     long tours = board.pieceBitboard[Piece.Tour + Piece.NumberOfType*color];
 
     while (tours != 0) {
-      // Récupère la case de départ de la tour et le mask
+      // Récupère la case de départ de la tour
       int startSquare = Long.numberOfTrailingZeros(tours);
-      long mask = MoveGenerationData.rookMask(startSquare);
-
-      // Génère le bitboard des bloqueurs
-      long blockers = mask & occupied;
 
       // Récupère les attaques pré-calculées et les convertit en coups (magic bitboard)
-      long magic = Magic.rookMagics[startSquare];
-      int shift = Magic.rookShifts[startSquare];
-      int index = Magic.index(magic, blockers, shift);
-      long attacks = MoveGenerationData.rookMoves(startSquare, index);
+      long blockers = occupied & MoveGenerationData.rookMask(startSquare);
+      long attacks = Magic.getRookAttacks(startSquare, blockers);
       attacks &= ~(attacks & board.colorBitboard[color]);
 
       while (attacks != 0) {
