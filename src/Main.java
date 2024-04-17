@@ -1,10 +1,23 @@
-// TODO :
-//
-// - Génération de coups
-// - Déroulement de la partie, Game Manager, Players, IA et Humain
-// - UI : Suite
-// - IA, Hacker, Book, PGN, et autre classes utiles
-// - UI : Fin
+/////////////////////////////////////////////////////////////////
+
+// Échecs on Java, Antoine Mechulam
+// https://github.com/toitouine/ChessAI
+
+// Le dossier ui contient les fichiers concernant l'interface graphique (menu
+// principal, affichage du plateau, éditeur de positions...)
+// Le dossier game contient les fichiers relatifs au fonctionnement de la
+// partie (plateau, joueurs, génération des coups...)
+// Le dossier util contient des classes utilisables partout qui facilitent
+// certaines actions
+
+// Les IAs disponibles sont :
+// - LeMaire
+// - Les Moutons
+// - Loic
+// - Antoine
+// - Stockfish
+
+/////////////////////////////////////////////////////////////////
 
 import processing.core.PApplet;
 

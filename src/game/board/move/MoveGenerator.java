@@ -50,10 +50,50 @@ public class MoveGenerator {
     addKnightMoves(moves, color);
     addRookMoves(moves, color);
     addBishopMoves(moves, color);
+    addQueenMoves(moves, color);
     if (color == Player.White) addWhitePawnMoves(moves);
     else addBlackPawnMoves(moves);
 
     return moves;
+  }
+
+  /////////////////////////////////////////////////////////////////
+
+  // Coups des dames
+
+  private void addQueenMoves(ArrayList<Move> moves, int color) {
+    long dames = board.pieceBitboard[Piece.Dame + Piece.NumberOfType*color];
+
+    while (dames != 0) {
+      // Récupère la case de départ de la dame
+      int startSquare = Long.numberOfTrailingZeros(dames);
+
+      // Récupère les coups de la tour
+      long rookMask = MoveGenerationData.rookMask(startSquare);
+      long rookBlockers = rookMask & occupied;
+      long rookMagic = Magic.rookMagics[startSquare];
+      int rookShift = Magic.rookShifts[startSquare];
+      int rookIndex = Magic.index(rookMagic, rookBlockers, rookShift);
+      long attacks = MoveGenerationData.rookMoves(startSquare, rookIndex);
+
+      // Récupère les coups du fou
+      long bishopMask = MoveGenerationData.bishopMask(startSquare);
+      long bishopBlockers = bishopMask & occupied;
+      long bishopMagic = Magic.bishopMagics[startSquare];
+      int bishopShift = Magic.bishopShifts[startSquare];
+      int bishopIndex = Magic.index(bishopMagic, bishopBlockers, bishopShift);
+      attacks |= MoveGenerationData.bishopMoves(startSquare, bishopIndex);
+
+      // Enlève les pièces alliées
+      attacks &= ~(attacks & board.colorBitboard[color]);
+
+      while (attacks != 0) {
+        moves.add(new Move(startSquare, Long.numberOfTrailingZeros(attacks)));
+        attacks &= attacks - 1;
+      }
+
+      dames &= dames - 1;
+    }
   }
 
   /////////////////////////////////////////////////////////////////
