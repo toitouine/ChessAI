@@ -7,8 +7,6 @@
 
 /////////////////////////////////////////////////////////////////
 
-import java.util.HashMap;
-
 public final class MoveGenerationData {
   private MoveGenerationData() {}
 
@@ -34,7 +32,6 @@ public final class MoveGenerationData {
   // (voir MoveGenerator.java)
   static private long rookMoveTable[][];
   static private long bishopMoveTable[][];
-
 
   // Cases des pièces entre le roi et la tour pour tester la possibilité des roques
   static final public long[] petitRoquePiecesMask = {0b1100000L << 56, 0b1100000L};

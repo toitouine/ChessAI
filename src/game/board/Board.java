@@ -1,13 +1,16 @@
 /////////////////////////////////////////////////////////////////
 
-// Représente une position à un moment donné dans la partie (pièces, informations, suivi du matériel...)
-// Contient également les informations nécessaires pour passer à la position d'avant en annulant un coup
-// Note : pour annuler un coup, il est nécessaire de l'annuler dans la position obtenue juste après avoir joué le coup
-// Chaque case est représentée par un nombre (de 0 à 63,  8 * ligne + colonne)
-// La case en haut à gauche correspond à 0, et celle en bas à droite à 63
+// Représente une position à un moment donné dans la partie (pièces, informations,
+// suivi du matériel...). Contient également les informations nécessaires pour
+// passer à la position précédente en annulant un coup.
+// Note : pour annuler un coup, il est nécessaire de l'annuler dans la position
+// obtenue juste après avoir joué le coup
 
-// Un plateau peut être utilisé pour une partie ou non (selon la variable playingBoard) pour savoir
-// si des sons, sauvegardes etc... doivent être effectués ou non
+// Les bitboards sont beaucoup utilisés :
+// Chaque case est représentée par un indice (de 0 à 63,  8 * ligne + colonne)
+// La case en haut à gauche correspond à 0, et celle en bas à droite à 63.
+// Chaque bit du bitboard correspond à une case (le bit n correspond à la case
+// d'indice n) : le bit est à 1 si il y a une pièce, et 0 sinon
 
 /////////////////////////////////////////////////////////////////
 
@@ -233,8 +236,7 @@ public final class Board implements Serializable {
       grid[capturedSquare] = null;
     }
 
-    // Roques
-    // (déplace la tour au bon endroit)
+    // Roques (déplace la tour au bon endroit)
     else if (flag == MoveFlag.PetitRoque) {
       Piece tour = grid[startSquare+3];
       grid[startSquare+1] = tour;

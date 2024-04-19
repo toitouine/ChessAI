@@ -68,13 +68,9 @@ public class MoveGenerator {
       // Récupère la case de départ de la dame
       int startSquare = Long.numberOfTrailingZeros(dames);
 
-      // Récupère les coups de la tour
-      long rookBlockers = occupied & MoveGenerationData.rookMask(startSquare);
-      long attacks = Magic.getRookAttacks(startSquare, rookBlockers);
-
-      // Récupère les coups du fou
-      long bishopBlockers = occupied & MoveGenerationData.bishopMask(startSquare);
-      attacks |= Magic.getBishopAttacks(startSquare, bishopBlockers);
+      // Récupère les coups de la tour et du fou
+      long attacks = Magic.getRookAttacks(startSquare, occupied);
+      attacks |= Magic.getBishopAttacks(startSquare, occupied);
 
       // Enlève les pièces alliées
       attacks &= ~(attacks & board.colorBitboard[color]);
@@ -88,8 +84,6 @@ public class MoveGenerator {
     }
   }
 
-  /////////////////////////////////////////////////////////////////
-
   // Coups des fous
 
   private void addBishopMoves(ArrayList<Move> moves, int color) {
@@ -100,8 +94,7 @@ public class MoveGenerator {
       int startSquare = Long.numberOfTrailingZeros(fous);
 
       // Récupère les attaques pré-calculées et les convertit en coups (magic bitboard)
-      long blockers = occupied & MoveGenerationData.bishopMask(startSquare);
-      long attacks = Magic.getBishopAttacks(startSquare, blockers);
+      long attacks = Magic.getBishopAttacks(startSquare, occupied);
       attacks &= ~(attacks & board.colorBitboard[color]);
 
       while (attacks != 0) {
@@ -113,8 +106,6 @@ public class MoveGenerator {
     }
   }
 
-  /////////////////////////////////////////////////////////////////
-
   // Coups des tours
 
   private void addRookMoves(ArrayList<Move> moves, int color) {
@@ -125,8 +116,7 @@ public class MoveGenerator {
       int startSquare = Long.numberOfTrailingZeros(tours);
 
       // Récupère les attaques pré-calculées et les convertit en coups (magic bitboard)
-      long blockers = occupied & MoveGenerationData.rookMask(startSquare);
-      long attacks = Magic.getRookAttacks(startSquare, blockers);
+      long attacks = Magic.getRookAttacks(startSquare, occupied);
       attacks &= ~(attacks & board.colorBitboard[color]);
 
       while (attacks != 0) {
@@ -137,8 +127,6 @@ public class MoveGenerator {
       tours &= tours - 1;
     }
   }
-
-  /////////////////////////////////////////////////////////////////
 
   // Coups du roi
 
@@ -169,8 +157,6 @@ public class MoveGenerator {
     }
   }
 
-  /////////////////////////////////////////////////////////////////
-
   // Coups des cavaliers
 
   private void addKnightMoves(ArrayList<Move> moves, int color) {
@@ -190,8 +176,6 @@ public class MoveGenerator {
       cavaliers &= cavaliers - 1;
     }
   }
-
-  /////////////////////////////////////////////////////////////////
 
   // Coups des pions
 

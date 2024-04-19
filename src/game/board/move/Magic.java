@@ -2,8 +2,8 @@
 
 // Magic
 // Contient les nombres magiques pour générer les coups des
-// sliders (voir MoveGenerator.java), et la méthode index pour
-// calculer l'index dans le tableau
+// sliders (voir MoveGenerator.java), et quelques méthodes
+// de génération d'attaques pour les sliders
 
 /////////////////////////////////////////////////////////////////
 
@@ -23,12 +23,14 @@ public final class Magic {
     return (int)((blockers * magic) >>> shift);
   }
 
-  public static long getRookAttacks(int square, long blockers) {
+  public static long getRookAttacks(int square, long allPieces) {
+    long blockers = allPieces & MoveGenerationData.rookMask(square);
     int index = Magic.index(rookMagics[square], blockers, rookShifts[square]);
     return MoveGenerationData.rookMoves(square, index);
   }
 
-  public static long getBishopAttacks(int square, long blockers) {
+  public static long getBishopAttacks(int square, long allPieces) {
+    long blockers = allPieces & MoveGenerationData.bishopMask(square);
     int index = Magic.index(bishopMagics[square], blockers, bishopShifts[square]);
     return MoveGenerationData.bishopMoves(square, index);
   }
