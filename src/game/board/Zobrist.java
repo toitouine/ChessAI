@@ -18,7 +18,7 @@ final public class Zobrist {
   private static long rngState = 1804289383;
 
   // Clés
-  public static final long[][] piecesOnSquare = new long[Piece.NumberOfPiece][64];
+  public static final long[][] piecesOnSquare = new long[2*Piece.NumberOfPiece][64];
   public static final long[] castlingRights = new long[16];
   public static final long[] enPassantSquare = new long[16];
   public static final long blackToMove;

@@ -80,6 +80,7 @@ public final class Test {
       count++;
     }
 
+    executorService.shutdown();
     long itPerSeconds = 1000*count / time.millis();
     Debug.log("test", "Itérations : " + String.format("%,d", count));
     Debug.log("test", "⟶  " + String.format("%,d", itPerSeconds) + " itérations par seconde");

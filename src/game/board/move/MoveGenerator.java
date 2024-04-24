@@ -5,27 +5,39 @@
 // initialisées dans MoveGenerationData.java. On distingue deux types de pièces :
 
 // - Roi, Cavalier, Pion :
-// Ces pièces ont un mouvement suffisamment "simple" pour pouvoir générer
-// les coups rapidement avec des masks des attaques ou des opératons simples.
+// Ces pièces ont un mouvement suffisamment systématique pour pouvoir
+// générer les coups rapidement avec des masks des attaques (précalculés
+// dans MoveGenerationData.java) ou des opératons simples.
 
 // - Les sliders (Dame, Tour, Fou) :
 // On utilise la technique des "magic bitboards". On obtient assez simplement
-// un bitboard des pièces qui bloquent (bloqueurs). On effectue alors des opérations
-// sur ce bitboard (faisant intervenir des "nombres magiques") pour obtenir un index
-// d'un tableau (où les coups sont pré-calculés selon chaque configuration de
-// bloqueurs). Au démarrage du programme, on peut donc générer un tel tableau par
-// case (donc 64 tableaux pour la tour, et 64 pour le fou), et calculer en avance
-// les coups sur une case donnée pour chaque arrangement de bloqueurs possible
-// (voir MoveGenerationData.java).
+// un bitboard des pièces qui bloquent le déplacement (bloqueurs). On effectue
+// alors une opération sur ce bitboard (faisant intervenir un "nombre magique")
+// pour obtenir un index d'un tableau où les coups sont pré-calculés (selon
+// chaque configuration de bloqueurs). Au démarrage du programme, on peut donc
+// générer un tel tableau par case (donc 64 tableaux pour la tour, et 64 pour
+// le fou), et calculer en avance les coups sur une case donnée pour chaque
+// arrangement de bloqueurs possible (voir MoveGenerationData.java).
 
-// Magic bitboard :
+// Précisions sur les "magic bitboards" :
 // L'opération effectuée est : index = (blockers * magic) >>> (64 - n)
-// où blocker correspond au bitboard des bloqueurs, magic au nombre magique de la case
-// et n au nombre de bits utiles associés au nombre magique (déterminé en même
-// temps que le nombre magique)
-// Pour éviter une soustraction, on sauvegarde 64 - n (shift) et non n dans les tableaux.
-// La liste des nombres magiques et des shifts (déterminés avec MagicFinder.java)
-// se trouve dans Magic.java
+// où blocker correspond au bitboard des bloqueurs, magic au nombre magique de
+// la case, et n au nombre de bits utiles associés au nombre magique (déterminé
+// en même temps que le nombre magique).
+// Pour éviter une soustraction, on sauvegarde 64 - n = shift, et non n, dans
+// les tableaux. La liste des nombres magiques et des shifts (déterminés avec
+// MagicFinder.java) se trouve dans Magic.java
+
+// Coups légaux :
+// Pour générer des coups légaux, on ajoute quelques contraintes supplémentaires.
+// - le roi ne peut aller que sur des cases non attaquées par l'adversaire
+// - le roi ne peut pas roquer si il est en échec ou traverse une case attaquée
+// - une pièce clouée ne peut se déplacer que dans la direction du clouage
+// - dans le cas d'une prise en passant, il faut tester un clouage horizontal
+// Enfin, on distingue en plus deux situations spéciales :
+// 1) Le roi est en échec : le roi doit bouger, ou la pièce qui fait échec doit
+//    être capturée, ou une pièce doit s'interposer entre le roi et l'attaquant
+// 2) Le roi est en double échec : seul le roi peut bouger
 
 /////////////////////////////////////////////////////////////////
 
@@ -33,8 +45,19 @@ import java.util.ArrayList;
 
 public class MoveGenerator {
 
-  private Board board; // Plateau sur lequel générer les coups
-  private long occupied = 0; // Bitboard avec toutes les pièces du plateau
+  // Plateau sur lequel générer les coups
+  private final Board board;
+
+  // Couleur de celui à qui on génère les coups et son adversaire
+  private int color;
+  private int opponent;
+
+  // Bitboards utiles pour générer les coups (du point de vue de celui qui génère)
+  private long[] friendlyPieces = new long[Piece.NumberOfPiece];
+  private long[] opponentPieces = new long[Piece.NumberOfPiece];
+  private long allFriendlyPieces;
+  private long allOpponentPieces;
+  private long occupied = 0; // Toutes les pièces du plateau
 
   public MoveGenerator(Board board) {
     this.board = board;
@@ -42,15 +65,26 @@ public class MoveGenerator {
 
   /////////////////////////////////////////////////////////////////
 
-  public ArrayList<Move> getLegalMoves(int color) {
+  public ArrayList<Move> getLegalMoves(int c) {
     ArrayList<Move> moves = new ArrayList<Move>(45);
-    occupied = board.colorBitboard[Player.White] | board.colorBitboard[Player.Black];
+    color = c;
+    opponent = 1-c;
 
-    addKingMoves(moves, color);
-    addKnightMoves(moves, color);
-    addRookMoves(moves, color);
-    addBishopMoves(moves, color);
-    addQueenMoves(moves, color);
+    // Récupère les bitboards
+    allFriendlyPieces = board.colorBitboard[color];
+    allOpponentPieces = board.colorBitboard[opponent];
+    occupied = allFriendlyPieces | allOpponentPieces;
+    for (int i = 0; i < Piece.NumberOfPiece; i++) {
+      friendlyPieces[i] = board.pieceBitboard[i + color*Piece.NumberOfPiece];
+      opponentPieces[i] = board.pieceBitboard[i + opponent*Piece.NumberOfPiece];
+    }
+
+    // Génère les coups
+    addKingMoves(moves);
+    addKnightMoves(moves);
+    addRookMoves(moves);
+    addBishopMoves(moves);
+    addQueenMoves(moves);
     if (color == Player.White) addWhitePawnMoves(moves);
     else addBlackPawnMoves(moves);
 
@@ -59,10 +93,31 @@ public class MoveGenerator {
 
   /////////////////////////////////////////////////////////////////
 
-  // Coups des dames
+  // Détecte si la case square est attaquée par une pièce adverse
+  public boolean isAttacked(int square) {
+    long pawnAttacks = MoveGenerationData.pawnAttacks(color, square);
+    if ((pawnAttacks & opponentPieces[Piece.Pion]) != 0) return true;
 
-  private void addQueenMoves(ArrayList<Move> moves, int color) {
-    long dames = board.pieceBitboard[Piece.Dame + Piece.NumberOfType*color];
+    long knightAttacks = MoveGenerationData.knightAttacks(square);
+    if ((knightAttacks & opponentPieces[Piece.Cavalier]) != 0) return true;
+
+    long kingAttacks = MoveGenerationData.kingAttacks(square);
+    if ((kingAttacks & opponentPieces[Piece.Roi]) != 0) return true;
+
+    long bishopQueens = opponentPieces[Piece.Dame] | opponentPieces[Piece.Fou];
+    if ((bishopQueens & Magic.getBishopAttacks(square, occupied)) != 0) return true;
+
+    long rookQueens = opponentPieces[Piece.Dame] | opponentPieces[Piece.Tour];
+    if ((rookQueens & Magic.getRookAttacks(square, occupied)) != 0) return true;
+
+    return false;
+  }
+
+  /////////////////////////////////////////////////////////////////
+
+  // Coups des dames
+  private void addQueenMoves(ArrayList<Move> moves) {
+    long dames = friendlyPieces[Piece.Dame];
 
     while (dames != 0) {
       // Récupère la case de départ de la dame
@@ -73,7 +128,7 @@ public class MoveGenerator {
       attacks |= Magic.getBishopAttacks(startSquare, occupied);
 
       // Enlève les pièces alliées
-      attacks &= ~(attacks & board.colorBitboard[color]);
+      attacks &= ~(attacks & allFriendlyPieces);
 
       while (attacks != 0) {
         moves.add(new Move(startSquare, Long.numberOfTrailingZeros(attacks)));
@@ -85,9 +140,8 @@ public class MoveGenerator {
   }
 
   // Coups des fous
-
-  private void addBishopMoves(ArrayList<Move> moves, int color) {
-    long fous = board.pieceBitboard[Piece.Fou + Piece.NumberOfType*color];
+  private void addBishopMoves(ArrayList<Move> moves) {
+    long fous = friendlyPieces[Piece.Fou];
 
     while (fous != 0) {
       // Récupère la case de départ du fou
@@ -95,7 +149,7 @@ public class MoveGenerator {
 
       // Récupère les attaques pré-calculées et les convertit en coups (magic bitboard)
       long attacks = Magic.getBishopAttacks(startSquare, occupied);
-      attacks &= ~(attacks & board.colorBitboard[color]);
+      attacks &= ~(attacks & allFriendlyPieces);
 
       while (attacks != 0) {
         moves.add(new Move(startSquare, Long.numberOfTrailingZeros(attacks)));
@@ -107,9 +161,8 @@ public class MoveGenerator {
   }
 
   // Coups des tours
-
-  private void addRookMoves(ArrayList<Move> moves, int color) {
-    long tours = board.pieceBitboard[Piece.Tour + Piece.NumberOfType*color];
+  private void addRookMoves(ArrayList<Move> moves) {
+    long tours = friendlyPieces[Piece.Tour];
 
     while (tours != 0) {
       // Récupère la case de départ de la tour
@@ -117,7 +170,7 @@ public class MoveGenerator {
 
       // Récupère les attaques pré-calculées et les convertit en coups (magic bitboard)
       long attacks = Magic.getRookAttacks(startSquare, occupied);
-      attacks &= ~(attacks & board.colorBitboard[color]);
+      attacks &= ~(attacks & allFriendlyPieces);
 
       while (attacks != 0) {
         moves.add(new Move(startSquare, Long.numberOfTrailingZeros(attacks)));
@@ -129,8 +182,7 @@ public class MoveGenerator {
   }
 
   // Coups du roi
-
-  private void addKingMoves(ArrayList<Move> moves, int color) {
+  private void addKingMoves(ArrayList<Move> moves) {
     // On suppose qu'il n'y a qu'un seul roi de couleur color en jeu
     int startSquare = board.roi(color);
 
@@ -138,29 +190,34 @@ public class MoveGenerator {
     long attacks = MoveGenerationData.kingAttacks(startSquare);
 
     // Convertit le bitboard des attaques en coups
-    long endSquares = attacks & ~board.colorBitboard[color];
+    long endSquares = attacks & ~allFriendlyPieces;
     while (endSquares != 0) {
-      moves.add(new Move(startSquare, Long.numberOfTrailingZeros(endSquares)));
+      int square = Long.numberOfTrailingZeros(endSquares);
+      // Ajoute le coup si la case d'arrivée n'est pas attaquée
+      if (!isAttacked(square)) moves.add(new Move(startSquare, square));
       endSquares &= endSquares - 1;
     }
 
     // Ajoute éventuellement les roques
     if (board.petitRoque(color)) {
       if ((MoveGenerationData.petitRoquePiecesMask[color] & occupied) == 0) {
-        moves.add(new Move(startSquare, startSquare+2, MoveFlag.PetitRoque));
+        if (!isAttacked(startSquare+1) & !isAttacked(startSquare+2)) {
+          moves.add(new Move(startSquare, startSquare+2, MoveFlag.PetitRoque));
+        }
       }
     }
     if (board.grandRoque(color)) {
       if ((MoveGenerationData.grandRoquePiecesMask[color] & occupied) == 0) {
-        moves.add(new Move(startSquare, startSquare-2, MoveFlag.GrandRoque));
+        if (!isAttacked(startSquare-1) & !isAttacked(startSquare-2)) {
+          moves.add(new Move(startSquare, startSquare-2, MoveFlag.GrandRoque));
+        }
       }
     }
   }
 
   // Coups des cavaliers
-
-  private void addKnightMoves(ArrayList<Move> moves, int color) {
-    long cavaliers = board.pieceBitboard[Piece.Cavalier + Piece.NumberOfType*color];
+  private void addKnightMoves(ArrayList<Move> moves) {
+    long cavaliers = friendlyPieces[Piece.Cavalier];
 
     while (cavaliers != 0) {
       // Récupère la case de départ du cavalier et ses attaques
@@ -168,7 +225,7 @@ public class MoveGenerator {
       long attacks = MoveGenerationData.knightAttacks(startSquare);
 
       // Convertit le bitboard des attaques en coups
-      long endSquares = attacks & ~board.colorBitboard[color];
+      long endSquares = attacks & ~allFriendlyPieces;
       while (endSquares != 0) {
         moves.add(new Move(startSquare, Long.numberOfTrailingZeros(endSquares)));
         endSquares &= endSquares - 1;
@@ -177,8 +234,7 @@ public class MoveGenerator {
     }
   }
 
-  // Coups des pions
-
+  // Coups des pions (blancs)
   private void addWhitePawnMoves(ArrayList<Move> moves) {
     long pions = board.pieceBitboard[Piece.Pion];
     long empty = ~occupied;
@@ -231,8 +287,9 @@ public class MoveGenerator {
     }
   }
 
+  // Coups des pions (noirs)
   private void addBlackPawnMoves(ArrayList<Move> moves) {
-    long pions = board.pieceBitboard[Piece.Pion + Piece.NumberOfType];
+    long pions = board.pieceBitboard[Piece.Pion + Piece.NumberOfPiece];
     long empty = ~occupied;
 
     // Avance simple des pions (et promotion)
@@ -283,6 +340,7 @@ public class MoveGenerator {
     }
   }
 
+  // Ajoute les coups de promotion
   private void addPromotionMoves(ArrayList<Move> moves, int startSquare, int endSquare) {
     moves.add(new Move(startSquare, endSquare, MoveFlag.PromotionDame));
     moves.add(new Move(startSquare, endSquare, MoveFlag.PromotionCavalier));

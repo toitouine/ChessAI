@@ -14,7 +14,7 @@ import java.util.Random;
 
 public final class MagicFinder {
 
-  Random random;
+  private Random random;
 
   public MagicFinder() {
     random = new Random();

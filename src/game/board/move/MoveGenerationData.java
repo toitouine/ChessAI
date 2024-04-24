@@ -22,6 +22,7 @@ public final class MoveGenerationData {
 
   // Attaques de différentes pièces depuis une case sous forme de bitboard
   static private long kingAttacks[];
+  static private long pawnAttacks[][];
   static private long knightAttacks[];
 
   // Masks pour la génération des coups des sliders (tour, fou, dame)
@@ -40,6 +41,7 @@ public final class MoveGenerationData {
   // Intialise toutes les données
   static {
     generateKingAttacks();
+    generatePawnAttacks();
     generateKnightAttacks();
     generateRookMasks();
     generateBishopMasks();
@@ -53,6 +55,10 @@ public final class MoveGenerationData {
 
   public static long kingAttacks(int square) {
     return kingAttacks[square];
+  }
+
+  public static long pawnAttacks(int color, int square) {
+    return pawnAttacks[color][square];
   }
 
   public static long knightAttacks(int square) {
@@ -77,8 +83,9 @@ public final class MoveGenerationData {
 
   /////////////////////////////////////////////////////////////////
 
-  // Les quatre méthodes suivantes génèrent les attaques (ou masks)
-  // des pièces pour générer les coups
+  // Les méthodes suivantes précalculent les différentes données
+  // utiles pour la génération des coups et les stockent dans les
+  // tableaux
 
   private static void generateKnightAttacks() {
     knightAttacks = new long[64];
@@ -94,6 +101,32 @@ public final class MoveGenerationData {
       attacks |= (1L << (i+15)) & ~Hfile & ~rank7 & ~rank8;
       attacks |= (1L << (i+6))  & ~Gfile & ~Hfile & ~rank8;
       knightAttacks[i] = attacks;
+    }
+  }
+
+  private static void generatePawnAttacks() {
+    pawnAttacks = new long[2][64];
+
+    // Pions blancs
+    for (int i = 0; i < 64; i++) {
+      if (i < 8) {
+        pawnAttacks[Player.White][i] = 0;
+        continue;
+      }
+      long attack1 = (1L << (i-7)) & ~Afile;
+      long attack2 = (1L << (i-9)) & ~Hfile;
+      pawnAttacks[Player.White][i] = attack1 | attack2;
+    }
+
+    // Pions noirs
+    for (int i = 0; i < 64; i++) {
+      if (i > 55) {
+        pawnAttacks[Player.Black][i] = 0;
+        continue;
+      }
+      long attack1 = 1L << (i+7) & ~Hfile;
+      long attack2 = 1L << (i+9) & ~Afile;
+      pawnAttacks[Player.Black][i] = attack1 | attack2;
     }
   }
 

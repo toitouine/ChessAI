@@ -54,7 +54,7 @@ public final class Board implements Serializable {
 
   public Board(String fen) {
     colorBitboard = new long[2];
-    pieceBitboard = new long[Piece.NumberOfPiece];
+    pieceBitboard = new long[2*Piece.NumberOfPiece];
     generator = new MoveGenerator(this);
     loadFEN(fen);
   }
@@ -70,10 +70,6 @@ public final class Board implements Serializable {
     FenManager.loadPosition(this, f);
     zobrist = Zobrist.calculateHash(this);
     phase = calculatePhase();
-  }
-
-  public void loadStartPosition() {
-    loadFEN(Config.General.defaultFEN);
   }
 
   // Génère la fen de la position
@@ -152,8 +148,8 @@ public final class Board implements Serializable {
   public float calculatePhase() {
     phase = 0;
 
-    for (int i = 0; i < Piece.NumberOfType; i++) {
-      long bitboard = pieceBitboard[i] | pieceBitboard[i+Piece.NumberOfType];
+    for (int i = 0; i < Piece.NumberOfPiece; i++) {
+      long bitboard = pieceBitboard[i] | pieceBitboard[i+Piece.NumberOfPiece];
       phase += Long.bitCount(bitboard) * Config.Piece.phases[i];
     }
 
@@ -173,7 +169,7 @@ public final class Board implements Serializable {
       enPassantSquare[i] = null;
     }
 
-    for (int i = 0; i < Piece.NumberOfPiece; i++) {
+    for (int i = 0; i < pieceBitboard.length; i++) {
       pieceBitboard[i] = 0;
     }
 
