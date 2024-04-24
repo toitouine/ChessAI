@@ -29,7 +29,7 @@
 // MagicFinder.java) se trouve dans Magic.java
 
 // Coups légaux :
-// Pour générer des coups légaux, on ajoute quelques contraintes supplémentaires.
+// Pour générer des coups légaux, on ajoute quelques contraintes supplémentaires :
 // - le roi ne peut aller que sur des cases non attaquées par l'adversaire
 // - le roi ne peut pas roquer si il est en échec ou traverse une case attaquée
 // - une pièce clouée ne peut se déplacer que dans la direction du clouage
