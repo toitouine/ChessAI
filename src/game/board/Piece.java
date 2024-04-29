@@ -11,7 +11,7 @@ public class Piece implements Serializable {
   static final public int Pion = 5;
 
   // Nombre total de pièces différentes (sans compter la couleur)
-  static final public int NumberOfPiece = 6;
+  static final public int Number = 6;
 
   // Couleur des pièces
   static final public int White = 0;
@@ -24,12 +24,12 @@ public class Piece implements Serializable {
   public Piece(int type, int color) {
     this.color = color;
     this.type = type;
-    this.index = type + color*NumberOfPiece;
+    this.index = type + color*Number;
   }
 
   // Plus lent mais parfois pratique
   public Piece(int index) {
-    this(index % NumberOfPiece, index/NumberOfPiece);
+    this(index % Number, index/Number);
   }
 
   public char getCode() {

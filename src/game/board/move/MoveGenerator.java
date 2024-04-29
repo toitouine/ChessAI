@@ -52,9 +52,12 @@ public class MoveGenerator {
   private int color;
   private int opponent;
 
+  // Case du roi allié
+  private int kingSquare;
+
   // Bitboards utiles pour générer les coups (du point de vue de celui qui génère)
-  private long[] friendlyPieces = new long[Piece.NumberOfPiece];
-  private long[] opponentPieces = new long[Piece.NumberOfPiece];
+  private long[] friendlyPieces = new long[Piece.Number];
+  private long[] opponentPieces = new long[Piece.Number];
   private long allFriendlyPieces;
   private long allOpponentPieces;
   private long occupied = 0; // Toutes les pièces du plateau
@@ -69,14 +72,15 @@ public class MoveGenerator {
     ArrayList<Move> moves = new ArrayList<Move>(45);
     color = c;
     opponent = 1-c;
+    kingSquare = board.roi(color);
 
     // Récupère les bitboards
     allFriendlyPieces = board.colorBitboard[color];
     allOpponentPieces = board.colorBitboard[opponent];
     occupied = allFriendlyPieces | allOpponentPieces;
-    for (int i = 0; i < Piece.NumberOfPiece; i++) {
-      friendlyPieces[i] = board.pieceBitboard[i + color*Piece.NumberOfPiece];
-      opponentPieces[i] = board.pieceBitboard[i + opponent*Piece.NumberOfPiece];
+    for (int i = 0; i < Piece.Number; i++) {
+      friendlyPieces[i] = board.pieceBitboard[i + color*Piece.Number];
+      opponentPieces[i] = board.pieceBitboard[i + opponent*Piece.Number];
     }
 
     // Génère les coups
@@ -92,6 +96,39 @@ public class MoveGenerator {
   }
 
   /////////////////////////////////////////////////////////////////
+
+  // Renvoie les cases attaquées par x-ray (derrière les pièces blockers)
+  // Note : cela renvoie toutes les cases attaquées, occupées ou non.
+  private long rookXray(int square, long blockers) {
+    long attacks = Magic.getRookAttacks(square, occupied);
+    blockers &= attacks;
+    return attacks ^ Magic.getRookAttacks(square, occupied ^ blockers);
+  }
+
+  private long bishopXray(int square, long blockers) {
+    long attacks = Magic.getBishopAttacks(square, occupied);
+    blockers &= attacks;
+    return attacks ^ Magic.getBishopAttacks(square, occupied ^ blockers);
+  }
+
+  // Renvoie les pièces clouées au roi
+  private long getPinnedPieces() {
+    // Récupère les pièces qui clouent (pinners)
+    long orthoSliders = opponentPieces[Piece.Dame] | opponentPieces[Piece.Tour];
+    long diagoSliders = opponentPieces[Piece.Dame] | opponentPieces[Piece.Fou];
+    long pinners = rookXray(kingSquare, allFriendlyPieces) & orthoSliders;
+    pinners |= bishopXray(kingSquare, allFriendlyPieces) & diagoSliders;
+
+    // Récupère les pièces clouées
+    long pinned = 0L;
+    while (pinners != 0) {
+      int square = Long.numberOfTrailingZeros(pinners);
+      pinned |= MoveGenerationData.inBetween(square, kingSquare) & allFriendlyPieces;
+      pinners &= pinners - 1;
+    }
+
+    return pinned;
+  }
 
   // Détecte si la case square est attaquée par une pièce adverse
   public boolean isAttacked(int square) {
@@ -114,6 +151,8 @@ public class MoveGenerator {
   }
 
   /////////////////////////////////////////////////////////////////
+
+  // Génération des coups de chaque type de pièce
 
   // Coups des dames
   private void addQueenMoves(ArrayList<Move> moves) {
@@ -183,33 +222,30 @@ public class MoveGenerator {
 
   // Coups du roi
   private void addKingMoves(ArrayList<Move> moves) {
-    // On suppose qu'il n'y a qu'un seul roi de couleur color en jeu
-    int startSquare = board.roi(color);
-
     // Récupère les attaques du roi
-    long attacks = MoveGenerationData.kingAttacks(startSquare);
+    long attacks = MoveGenerationData.kingAttacks(kingSquare);
 
     // Convertit le bitboard des attaques en coups
     long endSquares = attacks & ~allFriendlyPieces;
     while (endSquares != 0) {
       int square = Long.numberOfTrailingZeros(endSquares);
       // Ajoute le coup si la case d'arrivée n'est pas attaquée
-      if (!isAttacked(square)) moves.add(new Move(startSquare, square));
+      if (!isAttacked(square)) moves.add(new Move(kingSquare, square));
       endSquares &= endSquares - 1;
     }
 
     // Ajoute éventuellement les roques
     if (board.petitRoque(color)) {
       if ((MoveGenerationData.petitRoquePiecesMask[color] & occupied) == 0) {
-        if (!isAttacked(startSquare+1) & !isAttacked(startSquare+2)) {
-          moves.add(new Move(startSquare, startSquare+2, MoveFlag.PetitRoque));
+        if (!isAttacked(kingSquare+1) & !isAttacked(kingSquare+2)) {
+          moves.add(new Move(kingSquare, kingSquare+2, MoveFlag.PetitRoque));
         }
       }
     }
     if (board.grandRoque(color)) {
       if ((MoveGenerationData.grandRoquePiecesMask[color] & occupied) == 0) {
-        if (!isAttacked(startSquare-1) & !isAttacked(startSquare-2)) {
-          moves.add(new Move(startSquare, startSquare-2, MoveFlag.GrandRoque));
+        if (!isAttacked(kingSquare-1) & !isAttacked(kingSquare-2)) {
+          moves.add(new Move(kingSquare, kingSquare-2, MoveFlag.GrandRoque));
         }
       }
     }
@@ -289,7 +325,7 @@ public class MoveGenerator {
 
   // Coups des pions (noirs)
   private void addBlackPawnMoves(ArrayList<Move> moves) {
-    long pions = board.pieceBitboard[Piece.Pion + Piece.NumberOfPiece];
+    long pions = board.pieceBitboard[Piece.Pion + Piece.Number];
     long empty = ~occupied;
 
     // Avance simple des pions (et promotion)

@@ -26,11 +26,11 @@ public class Move {
     value = (short)(startSquare | (endSquare << 6));
   }
 
-  // Pour facilement créer des coups et tester des choses (ex : "e2e4", MoveFlag.None)
+  // Pour facilement créer des coups et tester des choses (ex : "e2e3", MoveFlag.None)
   // (ne pas utiliser quand il faut être rapide)
   public Move(String moveString, int flag) {
-    this(BoardUtility.nameToCase(moveString.substring(0, 2)),
-         BoardUtility.nameToCase(moveString.substring(2, 4)),
+    this(BoardUtility.caseIndex(moveString.substring(0, 2)),
+         BoardUtility.caseIndex(moveString.substring(2, 4)),
          flag);
   }
 

@@ -54,7 +54,7 @@ public final class Board implements Serializable {
 
   public Board(String fen) {
     colorBitboard = new long[2];
-    pieceBitboard = new long[2*Piece.NumberOfPiece];
+    pieceBitboard = new long[2*Piece.Number];
     generator = new MoveGenerator(this);
     loadFEN(fen);
   }
@@ -148,8 +148,8 @@ public final class Board implements Serializable {
   public float calculatePhase() {
     phase = 0;
 
-    for (int i = 0; i < Piece.NumberOfPiece; i++) {
-      long bitboard = pieceBitboard[i] | pieceBitboard[i+Piece.NumberOfPiece];
+    for (int i = 0; i < Piece.Number; i++) {
+      long bitboard = pieceBitboard[i] | pieceBitboard[i+Piece.Number];
       phase += Long.bitCount(bitboard) * Config.Piece.phases[i];
     }
 

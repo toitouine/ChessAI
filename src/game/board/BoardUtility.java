@@ -7,7 +7,7 @@ final public class BoardUtility {
   }
 
   // Renvoie l'index d'une case à partir de son nom (e4...)
-  static public int nameToCase(String name) {
+  static public int caseIndex(String name) {
     int colonne = (name.charAt(0) - '0') - 49;
     int ligne = 8 - Integer.parseInt(String.valueOf(name.charAt(1)));
     return 8 * ligne + colonne;

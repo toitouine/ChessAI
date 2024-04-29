@@ -34,6 +34,12 @@ public final class MoveGenerationData {
   static private long rookMoveTable[][];
   static private long bishopMoveTable[][];
 
+  // Bitboards des cases situées strictement entre deux cases, de manière
+  // orthogonale ou diagonale (déplacement d'une tour ou d'un fou).
+  // Contient 0 si les deux cases ne sont pas situées en diagonale ou sur la
+  // même ligne/colonne
+  static private long inBetween[][];
+
   // Cases des pièces entre le roi et la tour pour tester la possibilité des roques
   static final public long[] petitRoquePiecesMask = {0b1100000L << 56, 0b1100000L};
   static final public long[] grandRoquePiecesMask = {0b1110L << 56, 0b1110L};
@@ -47,6 +53,7 @@ public final class MoveGenerationData {
     generateBishopMasks();
     generateRookMoveTable();
     generateBishopMoveTable();
+    generateInBetween();
   }
 
   /////////////////////////////////////////////////////////////////
@@ -79,6 +86,10 @@ public final class MoveGenerationData {
 
   public static long bishopMoves(int square, int index) {
     return bishopMoveTable[square][index];
+  }
+
+  public static long inBetween(int s1, int s2) {
+    return inBetween[s1][s2];
   }
 
   /////////////////////////////////////////////////////////////////
@@ -183,6 +194,31 @@ public final class MoveGenerationData {
       }
 
       bishopAttackMask[square] = mask;
+    }
+  }
+
+  private static void generateInBetween() {
+    inBetween = new long[64][64];
+
+    for (int s1 = 0; s1 < 64; s1++) {
+      for (int s2 = 0; s2 < 64; s2++) {
+        // On passe les cases qui ne sont pas situées en diagonale / orthogonalement
+        inBetween[s1][s2] = 0;
+        if (s1 == s2) continue;
+        long s2bb = 1L << s2;
+        long orthoInter = getSlowRookMoves(s1, s2bb) & s2bb;
+        long diagoInter = getSlowBishopMoves(s1, s2bb) & s2bb;
+        if (orthoInter == 0 && diagoInter == 0) continue;
+
+        int fileDiff = Math.abs((s1 & 7) - (s2 & 7));
+        int rankDiff = Math.abs((s1 >>> 3) - (s2 >>> 3));
+        int dir = (s2 - s1)/Math.max(fileDiff, rankDiff);
+        int sq = s1 + dir;
+        while (sq != s2) {
+          inBetween[s1][s2] |= 1L << sq;
+          sq += dir;
+        }
+      }
     }
   }
 

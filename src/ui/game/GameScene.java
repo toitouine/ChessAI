@@ -96,6 +96,7 @@ public class GameScene extends Scene<MainApplet> {
     if (game.useTime) {
       sketch.rectMode(sketch.CENTER);
       sketch.textSize(23*w/70);
+      sketch.noStroke();
 
       if (!game.paused && game.board.tourDeQui == Player.White) sketch.fill(255);
       else sketch.fill(rgb(152, 151, 149));
