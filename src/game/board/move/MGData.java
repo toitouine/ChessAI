@@ -1,14 +1,14 @@
 /////////////////////////////////////////////////////////////////
 
 // MoveGenerationData
-// Contient les données pré-calculées utiles pour générer
+// Contient des données pré-calculées utiles pour générer
 // les coups des pièces (voir MoveGenerator.java), comme par
-// exemple les masks, nombres magiques...
+// exemple les masks, les attaques...
 
 /////////////////////////////////////////////////////////////////
 
-public final class MoveGenerationData {
-  private MoveGenerationData() {}
+public final class MGData {
+  private MGData() {}
 
   // Raccourcis pour les colonnes et lignes de l'échiquier
   static final private long Afile = Bitboard.Afile;
@@ -34,11 +34,16 @@ public final class MoveGenerationData {
   static private long rookMoveTable[][];
   static private long bishopMoveTable[][];
 
-  // Bitboards des cases situées strictement entre deux cases, de manière
+  // Bitboard des cases situées strictement entre deux cases, de manière
   // orthogonale ou diagonale (déplacement d'une tour ou d'un fou).
-  // Contient 0 si les deux cases ne sont pas situées en diagonale ou sur la
-  // même ligne/colonne
+  // Contient 0 si les cases ne sont pas diagonales ou orthogonales.
   static private long inBetween[][];
+
+  // Bitboard de la demi droite d'origine [origin] et dans la direction d'une
+  // case [target]. La demi droite traverse la case cible, et s'arrête au bord
+  // du plateau. Contient 0 si les cases ne sont pas diagonales ou orthogonales.
+  // Note : la case d'origine n'est pas comprise dans le bitboard.
+  static private long ray[][];
 
   // Cases des pièces entre le roi et la tour pour tester la possibilité des roques
   static final public long[] petitRoquePiecesMask = {0b1100000L << 56, 0b1100000L};
@@ -54,6 +59,7 @@ public final class MoveGenerationData {
     generateRookMoveTable();
     generateBishopMoveTable();
     generateInBetween();
+    generateRayTable();
   }
 
   /////////////////////////////////////////////////////////////////
@@ -90,6 +96,10 @@ public final class MoveGenerationData {
 
   public static long inBetween(int s1, int s2) {
     return inBetween[s1][s2];
+  }
+
+  public static long ray(int origin, int target) {
+    return ray[origin][target];
   }
 
   /////////////////////////////////////////////////////////////////
@@ -222,6 +232,38 @@ public final class MoveGenerationData {
     }
   }
 
+  private static void generateRayTable() {
+    ray = new long[64][64];
+
+    for (int s1 = 0; s1 < 64; s1++) {
+      long opposingEdges = 0L;
+      if ((s1 & 7) != 0) opposingEdges |= Afile;
+      if ((s1 & 7) != 7) opposingEdges |= Hfile;
+      if ((s1 >>> 3) != 0) opposingEdges |= rank8;
+      if ((s1 >>> 3) != 7) opposingEdges |= rank1;
+
+      for (int s2 = 0; s2 < 64; s2++) {
+        ray[s1][s2] = 0;
+        if (s1 == s2) continue;
+        long s2bb = 1L << s2;
+        long orthoInter = getSlowRookMoves(s1, s2bb) & s2bb;
+        long diagoInter = getSlowBishopMoves(s1, s2bb) & s2bb;
+        if (orthoInter == 0 && diagoInter == 0) continue;
+
+        int fileDiff = Math.abs((s1 & 7) - (s2 & 7));
+        int rankDiff = Math.abs((s1 >>> 3) - (s2 >>> 3));
+        int dir = (s2 - s1)/Math.max(fileDiff, rankDiff);
+        int sq = s1 + dir;
+
+        while (((1L << sq) & opposingEdges) == 0) {
+          ray[s1][s2] |= 1L << sq;
+          sq += dir;
+        }
+        ray[s1][s2] |= 1L << sq;
+      }
+    }
+  }
+
   /////////////////////////////////////////////////////////////////
 
   // Initialise les coups dans les tables correspondant aux nombres magiques
@@ -236,10 +278,10 @@ public final class MoveGenerationData {
       int tableSize = 1 << (64 - shift);
       rookMoveTable[square] = new long[tableSize];
 
-      long mask = MoveGenerationData.rookAttackMask[square];
+      long mask = rookAttackMask[square];
       long blockers = 0;
       do {
-        long moves = MoveGenerationData.getSlowRookMoves(square, blockers);
+        long moves = getSlowRookMoves(square, blockers);
         int index = Magic.index(magic, blockers, shift);
         rookMoveTable[square][index] = moves;
         blockers = (blockers - mask) & mask;
@@ -256,10 +298,10 @@ public final class MoveGenerationData {
       int tableSize = 1 << (64 - shift);
       bishopMoveTable[square] = new long[tableSize];
 
-      long mask = MoveGenerationData.bishopAttackMask[square];
+      long mask = bishopAttackMask[square];
       long blockers = 0;
       do {
-        long moves = MoveGenerationData.getSlowBishopMoves(square, blockers);
+        long moves = getSlowBishopMoves(square, blockers);
         int index = Magic.index(magic, blockers, shift);
         bishopMoveTable[square][index] = moves;
         blockers = (blockers - mask) & mask;

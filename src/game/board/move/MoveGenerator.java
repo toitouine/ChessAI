@@ -2,12 +2,12 @@
 
 // Génération des coups pour un plateau donné.
 // On utilise principalement les bitboards, et on s’appuie sur les données
-// initialisées dans MoveGenerationData.java. On distingue deux types de pièces :
+// initialisées dans MGData.java. On distingue deux types de pièces :
 
 // - Roi, Cavalier, Pion :
 // Ces pièces ont un mouvement suffisamment systématique pour pouvoir
 // générer les coups rapidement avec des masks des attaques (précalculés
-// dans MoveGenerationData.java) ou des opératons simples.
+// dans MGData.java) ou des opératons simples.
 
 // - Les sliders (Dame, Tour, Fou) :
 // On utilise la technique des "magic bitboards". On obtient assez simplement
@@ -17,7 +17,7 @@
 // chaque configuration de bloqueurs). Au démarrage du programme, on peut donc
 // générer un tel tableau par case (donc 64 tableaux pour la tour, et 64 pour
 // le fou), et calculer en avance les coups sur une case donnée pour chaque
-// arrangement de bloqueurs possible (voir MoveGenerationData.java).
+// arrangement de bloqueurs possible (voir MGData.java).
 
 // Précisions sur les "magic bitboards" :
 // L'opération effectuée est : index = (blockers * magic) >>> (64 - n)
@@ -60,7 +60,8 @@ public class MoveGenerator {
   private long[] opponentPieces = new long[Piece.Number];
   private long allFriendlyPieces;
   private long allOpponentPieces;
-  private long occupied = 0; // Toutes les pièces du plateau
+  private long occupied; // Toutes les pièces du plateau
+  private long pinned; // Pièces clouées au roi
 
   public MoveGenerator(Board board) {
     this.board = board;
@@ -82,6 +83,9 @@ public class MoveGenerator {
       friendlyPieces[i] = board.pieceBitboard[i + color*Piece.Number];
       opponentPieces[i] = board.pieceBitboard[i + opponent*Piece.Number];
     }
+
+    // Récupère les pièces clouées
+    pinned = getPinnedPieces();
 
     // Génère les coups
     addKingMoves(moves);
@@ -123,7 +127,7 @@ public class MoveGenerator {
     long pinned = 0L;
     while (pinners != 0) {
       int square = Long.numberOfTrailingZeros(pinners);
-      pinned |= MoveGenerationData.inBetween(square, kingSquare) & allFriendlyPieces;
+      pinned |= MGData.inBetween(square, kingSquare) & allFriendlyPieces;
       pinners &= pinners - 1;
     }
 
@@ -132,13 +136,13 @@ public class MoveGenerator {
 
   // Détecte si la case square est attaquée par une pièce adverse
   public boolean isAttacked(int square) {
-    long pawnAttacks = MoveGenerationData.pawnAttacks(color, square);
+    long pawnAttacks = MGData.pawnAttacks(color, square);
     if ((pawnAttacks & opponentPieces[Piece.Pion]) != 0) return true;
 
-    long knightAttacks = MoveGenerationData.knightAttacks(square);
+    long knightAttacks = MGData.knightAttacks(square);
     if ((knightAttacks & opponentPieces[Piece.Cavalier]) != 0) return true;
 
-    long kingAttacks = MoveGenerationData.kingAttacks(square);
+    long kingAttacks = MGData.kingAttacks(square);
     if ((kingAttacks & opponentPieces[Piece.Roi]) != 0) return true;
 
     long bishopQueens = opponentPieces[Piece.Dame] | opponentPieces[Piece.Fou];
@@ -162,11 +166,18 @@ public class MoveGenerator {
       // Récupère la case de départ de la dame
       int startSquare = Long.numberOfTrailingZeros(dames);
 
+      // Si la dame est clouée, récupère les cases de déplacement valides
+      long possibleSquares = -1L;
+      if ((dames & -dames & pinned) != 0) {
+        possibleSquares = MGData.ray(kingSquare, startSquare);
+      }
+
       // Récupère les coups de la tour et du fou
       long attacks = Magic.getRookAttacks(startSquare, occupied);
       attacks |= Magic.getBishopAttacks(startSquare, occupied);
 
-      // Enlève les pièces alliées
+      // Ne conserve que les attaques valides et enlève les pièces alliées
+      attacks &= possibleSquares;
       attacks &= ~(attacks & allFriendlyPieces);
 
       while (attacks != 0) {
@@ -186,8 +197,14 @@ public class MoveGenerator {
       // Récupère la case de départ du fou
       int startSquare = Long.numberOfTrailingZeros(fous);
 
+      long possibleSquares = -1L;
+      if ((fous & -fous & pinned) != 0) {
+        possibleSquares = MGData.ray(kingSquare, startSquare);
+      }
+
       // Récupère les attaques pré-calculées et les convertit en coups (magic bitboard)
       long attacks = Magic.getBishopAttacks(startSquare, occupied);
+      attacks &= possibleSquares;
       attacks &= ~(attacks & allFriendlyPieces);
 
       while (attacks != 0) {
@@ -207,8 +224,14 @@ public class MoveGenerator {
       // Récupère la case de départ de la tour
       int startSquare = Long.numberOfTrailingZeros(tours);
 
+      long possibleSquares = -1L;
+      if ((tours & -tours & pinned) != 0) {
+        possibleSquares = MGData.ray(kingSquare, startSquare);
+      }
+
       // Récupère les attaques pré-calculées et les convertit en coups (magic bitboard)
       long attacks = Magic.getRookAttacks(startSquare, occupied);
+      attacks &= possibleSquares;
       attacks &= ~(attacks & allFriendlyPieces);
 
       while (attacks != 0) {
@@ -223,7 +246,7 @@ public class MoveGenerator {
   // Coups du roi
   private void addKingMoves(ArrayList<Move> moves) {
     // Récupère les attaques du roi
-    long attacks = MoveGenerationData.kingAttacks(kingSquare);
+    long attacks = MGData.kingAttacks(kingSquare);
 
     // Convertit le bitboard des attaques en coups
     long endSquares = attacks & ~allFriendlyPieces;
@@ -236,14 +259,14 @@ public class MoveGenerator {
 
     // Ajoute éventuellement les roques
     if (board.petitRoque(color)) {
-      if ((MoveGenerationData.petitRoquePiecesMask[color] & occupied) == 0) {
+      if ((MGData.petitRoquePiecesMask[color] & occupied) == 0) {
         if (!isAttacked(kingSquare+1) & !isAttacked(kingSquare+2)) {
           moves.add(new Move(kingSquare, kingSquare+2, MoveFlag.PetitRoque));
         }
       }
     }
     if (board.grandRoque(color)) {
-      if ((MoveGenerationData.grandRoquePiecesMask[color] & occupied) == 0) {
+      if ((MGData.grandRoquePiecesMask[color] & occupied) == 0) {
         if (!isAttacked(kingSquare-1) & !isAttacked(kingSquare-2)) {
           moves.add(new Move(kingSquare, kingSquare-2, MoveFlag.GrandRoque));
         }
@@ -256,9 +279,15 @@ public class MoveGenerator {
     long cavaliers = friendlyPieces[Piece.Cavalier];
 
     while (cavaliers != 0) {
+      // Si le cavalier est cloué, il ne peut pas bouger
+      if ((cavaliers & -cavaliers & pinned) != 0) {
+        cavaliers &= cavaliers - 1;
+        continue;
+      }
+
       // Récupère la case de départ du cavalier et ses attaques
       int startSquare = Long.numberOfTrailingZeros(cavaliers);
-      long attacks = MoveGenerationData.knightAttacks(startSquare);
+      long attacks = MGData.knightAttacks(startSquare);
 
       // Convertit le bitboard des attaques en coups
       long endSquares = attacks & ~allFriendlyPieces;
@@ -270,7 +299,7 @@ public class MoveGenerator {
     }
   }
 
-  // Coups des pions (blancs)
+  // Coups des pions (blancs) TODO
   private void addWhitePawnMoves(ArrayList<Move> moves) {
     long pions = board.pieceBitboard[Piece.Pion];
     long empty = ~occupied;
@@ -323,7 +352,7 @@ public class MoveGenerator {
     }
   }
 
-  // Coups des pions (noirs)
+  // Coups des pions (noirs) TODO
   private void addBlackPawnMoves(ArrayList<Move> moves) {
     long pions = board.pieceBitboard[Piece.Pion + Piece.Number];
     long empty = ~occupied;

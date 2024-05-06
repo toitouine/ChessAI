@@ -6,7 +6,7 @@
 // (voir MoveGenerator.java pour l'explication)
 //
 // Note : Pour pouvoir utiliser MagicFinder, il faut avoir
-// initialisé MoveGenerationData
+// initialisé MGData
 
 /////////////////////////////////////////////////////////////////
 
@@ -95,8 +95,8 @@ public final class MagicFinder {
   private boolean isMagic(long magic, int bits, int square, boolean isRook) {
     // Récupère le mask
     long mask;
-    if (isRook) mask = MoveGenerationData.rookMask(square);
-    else mask = MoveGenerationData.bishopMask(square);
+    if (isRook) mask = MGData.rookMask(square);
+    else mask = MGData.bishopMask(square);
 
     // Tableau des coups (tableau d'objets pour avoir null, il faut utiliser .equals())
     Long[] moveTable = new Long[1 << bits];
@@ -106,8 +106,8 @@ public final class MagicFinder {
     do {
       // Récupère les coups et l'index
       long moves;
-      if (isRook) moves = MoveGenerationData.getSlowRookMoves(square, blockers);
-      else moves = MoveGenerationData.getSlowBishopMoves(square, blockers);
+      if (isRook) moves = MGData.getSlowRookMoves(square, blockers);
+      else moves = MGData.getSlowBishopMoves(square, blockers);
       int index = Magic.index(magic, blockers, 64-bits);
 
       // Si il n'y a rien à l'index, où si il y a une collision qui nous

@@ -24,14 +24,14 @@ public final class Magic {
   }
 
   public static long getRookAttacks(int square, long allPieces) {
-    long blockers = allPieces & MoveGenerationData.rookMask(square);
+    long blockers = allPieces & MGData.rookMask(square);
     int index = Magic.index(rookMagics[square], blockers, rookShifts[square]);
-    return MoveGenerationData.rookMoves(square, index);
+    return MGData.rookMoves(square, index);
   }
 
   public static long getBishopAttacks(int square, long allPieces) {
-    long blockers = allPieces & MoveGenerationData.bishopMask(square);
+    long blockers = allPieces & MGData.bishopMask(square);
     int index = Magic.index(bishopMagics[square], blockers, bishopShifts[square]);
-    return MoveGenerationData.bishopMoves(square, index);
+    return MGData.bishopMoves(square, index);
   }
 }
