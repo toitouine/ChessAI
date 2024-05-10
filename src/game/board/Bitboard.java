@@ -8,6 +8,10 @@ public final class Bitboard {
   static final public long Hfile = Afile << 7;
   static final public long rank1 = 0b11111111L << 56;
   static final public long rank2 = 0b11111111L << 48;
+  static final public long rank3 = 0b11111111L << 40;
+  static final public long rank4 = 0b11111111L << 32;
+  static final public long rank5 = 0b11111111L << 24;
+  static final public long rank6 = 0b11111111L << 16;
   static final public long rank7 = 0b11111111L << 8;
   static final public long rank8 = 0b11111111L;
 

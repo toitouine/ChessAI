@@ -301,11 +301,15 @@ public class MoveGenerator {
 
   // Coups des pions (blancs) TODO
   private void addWhitePawnMoves(ArrayList<Move> moves) {
-    long pions = board.pieceBitboard[Piece.Pion];
+    long pions = friendlyPieces[Piece.Pion];
     long empty = ~occupied;
 
-    // Avance simple des pions (et promotion)
+    // Avance simple et double des pions, captures
     long onepush = (pions >>> 8) & empty;
+    long doublepush = ((onepush & Bitboard.rank3) >>> 8) & empty;
+    long captureLeft = ((~Bitboard.Afile & pions) >>> 9) & allOpponentPieces;
+    long captureRight = ((~Bitboard.Hfile & pions) >>> 7) & allOpponentPieces;
+
     while (onepush != 0) {
       int endSquare = Long.numberOfTrailingZeros(onepush);
       if (endSquare <= 7) addPromotionMoves(moves, endSquare+8, endSquare);
@@ -313,16 +317,12 @@ public class MoveGenerator {
       onepush &= onepush - 1;
     }
 
-    // Avance double des pions
-    long doublepush = (((pions & Bitboard.rank2) >>> 8) & empty) >>> 8 & empty;
     while (doublepush != 0) {
       int endSquare = Long.numberOfTrailingZeros(doublepush);
       moves.add(new Move(endSquare + 16, endSquare, MoveFlag.DoubleAvance));
       doublepush &= doublepush - 1;
     }
 
-    // Capture gauche (et promotion)
-    long captureLeft = ((~Bitboard.Afile & pions) >>> 9) & board.colorBitboard[Player.Black];
     while (captureLeft != 0) {
       int endSquare = Long.numberOfTrailingZeros(captureLeft);
       if (endSquare <= 7) addPromotionMoves(moves, endSquare + 9, endSquare);
@@ -330,8 +330,6 @@ public class MoveGenerator {
       captureLeft &= captureLeft - 1;
     }
 
-    // Capture droite (et promotion)
-    long captureRight = ((~Bitboard.Hfile & pions) >>> 7) & board.colorBitboard[Player.Black];
     while (captureRight != 0) {
       int endSquare = Long.numberOfTrailingZeros(captureRight);
       if (endSquare <= 7) addPromotionMoves(moves, endSquare + 7, endSquare);
@@ -340,11 +338,10 @@ public class MoveGenerator {
     }
 
     // En passant
-    if (board.enPassantSquare[Player.Black] == null) return;
+    if (board.enPassantSquare[opponent] == null) return;
 
-    int caseEnPassant = board.enPassantSquare[Player.Black];
-    long mangeurs = pions & ( (1L << (caseEnPassant+7) & ~Bitboard.Hfile)
-                            | (1L << (caseEnPassant+9) & ~Bitboard.Afile) );
+    int caseEnPassant = board.enPassantSquare[opponent];
+    long mangeurs = pions & MGData.pawnAttacks(opponent, caseEnPassant);
     while (mangeurs != 0) {
       int startSquare = Long.numberOfTrailingZeros(mangeurs);
       moves.add(new Move(startSquare, caseEnPassant, MoveFlag.EnPassant));
@@ -354,11 +351,15 @@ public class MoveGenerator {
 
   // Coups des pions (noirs) TODO
   private void addBlackPawnMoves(ArrayList<Move> moves) {
-    long pions = board.pieceBitboard[Piece.Pion + Piece.Number];
+    long pions = friendlyPieces[Piece.Pion];
     long empty = ~occupied;
 
-    // Avance simple des pions (et promotion)
+    // Avance simple et double des pions, captures
     long onepush = (pions << 8) & empty;
+    long doublepush = ((onepush & Bitboard.rank6) << 8) & empty;
+    long captureLeft = ((~Bitboard.Afile & pions) << 7) & allOpponentPieces;
+    long captureRight = ((~Bitboard.Hfile & pions) << 9) & allOpponentPieces;
+
     while (onepush != 0) {
       int endSquare = Long.numberOfTrailingZeros(onepush);
       if (endSquare >= 56) addPromotionMoves(moves, endSquare-8, endSquare);
@@ -366,16 +367,12 @@ public class MoveGenerator {
       onepush &= onepush - 1;
     }
 
-    // Avance double des pions
-    long doublepush = (((pions & Bitboard.rank7) << 8) & empty) << 8 & empty;
     while (doublepush != 0) {
       int endSquare = Long.numberOfTrailingZeros(doublepush);
       moves.add(new Move(endSquare - 16, endSquare, MoveFlag.DoubleAvance));
       doublepush &= doublepush - 1;
     }
 
-    // Capture droite (et promotion)
-    long captureRight = ((~Bitboard.Hfile & pions) << 9) & board.colorBitboard[Player.White];
     while (captureRight != 0) {
       int endSquare = Long.numberOfTrailingZeros(captureRight);
       if (endSquare >= 56) addPromotionMoves(moves, endSquare - 9, endSquare);
@@ -383,8 +380,6 @@ public class MoveGenerator {
       captureRight &= captureRight - 1;
     }
 
-    // Capture gauche (et promotion)
-    long captureLeft = ((~Bitboard.Afile & pions) << 7) & board.colorBitboard[Player.White];
     while (captureLeft != 0) {
       int endSquare = Long.numberOfTrailingZeros(captureLeft);
       if (endSquare >= 56) addPromotionMoves(moves, endSquare - 7, endSquare);
@@ -393,11 +388,10 @@ public class MoveGenerator {
     }
 
     // En passant
-    if (board.enPassantSquare[Player.White] == null) return;
+    if (board.enPassantSquare[opponent] == null) return;
 
-    int caseEnPassant = board.enPassantSquare[Player.White];
-    long mangeurs = pions & ( (1L << (caseEnPassant-7) & ~Bitboard.Afile)
-                            | (1L << (caseEnPassant-9) & ~Bitboard.Hfile) );
+    int caseEnPassant = board.enPassantSquare[opponent];
+    long mangeurs = pions & MGData.pawnAttacks(opponent, caseEnPassant);
     while (mangeurs != 0) {
       int startSquare = Long.numberOfTrailingZeros(mangeurs);
       moves.add(new Move(startSquare, caseEnPassant, MoveFlag.EnPassant));
