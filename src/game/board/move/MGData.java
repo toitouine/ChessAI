@@ -45,6 +45,11 @@ public final class MGData {
   // Note : la case d'origine n'est pas comprise dans le bitboard.
   static private long ray[][];
 
+  // True ou false selon si les deux cases sont sur la même colonne / diagonale
+  static private boolean sameFile[][];
+  static private boolean sameLeftDiag[][];
+  static private boolean sameRightDiag[][];
+
   // Cases des pièces entre le roi et la tour pour tester la possibilité des roques
   static final public long[] petitRoquePiecesMask = {0b1100000L << 56, 0b1100000L};
   static final public long[] grandRoquePiecesMask = {0b1110L << 56, 0b1110L};
@@ -60,6 +65,7 @@ public final class MGData {
     generateBishopMoveTable();
     generateInBetween();
     generateRayTable();
+    generateSameChecks();
   }
 
   /////////////////////////////////////////////////////////////////
@@ -100,6 +106,18 @@ public final class MGData {
 
   public static long ray(int origin, int target) {
     return ray[origin][target];
+  }
+
+  public static boolean isSameFile(int sq1, int sq2) {
+    return sameFile[sq1][sq2];
+  }
+
+  public static boolean isSameLeftDiag(int sq1, int sq2) {
+    return sameLeftDiag[sq1][sq2];
+  }
+
+  public static boolean isSameRightDiag(int sq1, int sq2) {
+    return sameRightDiag[sq1][sq2];
   }
 
   /////////////////////////////////////////////////////////////////
@@ -260,6 +278,20 @@ public final class MGData {
           sq += dir;
         }
         ray[s1][s2] |= 1L << sq;
+      }
+    }
+  }
+
+  private static void generateSameChecks() {
+    sameFile = new boolean[64][64];
+    sameLeftDiag = new boolean[64][64];
+    sameRightDiag = new boolean[64][64];
+
+    for (int i = 0; i < 64; i++) {
+      for (int j = 0; j < 64; j++) {
+        sameFile[i][j] = (i & 7) == (j & 7);
+        sameLeftDiag[i][j] = (j-i) % 9 == 0;
+        sameRightDiag[i][j] = (j-i) % 7 == 0;
       }
     }
   }

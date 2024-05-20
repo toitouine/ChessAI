@@ -88,11 +88,11 @@ public class MoveGenerator {
     pinned = getPinnedPieces();
 
     // Génère les coups
-    addKingMoves(moves);
-    addKnightMoves(moves);
-    addRookMoves(moves);
-    addBishopMoves(moves);
-    addQueenMoves(moves);
+    // addKingMoves(moves);
+    // addKnightMoves(moves);
+    // addRookMoves(moves);
+    // addBishopMoves(moves);
+    // addQueenMoves(moves);
     if (color == Player.White) addWhitePawnMoves(moves);
     else addBlackPawnMoves(moves);
 
@@ -299,7 +299,7 @@ public class MoveGenerator {
     }
   }
 
-  // Coups des pions (blancs) TODO
+  // Coups des pions blancs
   private void addWhitePawnMoves(ArrayList<Move> moves) {
     long pions = friendlyPieces[Piece.Pion];
     long empty = ~occupied;
@@ -312,28 +312,56 @@ public class MoveGenerator {
 
     while (onepush != 0) {
       int endSquare = Long.numberOfTrailingZeros(onepush);
-      if (endSquare <= 7) addPromotionMoves(moves, endSquare+8, endSquare);
-      else moves.add(new Move(endSquare + 8, endSquare));
+      int startSquare = endSquare+8;
+      if (((1L << startSquare) & pinned) != 0) {
+        if (!MGData.isSameFile(startSquare, kingSquare)) {
+          onepush &= onepush - 1;
+          continue;
+        }
+      }
+      if (endSquare <= 7) addPromotionMoves(moves, startSquare, endSquare);
+      else moves.add(new Move(startSquare, endSquare));
       onepush &= onepush - 1;
     }
 
     while (doublepush != 0) {
       int endSquare = Long.numberOfTrailingZeros(doublepush);
-      moves.add(new Move(endSquare + 16, endSquare, MoveFlag.DoubleAvance));
+      int startSquare = endSquare + 16;
+      if (((1L << startSquare) & pinned) != 0) {
+        if (!MGData.isSameFile(startSquare, kingSquare)) {
+          doublepush &= doublepush - 1;
+          continue;
+        }
+      }
+      moves.add(new Move(startSquare, endSquare, MoveFlag.DoubleAvance));
       doublepush &= doublepush - 1;
     }
 
     while (captureLeft != 0) {
       int endSquare = Long.numberOfTrailingZeros(captureLeft);
-      if (endSquare <= 7) addPromotionMoves(moves, endSquare + 9, endSquare);
-      else moves.add(new Move(endSquare + 9, endSquare));
+      int startSquare = endSquare + 9;
+      if (((1L << startSquare) & pinned) != 0) {
+        if (!MGData.isSameLeftDiag(startSquare, kingSquare)) {
+          captureLeft &= captureLeft - 1;
+          continue;
+        }
+      }
+      if (endSquare <= 7) addPromotionMoves(moves, startSquare, endSquare);
+      else moves.add(new Move(startSquare, endSquare));
       captureLeft &= captureLeft - 1;
     }
 
     while (captureRight != 0) {
       int endSquare = Long.numberOfTrailingZeros(captureRight);
-      if (endSquare <= 7) addPromotionMoves(moves, endSquare + 7, endSquare);
-      else moves.add(new Move(endSquare + 7, endSquare));
+      int startSquare = endSquare + 7;
+      if (((1L << startSquare) & pinned) != 0) {
+        if (!MGData.isSameRightDiag(startSquare, kingSquare)) {
+          captureRight &= captureRight - 1;
+          continue;
+        }
+      }
+      if (endSquare <= 7) addPromotionMoves(moves, startSquare, endSquare);
+      else moves.add(new Move(startSquare, endSquare));
       captureRight &= captureRight - 1;
     }
 
@@ -344,12 +372,32 @@ public class MoveGenerator {
     long mangeurs = pions & MGData.pawnAttacks(opponent, caseEnPassant);
     while (mangeurs != 0) {
       int startSquare = Long.numberOfTrailingZeros(mangeurs);
+
+      // On doit tester si le pion est cloué normalement ou horizontalement de manière spéciale
+      if (((1L << startSquare) & pinned) != 0) {
+        long possibleSquares = MGData.ray(kingSquare, startSquare);
+        if ((possibleSquares & (1L << caseEnPassant)) == 0) {
+          mangeurs &= mangeurs - 1;
+          continue;
+        }
+      }
+      long ennemySliders = opponentPieces[Piece.Tour] | opponentPieces[Piece.Dame];
+      long kingBitboard = friendlyPieces[Piece.Roi];
+      if ((Bitboard.rank5 & kingBitboard) != 0 && (Bitboard.rank5 & ennemySliders) != 0) {
+        long twoPawns = (1L << startSquare) | (1L << (caseEnPassant + 8));
+        long ray = MGData.ray(kingSquare, startSquare);
+        if ((ray & ~twoPawns & ~ennemySliders & occupied) == 0) {
+          mangeurs &= mangeurs - 1;
+          continue;
+        }
+      }
+
       moves.add(new Move(startSquare, caseEnPassant, MoveFlag.EnPassant));
       mangeurs &= mangeurs - 1;
     }
   }
 
-  // Coups des pions (noirs) TODO
+  // Coups des pions noirs
   private void addBlackPawnMoves(ArrayList<Move> moves) {
     long pions = friendlyPieces[Piece.Pion];
     long empty = ~occupied;
@@ -362,28 +410,56 @@ public class MoveGenerator {
 
     while (onepush != 0) {
       int endSquare = Long.numberOfTrailingZeros(onepush);
-      if (endSquare >= 56) addPromotionMoves(moves, endSquare-8, endSquare);
-      else moves.add(new Move(endSquare - 8, endSquare));
+      int startSquare = endSquare - 8;
+      if (((1L << startSquare) & pinned) != 0) {
+        if (!MGData.isSameFile(startSquare, kingSquare)) {
+          onepush &= onepush - 1;
+          continue;
+        }
+      }
+      if (endSquare >= 56) addPromotionMoves(moves, startSquare, endSquare);
+      else moves.add(new Move(startSquare, endSquare));
       onepush &= onepush - 1;
     }
 
     while (doublepush != 0) {
       int endSquare = Long.numberOfTrailingZeros(doublepush);
-      moves.add(new Move(endSquare - 16, endSquare, MoveFlag.DoubleAvance));
+      int startSquare = endSquare - 16;
+      if (((1L << startSquare) & pinned) != 0) {
+        if (!MGData.isSameFile(startSquare, kingSquare)) {
+          doublepush &= doublepush - 1;
+          continue;
+        }
+      }
+      moves.add(new Move(startSquare, endSquare, MoveFlag.DoubleAvance));
       doublepush &= doublepush - 1;
     }
 
     while (captureRight != 0) {
       int endSquare = Long.numberOfTrailingZeros(captureRight);
-      if (endSquare >= 56) addPromotionMoves(moves, endSquare - 9, endSquare);
-      else moves.add(new Move(endSquare - 9, endSquare));
+      int startSquare = endSquare - 9;
+      if (((1L << startSquare) & pinned) != 0) {
+        if (!MGData.isSameLeftDiag(startSquare, kingSquare)) {
+          captureRight &= captureRight - 1;
+          continue;
+        }
+      }
+      if (endSquare >= 56) addPromotionMoves(moves, startSquare, endSquare);
+      else moves.add(new Move(startSquare, endSquare));
       captureRight &= captureRight - 1;
     }
 
     while (captureLeft != 0) {
       int endSquare = Long.numberOfTrailingZeros(captureLeft);
-      if (endSquare >= 56) addPromotionMoves(moves, endSquare - 7, endSquare);
-      else moves.add(new Move(endSquare - 7, endSquare));
+      int startSquare = endSquare - 7;
+      if (((1L << startSquare) & pinned) != 0) {
+        if (!MGData.isSameRightDiag(startSquare, kingSquare)) {
+          captureLeft &= captureLeft - 1;
+          continue;
+        }
+      }
+      if (endSquare >= 56) addPromotionMoves(moves, startSquare, endSquare);
+      else moves.add(new Move(startSquare, endSquare));
       captureLeft &= captureLeft - 1;
     }
 
@@ -394,6 +470,26 @@ public class MoveGenerator {
     long mangeurs = pions & MGData.pawnAttacks(opponent, caseEnPassant);
     while (mangeurs != 0) {
       int startSquare = Long.numberOfTrailingZeros(mangeurs);
+
+      // On doit tester si le pion est cloué normalement ou horizontalement de manière spéciale
+      if (((1L << startSquare) & pinned) != 0) {
+        long possibleSquares = MGData.ray(kingSquare, startSquare);
+        if ((possibleSquares & (1L << caseEnPassant)) == 0) {
+          mangeurs &= mangeurs - 1;
+          continue;
+        }
+      }
+      long ennemySliders = opponentPieces[Piece.Tour] | opponentPieces[Piece.Dame];
+      long kingBitboard = friendlyPieces[Piece.Roi];
+      if ((Bitboard.rank4 & kingBitboard) != 0 && (Bitboard.rank4 & ennemySliders) != 0) {
+        long twoPawns = (1L << startSquare) | (1L << (caseEnPassant - 8));
+        long ray = MGData.ray(kingSquare, startSquare);
+        if ((ray & ~twoPawns & ~ennemySliders & occupied) == 0) {
+          mangeurs &= mangeurs - 1;
+          continue;
+        }
+      }
+
       moves.add(new Move(startSquare, caseEnPassant, MoveFlag.EnPassant));
       mangeurs &= mangeurs - 1;
     }
