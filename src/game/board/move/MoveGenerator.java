@@ -55,6 +55,13 @@ public class MoveGenerator {
   // Case du roi allié
   private int kingSquare;
 
+  // Roi en échec ou non (éventuellement double)
+  private boolean kingInCheck;
+
+  // Cases où les coups sont légaux (en cas d'échec, ne contient que
+  // les cases qui permettent de parer ou arrêter l'échec)
+  private long legalSquares;
+
   // Bitboards utiles pour générer les coups (du point de vue de celui qui génère)
   private long[] friendlyPieces = new long[Piece.Number];
   private long[] opponentPieces = new long[Piece.Number];
@@ -74,8 +81,6 @@ public class MoveGenerator {
     color = c;
     opponent = 1-c;
     kingSquare = board.roi(color);
-
-    // Récupère les bitboards
     allFriendlyPieces = board.colorBitboard[color];
     allOpponentPieces = board.colorBitboard[opponent];
     occupied = allFriendlyPieces | allOpponentPieces;
@@ -84,15 +89,30 @@ public class MoveGenerator {
       opponentPieces[i] = board.pieceBitboard[i + opponent*Piece.Number];
     }
 
+    long checkers = getCheckers();
+    kingInCheck = checkers != 0;
+
+    // Génère les coups du roi
+    addKingMoves(moves);
+
+    // En cas de double échec, seul le roi peut bouger
+    if (Long.bitCount(checkers) >= 2) return moves;
+
+    if (kingInCheck) {
+      long checkRay = MGData.inBetween(Long.numberOfTrailingZeros(checkers), kingSquare);
+      legalSquares = checkers | checkRay;
+    } else {
+      legalSquares = -1L;
+    }
+
     // Récupère les pièces clouées
     pinned = getPinnedPieces();
 
-    // Génère les coups
-    // addKingMoves(moves);
-    // addKnightMoves(moves);
-    // addRookMoves(moves);
-    // addBishopMoves(moves);
-    // addQueenMoves(moves);
+    // Génère les coups des autres pièces
+    addKnightMoves(moves);
+    addRookMoves(moves);
+    addBishopMoves(moves);
+    addQueenMoves(moves);
     if (color == Player.White) addWhitePawnMoves(moves);
     else addBlackPawnMoves(moves);
 
@@ -134,8 +154,20 @@ public class MoveGenerator {
     return pinned;
   }
 
+  private long getCheckers() {
+    long bishopQueens = opponentPieces[Piece.Dame] | opponentPieces[Piece.Fou];
+    long rookQueens = opponentPieces[Piece.Dame] | opponentPieces[Piece.Tour];
+
+    long checkers = opponentPieces[Piece.Pion] & MGData.pawnAttacks(color, kingSquare);
+    checkers |= opponentPieces[Piece.Cavalier] & MGData.knightAttacks(kingSquare);
+    checkers |= opponentPieces[Piece.Roi] & MGData.kingAttacks(kingSquare);
+    checkers |= bishopQueens & Magic.getBishopAttacks(kingSquare, occupied);
+    checkers |= rookQueens & Magic.getRookAttacks(kingSquare, occupied);
+    return checkers;
+  }
+
   // Détecte si la case square est attaquée par une pièce adverse
-  public boolean isAttacked(int square) {
+  private boolean isAttacked(int square) {
     long pawnAttacks = MGData.pawnAttacks(color, square);
     if ((pawnAttacks & opponentPieces[Piece.Pion]) != 0) return true;
 
@@ -258,6 +290,8 @@ public class MoveGenerator {
     }
 
     // Ajoute éventuellement les roques
+    if (kingInCheck) return;
+
     if (board.petitRoque(color)) {
       if ((MGData.petitRoquePiecesMask[color] & occupied) == 0) {
         if (!isAttacked(kingSquare+1) & !isAttacked(kingSquare+2)) {
