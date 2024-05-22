@@ -160,7 +160,6 @@ public class MoveGenerator {
 
     long checkers = opponentPieces[Piece.Pion] & MGData.pawnAttacks(color, kingSquare);
     checkers |= opponentPieces[Piece.Cavalier] & MGData.knightAttacks(kingSquare);
-    checkers |= opponentPieces[Piece.Roi] & MGData.kingAttacks(kingSquare);
     checkers |= bishopQueens & Magic.getBishopAttacks(kingSquare, occupied);
     checkers |= rookQueens & Magic.getRookAttacks(kingSquare, occupied);
     return checkers;
@@ -209,7 +208,7 @@ public class MoveGenerator {
       attacks |= Magic.getBishopAttacks(startSquare, occupied);
 
       // Ne conserve que les attaques valides et enlève les pièces alliées
-      attacks &= possibleSquares;
+      attacks &= possibleSquares & legalSquares;
       attacks &= ~(attacks & allFriendlyPieces);
 
       while (attacks != 0) {
@@ -236,7 +235,7 @@ public class MoveGenerator {
 
       // Récupère les attaques pré-calculées et les convertit en coups (magic bitboard)
       long attacks = Magic.getBishopAttacks(startSquare, occupied);
-      attacks &= possibleSquares;
+      attacks &= possibleSquares & legalSquares;
       attacks &= ~(attacks & allFriendlyPieces);
 
       while (attacks != 0) {
@@ -263,7 +262,7 @@ public class MoveGenerator {
 
       // Récupère les attaques pré-calculées et les convertit en coups (magic bitboard)
       long attacks = Magic.getRookAttacks(startSquare, occupied);
-      attacks &= possibleSquares;
+      attacks &= possibleSquares & legalSquares;
       attacks &= ~(attacks & allFriendlyPieces);
 
       while (attacks != 0) {
@@ -324,7 +323,7 @@ public class MoveGenerator {
       long attacks = MGData.knightAttacks(startSquare);
 
       // Convertit le bitboard des attaques en coups
-      long endSquares = attacks & ~allFriendlyPieces;
+      long endSquares = attacks & ~allFriendlyPieces & legalSquares;
       while (endSquares != 0) {
         moves.add(new Move(startSquare, Long.numberOfTrailingZeros(endSquares)));
         endSquares &= endSquares - 1;
@@ -339,10 +338,10 @@ public class MoveGenerator {
     long empty = ~occupied;
 
     // Avance simple et double des pions, captures
-    long onepush = (pions >>> 8) & empty;
-    long doublepush = ((onepush & Bitboard.rank3) >>> 8) & empty;
-    long captureLeft = ((~Bitboard.Afile & pions) >>> 9) & allOpponentPieces;
-    long captureRight = ((~Bitboard.Hfile & pions) >>> 7) & allOpponentPieces;
+    long onepush = (pions >>> 8) & empty & legalSquares;
+    long doublepush = ((onepush & Bitboard.rank3) >>> 8) & empty & legalSquares;
+    long captureLeft = ((~Bitboard.Afile & pions) >>> 9) & allOpponentPieces & legalSquares;
+    long captureRight = ((~Bitboard.Hfile & pions) >>> 7) & allOpponentPieces & legalSquares;
 
     while (onepush != 0) {
       int endSquare = Long.numberOfTrailingZeros(onepush);
@@ -403,6 +402,8 @@ public class MoveGenerator {
     if (board.enPassantSquare[opponent] == null) return;
 
     int caseEnPassant = board.enPassantSquare[opponent];
+    if (((1L << caseEnPassant) & legalSquares) == 0) return;
+
     long mangeurs = pions & MGData.pawnAttacks(opponent, caseEnPassant);
     while (mangeurs != 0) {
       int startSquare = Long.numberOfTrailingZeros(mangeurs);
@@ -437,10 +438,10 @@ public class MoveGenerator {
     long empty = ~occupied;
 
     // Avance simple et double des pions, captures
-    long onepush = (pions << 8) & empty;
-    long doublepush = ((onepush & Bitboard.rank6) << 8) & empty;
-    long captureLeft = ((~Bitboard.Afile & pions) << 7) & allOpponentPieces;
-    long captureRight = ((~Bitboard.Hfile & pions) << 9) & allOpponentPieces;
+    long onepush = (pions << 8) & empty & legalSquares;
+    long doublepush = ((onepush & Bitboard.rank6) << 8) & empty & legalSquares;
+    long captureLeft = ((~Bitboard.Afile & pions) << 7) & allOpponentPieces & legalSquares;
+    long captureRight = ((~Bitboard.Hfile & pions) << 9) & allOpponentPieces & legalSquares;
 
     while (onepush != 0) {
       int endSquare = Long.numberOfTrailingZeros(onepush);
@@ -501,6 +502,8 @@ public class MoveGenerator {
     if (board.enPassantSquare[opponent] == null) return;
 
     int caseEnPassant = board.enPassantSquare[opponent];
+    if (((1L << caseEnPassant) & legalSquares) == 0) return;
+
     long mangeurs = pions & MGData.pawnAttacks(opponent, caseEnPassant);
     while (mangeurs != 0) {
       int startSquare = Long.numberOfTrailingZeros(mangeurs);
