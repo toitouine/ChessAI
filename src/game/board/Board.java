@@ -369,6 +369,14 @@ public final class Board implements Serializable {
     tourDeQui = 1 - tourDeQui;
   }
 
+  public void make(String moveString, int flag) {
+    make(new Move(moveString, flag));
+  }
+
+  public void make(String moveString) {
+    make(new Move(moveString, MoveFlag.None));
+  }
+
   /////////////////////////////////////////////////////////////////
 
   public ArrayList<Move> getLegalMoves(int color) {
@@ -377,6 +385,79 @@ public final class Board implements Serializable {
 
   public ArrayList<Move> getLegalMoves() {
     return getLegalMoves(tourDeQui);
+  }
+
+  public long perft(int depth) {
+    return perft(depth, true, true);
+  }
+
+  public long perft(int depth, boolean bulk, boolean print) {
+    if (print) {
+      Debug.log("perft", "");
+      Debug.log("perft", "Démarrage de perft " + depth);
+      if (bulk) Debug.log("perft", "Bulk-counting activé");
+      Debug.log("perft", "");
+    }
+
+    long before = System.nanoTime();
+
+    long total = 0;
+    ArrayList<Move> moves = getLegalMoves();
+    for (int i = 0; i < moves.size(); i++) {
+      Move move = moves.get(i);
+      make(move);
+      long count = countMoves(depth-1, bulk);
+      unmake(move);
+      if (print) Debug.log("perft", move.notation() + ": " + count);
+      total += count;
+    }
+
+    long time = System.nanoTime() - before;
+    float timeMs = (float)time/1000000;
+    float mps = total/(timeMs*1000);
+
+    if (print) {
+      Debug.log("perft", "");
+      Debug.log("perft", "Total : " + Value.format(total));
+      Debug.log("perft", "Temps : " + Value.format(timeMs) + " ms");
+      Debug.log("perft", "Positions par seconde : " + Value.format(mps) + " millions/s");
+      Debug.log("perft", "");
+    }
+
+    return total;
+  }
+
+  public boolean verifyPerft(String fen, int depth, long expected) {
+    String previousFen = generateFEN();
+    loadFEN(fen);
+    long total = perft(depth, true, false);
+    boolean success = total == expected;
+    String str = fen + " [" + depth + "]";
+    if (success) {
+      Debug.log("perft", "Test réussi : " + str);
+    } else {
+      Debug.log("perft", "ÉCHEC : " + str + ". Expected : " + expected + ", Got : " + total);
+    }
+    loadFEN(previousFen);
+    return success;
+  }
+
+  public long countMoves(int depth, boolean bulk) {
+    if (depth == 0) return 1;
+
+    ArrayList<Move> moves = getLegalMoves();
+    if (bulk && depth == 1) {
+      return moves.size();
+    }
+
+    long count = 0;
+    for (int i = 0; i < moves.size(); i++) {
+      Move move = moves.get(i);
+      make(move);
+      count += countMoves(depth-1, bulk);
+      unmake(move);
+    }
+    return count;
   }
 
   public Board copy() {

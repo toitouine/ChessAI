@@ -40,8 +40,8 @@ public final class Test {
     incertitude = (long)(incertitude / Math.sqrt(itsPerSeconds.size()));
 
     Debug.log("test", "───────────────────");
-    Debug.log("test", "Résultat : " + String.format("%,d", moyenne) + " ± " + String.format("%,d", incertitude) + " itérations par seconde");
-    Debug.log("test", "(environ " + String.format("%,f", 1/(float)moyenne*1000000000L) + " nanosecondes par itération)");
+    Debug.log("test", "Résultat : " + Value.format(moyenne) + " ± " + Value.format(incertitude) + " itérations par seconde");
+    Debug.log("test", "(environ " + Value.format(1/(float)moyenne*1000000000L) + " nanosecondes par itération)");
     Debug.log("test", "");
   }
 
@@ -49,7 +49,7 @@ public final class Test {
   // Renvoie le nombre d'itérations par seconde
   private static long iterations(Callback function, long iterations) {
     Debug.log("test", "───────────────────");
-    Debug.log("test", "Avec " + String.format("%,d", iterations) + " itérations :");
+    Debug.log("test", "Avec " + Value.format(iterations) + " itérations :");
 
     long before = System.nanoTime();
     for (long i = 0; i < iterations; i++) {
@@ -58,8 +58,8 @@ public final class Test {
     long timeNano = System.nanoTime() - before;
 
     long itPerSeconds = 1000000000*iterations/timeNano;
-    Debug.log("test", "Temps : " + String.format("%,f", (float)timeNano/1000000) + " ms");
-    Debug.log("test", "⟶  " + String.format("%,d", itPerSeconds) + " itérations par seconde");
+    Debug.log("test", "Temps : " + Value.format((float)timeNano/1000000) + " ms");
+    Debug.log("test", "⟶  " + Value.format(itPerSeconds) + " itérations par seconde");
     return itPerSeconds;
   }
 
@@ -67,7 +67,7 @@ public final class Test {
   // Renvoie le nombre d'itérations par seconde
   private static long duringTime(Callback function, Time time) {
     Debug.log("test", "───────────────────");
-    Debug.log("test", "En " + time.millis() + " ms :");
+    Debug.log("test", "En " + Value.format(time.millis()) + " ms :");
 
     long count = 0;
 
@@ -82,8 +82,8 @@ public final class Test {
 
     executorService.shutdown();
     long itPerSeconds = 1000*count / time.millis();
-    Debug.log("test", "Itérations : " + String.format("%,d", count));
-    Debug.log("test", "⟶  " + String.format("%,d", itPerSeconds) + " itérations par seconde");
+    Debug.log("test", "Itérations : " + Value.format(count));
+    Debug.log("test", "⟶  " + Value.format(itPerSeconds) + " itérations par seconde");
     return itPerSeconds;
   }
 }

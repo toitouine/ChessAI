@@ -54,10 +54,13 @@ public class Move {
     return value == otherMove.value;
   }
 
+  public String notation() {
+    return BoardUtility.caseName(startSquare()) + BoardUtility.caseName(endSquare());
+  }
+
   @Override
   public String toString() {
-    return BoardUtility.caseName(startSquare()) + BoardUtility.caseName(endSquare())
-           + (flag() != 0 ? "[" + flag() + "]" : "");
+    return notation() + (flag() != 0 ? "[" + flag() + "]" : "");
   }
 }
 

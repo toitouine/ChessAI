@@ -166,7 +166,9 @@ public class MoveGenerator {
   }
 
   // Détecte si la case square est attaquée par une pièce adverse
-  private boolean isAttacked(int square) {
+  // Note : occupancy est en paramètre pour pouvoir regarder si la
+  // case est attaquée ou non sans considérer une pièce bloqueuse
+  private boolean isAttacked(int square, long occupancy) {
     long pawnAttacks = MGData.pawnAttacks(color, square);
     if ((pawnAttacks & opponentPieces[Piece.Pion]) != 0) return true;
 
@@ -177,10 +179,10 @@ public class MoveGenerator {
     if ((kingAttacks & opponentPieces[Piece.Roi]) != 0) return true;
 
     long bishopQueens = opponentPieces[Piece.Dame] | opponentPieces[Piece.Fou];
-    if ((bishopQueens & Magic.getBishopAttacks(square, occupied)) != 0) return true;
+    if ((bishopQueens & Magic.getBishopAttacks(square, occupancy)) != 0) return true;
 
     long rookQueens = opponentPieces[Piece.Dame] | opponentPieces[Piece.Tour];
-    if ((rookQueens & Magic.getRookAttacks(square, occupied)) != 0) return true;
+    if ((rookQueens & Magic.getRookAttacks(square, occupancy)) != 0) return true;
 
     return false;
   }
@@ -283,8 +285,10 @@ public class MoveGenerator {
     long endSquares = attacks & ~allFriendlyPieces;
     while (endSquares != 0) {
       int square = Long.numberOfTrailingZeros(endSquares);
+
       // Ajoute le coup si la case d'arrivée n'est pas attaquée
-      if (!isAttacked(square)) moves.add(new Move(kingSquare, square));
+      long occupancy = occupied & ~friendlyPieces[Piece.Roi];
+      if (!isAttacked(square, occupancy)) moves.add(new Move(kingSquare, square));
       endSquares &= endSquares - 1;
     }
 
@@ -293,14 +297,14 @@ public class MoveGenerator {
 
     if (board.petitRoque(color)) {
       if ((MGData.petitRoquePiecesMask[color] & occupied) == 0) {
-        if (!isAttacked(kingSquare+1) & !isAttacked(kingSquare+2)) {
+        if (!isAttacked(kingSquare+1, occupied) & !isAttacked(kingSquare+2, occupied)) {
           moves.add(new Move(kingSquare, kingSquare+2, MoveFlag.PetitRoque));
         }
       }
     }
     if (board.grandRoque(color)) {
       if ((MGData.grandRoquePiecesMask[color] & occupied) == 0) {
-        if (!isAttacked(kingSquare-1) & !isAttacked(kingSquare-2)) {
+        if (!isAttacked(kingSquare-1, occupied) & !isAttacked(kingSquare-2, occupied)) {
           moves.add(new Move(kingSquare, kingSquare-2, MoveFlag.GrandRoque));
         }
       }
@@ -338,8 +342,9 @@ public class MoveGenerator {
     long empty = ~occupied;
 
     // Avance simple et double des pions, captures
-    long onepush = (pions >>> 8) & empty & legalSquares;
-    long doublepush = ((onepush & Bitboard.rank3) >>> 8) & empty & legalSquares;
+    long single = (pions >>> 8) & empty;
+    long onepush = single & legalSquares;
+    long doublepush = ((single & Bitboard.rank3) >>> 8) & empty & legalSquares;
     long captureLeft = ((~Bitboard.Afile & pions) >>> 9) & allOpponentPieces & legalSquares;
     long captureRight = ((~Bitboard.Hfile & pions) >>> 7) & allOpponentPieces & legalSquares;
 
@@ -402,31 +407,35 @@ public class MoveGenerator {
     if (board.enPassantSquare[opponent] == null) return;
 
     int caseEnPassant = board.enPassantSquare[opponent];
-    if (((1L << caseEnPassant) & legalSquares) == 0) return;
+    long victimBitboard = 1L << (caseEnPassant + 8);
+    long enPassantBitboard = 1L << caseEnPassant;
+    if ((enPassantBitboard & legalSquares) == 0 && victimBitboard != legalSquares) {
+      // Dans ces cas-là, en passant est illégal
+      return;
+    }
 
     long mangeurs = pions & MGData.pawnAttacks(opponent, caseEnPassant);
     while (mangeurs != 0) {
       int startSquare = Long.numberOfTrailingZeros(mangeurs);
 
-      // On doit tester si le pion est cloué normalement ou horizontalement de manière spéciale
+      // On teste si le pion est cloué normalement
       if (((1L << startSquare) & pinned) != 0) {
-        long possibleSquares = MGData.ray(kingSquare, startSquare);
-        if ((possibleSquares & (1L << caseEnPassant)) == 0) {
-          mangeurs &= mangeurs - 1;
-          continue;
-        }
-      }
-      long ennemySliders = opponentPieces[Piece.Tour] | opponentPieces[Piece.Dame];
-      long kingBitboard = friendlyPieces[Piece.Roi];
-      if ((Bitboard.rank5 & kingBitboard) != 0 && (Bitboard.rank5 & ennemySliders) != 0) {
-        long twoPawns = (1L << startSquare) | (1L << (caseEnPassant + 8));
-        long ray = MGData.ray(kingSquare, startSquare);
-        if ((ray & ~twoPawns & ~ennemySliders & occupied) == 0) {
+        if ((enPassantBitboard & (MGData.ray(kingSquare, startSquare))) == 0) {
           mangeurs &= mangeurs - 1;
           continue;
         }
       }
 
+      // On teste si le pion est cloué horizontalement
+      long ennemySliders = opponentPieces[Piece.Tour] | opponentPieces[Piece.Dame];
+      long twoPawns = (1L << startSquare) | victimBitboard;
+      long preview = (occupied & ~twoPawns) | enPassantBitboard;
+      long orthoThreats = Magic.getRookAttacks(kingSquare, preview);
+      if ((orthoThreats & ennemySliders) != 0) {
+        // Le coup est impossible à cause d'un clouage horizontal
+        mangeurs &= mangeurs - 1;
+        continue;
+      }
       moves.add(new Move(startSquare, caseEnPassant, MoveFlag.EnPassant));
       mangeurs &= mangeurs - 1;
     }
@@ -438,8 +447,9 @@ public class MoveGenerator {
     long empty = ~occupied;
 
     // Avance simple et double des pions, captures
-    long onepush = (pions << 8) & empty & legalSquares;
-    long doublepush = ((onepush & Bitboard.rank6) << 8) & empty & legalSquares;
+    long single = (pions << 8) & empty;
+    long onepush = single & legalSquares;
+    long doublepush = ((single & Bitboard.rank6) << 8) & empty & legalSquares;
     long captureLeft = ((~Bitboard.Afile & pions) << 7) & allOpponentPieces & legalSquares;
     long captureRight = ((~Bitboard.Hfile & pions) << 9) & allOpponentPieces & legalSquares;
 
@@ -502,31 +512,35 @@ public class MoveGenerator {
     if (board.enPassantSquare[opponent] == null) return;
 
     int caseEnPassant = board.enPassantSquare[opponent];
-    if (((1L << caseEnPassant) & legalSquares) == 0) return;
+    long victimBitboard = 1L << (caseEnPassant - 8);
+    long enPassantBitboard = 1L << caseEnPassant;
+    if ((enPassantBitboard & legalSquares) == 0 && victimBitboard != legalSquares) {
+      // Dans ces cas-là, en passant est illégal
+      return;
+    }
 
     long mangeurs = pions & MGData.pawnAttacks(opponent, caseEnPassant);
     while (mangeurs != 0) {
       int startSquare = Long.numberOfTrailingZeros(mangeurs);
 
-      // On doit tester si le pion est cloué normalement ou horizontalement de manière spéciale
+      // On teste si le pion est cloué normalement
       if (((1L << startSquare) & pinned) != 0) {
-        long possibleSquares = MGData.ray(kingSquare, startSquare);
-        if ((possibleSquares & (1L << caseEnPassant)) == 0) {
-          mangeurs &= mangeurs - 1;
-          continue;
-        }
-      }
-      long ennemySliders = opponentPieces[Piece.Tour] | opponentPieces[Piece.Dame];
-      long kingBitboard = friendlyPieces[Piece.Roi];
-      if ((Bitboard.rank4 & kingBitboard) != 0 && (Bitboard.rank4 & ennemySliders) != 0) {
-        long twoPawns = (1L << startSquare) | (1L << (caseEnPassant - 8));
-        long ray = MGData.ray(kingSquare, startSquare);
-        if ((ray & ~twoPawns & ~ennemySliders & occupied) == 0) {
+        if ((enPassantBitboard & (MGData.ray(kingSquare, startSquare))) == 0) {
           mangeurs &= mangeurs - 1;
           continue;
         }
       }
 
+      // On teste si le pion est cloué horizontalement
+      long ennemySliders = opponentPieces[Piece.Tour] | opponentPieces[Piece.Dame];
+      long twoPawns = (1L << startSquare) | victimBitboard;
+      long preview = (occupied & ~twoPawns) | enPassantBitboard;
+      long orthoThreats = Magic.getRookAttacks(kingSquare, preview);
+      if ((orthoThreats & ennemySliders) != 0) {
+        // Le coup est impossible à cause d'un clouage horizontal
+        mangeurs &= mangeurs - 1;
+        continue;
+      }
       moves.add(new Move(startSquare, caseEnPassant, MoveFlag.EnPassant));
       mangeurs &= mangeurs - 1;
     }
