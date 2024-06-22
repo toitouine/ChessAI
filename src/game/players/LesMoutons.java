@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+
 public class LesMoutons extends Player {
 
   public LesMoutons(SearchSettings settings) {
@@ -9,6 +11,13 @@ public class LesMoutons extends Player {
     ouvertureNumber = 5;
     isBot = true;
     this.settings = settings;
+  }
+
+  @Override
+  public Move play(Board board) {
+    ArrayList<Move> moves = board.getLegalMoves();
+    int index = (int)(Math.random() * moves.size());
+    return moves.get(index);
   }
 
 }

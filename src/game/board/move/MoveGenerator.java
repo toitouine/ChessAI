@@ -42,8 +42,9 @@
 /////////////////////////////////////////////////////////////////
 
 import java.util.ArrayList;
+import java.io.Serializable;
 
-public class MoveGenerator {
+public class MoveGenerator implements Serializable {
 
   // Plateau sur lequel générer les coups
   private final Board board;
@@ -168,7 +169,7 @@ public class MoveGenerator {
   // Détecte si la case square est attaquée par une pièce adverse
   // Note : occupancy est en paramètre pour pouvoir regarder si la
   // case est attaquée ou non sans considérer une pièce bloqueuse
-  private boolean isAttacked(int square, long occupancy) {
+  public boolean isAttacked(int square, long occupancy) {
     long pawnAttacks = MGData.pawnAttacks(color, square);
     if ((pawnAttacks & opponentPieces[Piece.Pion]) != 0) return true;
 

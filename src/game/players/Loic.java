@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+
 public class Loic extends Player {
 
   public Loic(SearchSettings settings) {
@@ -9,6 +11,13 @@ public class Loic extends Player {
     ouvertureNumber = 0;
     isBot = true;
     this.settings = settings;
+  }
+
+  @Override
+  public Move play(Board board) {
+    ArrayList<Move> moves = board.getLegalMoves();
+    int index = (int)(Math.random() * moves.size());
+    return moves.get(index);
   }
 
 }

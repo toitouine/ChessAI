@@ -4,17 +4,10 @@ import processing.awt.PSurfaceAWT;
 import java.awt.Frame;
 import java.awt.Rectangle;
 import java.awt.GraphicsDevice;
-import java.util.HashMap;
-
-enum SceneIndex {
-  Menu,
-  Game,
-  Editor
-}
+import java.util.ArrayList;
 
 public abstract class SApplet extends PApplet {
 
-  private HashMap<SceneIndex, Scene> scenes = new HashMap<SceneIndex, Scene>();
   private Scene currentScene;
 
   abstract public void setup();
@@ -28,17 +21,7 @@ public abstract class SApplet extends PApplet {
     currentScene.show();
   }
 
-  final protected void register(Scene scene, SceneIndex index) {
-    scenes.put(index, scene);
-  }
-
-  final public void setScene(SceneIndex index) {
-    Scene scene = scenes.get(index);
-    if (scene == null) {
-      Debug.error("Scène demandée introuvable (SceneIndex " + index + "). Annulation du changement de scène.");
-      return;
-    }
-
+  final public void setScene(Scene scene) {
     currentScene = scene;
     currentScene.awake();
   }

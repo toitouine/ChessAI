@@ -22,4 +22,8 @@ public class Timer {
 
     return min + ":" + sec;
   }
+
+  public Timer copy() {
+    return new Timer(time.copy(), increment.copy());
+  }
 }

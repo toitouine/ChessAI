@@ -1,23 +1,31 @@
 public class SearchSettings {
+  public final Search type;
+  public final Time time;
+  public final int depth;
 
-  public Search type;
-  public Time time;
-  public int depth;
-
-  public SearchSettings(Search type, Time time) {
-    if (type != Search.Iterative) {
-      Debug.error("Paramètres de recherche : type de recherche non itérative mais temps fourni");
-    }
-    this.type = type;
-    this.time = time;
+  private SearchSettings(Time t) {
+    type = Search.Iterative;
+    time = t;
+    depth = 0;
   }
 
-  public SearchSettings(Search type, int depth) {
-    if (type != Search.Fixed) {
-      Debug.error("Paramètres de recherche : type de recherche non fixe mais profondeur fournie");
-    }
-    this.type = type;
-    this.depth = depth;
+  private SearchSettings(int d) {
+    type = Search.Fixed;
+    depth = d;
+    time = null;
+  }
+
+  public static SearchSettings FixedSearch(int depth) {
+    return new SearchSettings(depth);
+  }
+
+  public static SearchSettings IterativeSearch(Time time) {
+    return new SearchSettings(time);
+  }
+
+  public SearchSettings copy() {
+    if (type == Search.Fixed) return new SearchSettings(depth);
+    else return new SearchSettings(time);
   }
 }
 

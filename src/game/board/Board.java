@@ -38,7 +38,6 @@ public final class Board implements Serializable {
   private int[] rois = {-1, -1}; // Accès rapide à la case des rois de la partie
 
   // Bitboards (1 si il y a une pièce, 0 si il n'y en a pas)
-  // Associe chaque index de case (0 - 63) à un bit (0 pour 2^0, 1 pour 2^1, n pour 2^n)
   public long[] colorBitboard; // Bitboard pour chaque couleur (blanc puis noir)
   public long[] pieceBitboard; // Bitboard pour chaque index de pièce (voir piece.index)
 
@@ -118,6 +117,11 @@ public final class Board implements Serializable {
   public void enableGrandRoque(int color) {
     int shift = (color == Player.White ? 2 : 0);
     castleState |= 1 << shift;
+  }
+
+  // Renvoie le bitboard des pièces (noires et blanches) d'un certain type
+  public long getPieces(int type) {
+    return pieceBitboard[type] | pieceBitboard[type + Piece.Number];
   }
 
   /////////////////////////////////////////////////////////////////
@@ -387,6 +391,14 @@ public final class Board implements Serializable {
     return getLegalMoves(tourDeQui);
   }
 
+  // Renvoie si le joueur dont c'est le tour est en échec ou non
+  public boolean inCheck() {
+    long occupancy = colorBitboard[Player.White] | colorBitboard[Player.Black];
+    return generator.isAttacked(rois[tourDeQui], occupancy);
+  }
+
+  /////////////////////////////////////////////////////////////////
+
   public long perft(int depth) {
     return perft(depth, true, true);
   }
@@ -459,6 +471,8 @@ public final class Board implements Serializable {
     }
     return count;
   }
+
+  /////////////////////////////////////////////////////////////////
 
   public Board copy() {
     try {

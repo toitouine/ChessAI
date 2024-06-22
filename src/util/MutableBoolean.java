@@ -1,4 +1,4 @@
-public final class MutableBoolean {
+public class MutableBoolean {
   private boolean value;
 
   public MutableBoolean(boolean value) {
@@ -20,5 +20,24 @@ public final class MutableBoolean {
   @Override
   public String toString() {
     return getClass().getName() + "[" + value + "]";
+  }
+}
+
+// Variable booléenne synchronisée entre plusieurs threads
+class SyncBoolean extends MutableBoolean {
+  public SyncBoolean(boolean value) {
+    super(value);
+  }
+
+  @Override
+  public synchronized void set(boolean value) {
+    super.set(value);
+    notify();
+  }
+
+  @Override
+  public synchronized void toggle() {
+    super.toggle();
+    notify();
   }
 }

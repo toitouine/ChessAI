@@ -48,18 +48,19 @@ public class MenuScene extends Scene<MainApplet> {
   private void startGame() {
     SearchSettings s1, s2;
     s1 = (showWhiteID.get()
-           ? new SearchSettings(Search.Iterative, Time.fromMillis(whiteIDSlider.getValue()))
-           : new SearchSettings(Search.Fixed, whiteFixSlider.getValue()));
+           ? SearchSettings.IterativeSearch(Time.fromMillis(whiteIDSlider.getValue()))
+           : SearchSettings.FixedSearch(whiteFixSlider.getValue()));
     s2 = (showBlackID.get()
-           ? new SearchSettings(Search.Iterative, Time.fromMillis(blackIDSlider.getValue()))
-           : new SearchSettings(Search.Fixed, blackFixSlider.getValue()));
+           ? SearchSettings.IterativeSearch(Time.fromMillis(blackIDSlider.getValue()))
+           : SearchSettings.FixedSearch(blackFixSlider.getValue()));
 
     Player p1 = Player.create(whiteSelector.getValue(), s1);
     Player p2 = Player.create(blackSelector.getValue(), s2);
     Timer t1 = new Timer(whiteTime.getTime(), whiteTime.getIncrement());
     Timer t2 = new Timer(blackTime.getTime(), blackTime.getIncrement());
 
-    sketch.startDisplayGame(p1, p2, startFEN, t1, t2, useHacker);
+    Game game = new Game(p1, p2, startFEN, t1, t2, useHacker);
+    sketch.startDisplayGame(game);
   }
 
   private void init() {

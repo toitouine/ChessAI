@@ -29,24 +29,16 @@ public final class Debug {
     disableLogs = Config.General.disableLogs;
   }
 
-  public static void println(Object... logs) {
-    if (disableLogs) return;
-    for (int i = 0; i < logs.length; i++) {
-      System.out.print(logs[i] + (i == logs.length-1 ? "" : " " ) );
-    }
-    System.out.println();
-  }
-
   public static void error(Object message) {
     log("erreur", message);
   }
 
-  public static void log(Object... logs) {
-    println(logs);
-  }
-
   public static void log(Object message) {
     log("", message);
+  }
+
+  public static void log() {
+    log("", "");
   }
 
   public static void log(String tag, Object message) {

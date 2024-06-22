@@ -13,25 +13,20 @@ public class GameScene extends Scene<MainApplet> {
   private MutableBoolean attach = new MutableBoolean(true);
   private MutableBoolean isWhitePov = new MutableBoolean(true);
   private MutableBoolean showVariante = new MutableBoolean(false); // TODO
-  private MutableBoolean play = new MutableBoolean(true); // TODO
   private BoardDisplay boardDisplay;
   private Player white, black;
   private PImage whiteImage, blackImage;
   private PImage errorImage;
 
-  private Game game;
+  private final Game game;
 
-  public GameScene(MainApplet sketch, int width, int height) {
+  public GameScene(MainApplet sketch, Game g, int width, int height) {
     super(sketch, width, height);
+    game = g;
     init();
   }
 
   protected void setup() {
-    if (game == null) {
-      Debug.error("Scène de partie activée mais aucune partie fournie");
-      return;
-    }
-
     Debug.log("ui", "Nouvelle scène : Partie");
     PSurface surface = sketch.getSurface();
     sketch.setTitle(game.getWhite().pseudo + " contre " + game.getBlack().pseudo);
@@ -49,12 +44,6 @@ public class GameScene extends Scene<MainApplet> {
 
   protected void draw() {
     sketch.background(49, 46, 43);
-
-    if (game == null) {
-      sketch.imageMode(sketch.CENTER);
-      sketch.image(errorImage, width - 4*w, height-4*w, 8*w, 8*w);
-      return;
-    }
 
     int pov = (isWhitePov.get() ? Player.White : Player.Black);
 
@@ -98,26 +87,22 @@ public class GameScene extends Scene<MainApplet> {
       sketch.textSize(23*w/70);
       sketch.noStroke();
 
-      if (!game.paused && game.board.tourDeQui == Player.White) sketch.fill(255);
+      if (!game.paused.get() && game.board.tourDeQui == Player.White) sketch.fill(255);
       else sketch.fill(rgb(152, 151, 149));
       sketch.rect(offsetX/2, whiteTimeY, offsetX/1.15f, 45*w/70, 4);
 
-      if (!game.paused && game.board.tourDeQui == Player.White) sketch.fill(rgb(38, 33, 27));
+      if (!game.paused.get() && game.board.tourDeQui == Player.White) sketch.fill(rgb(38, 33, 27));
       else sketch.fill(rgb(97, 94, 91));
       sketch.text(game.timers[Player.White].formattedTime(), offsetX/2, whiteTimeY);
 
-      if (!game.paused && game.board.tourDeQui == Player.Black) sketch.fill(rgb(38, 33, 27));
+      if (!game.paused.get() && game.board.tourDeQui == Player.Black) sketch.fill(rgb(38, 33, 27));
       else sketch.fill(rgb(43, 39, 34));
       sketch.rect(offsetX/2, blackTimeY, offsetX/1.15f, 45*w/70, 4);
 
-      if (!game.paused && game.board.tourDeQui == Player.Black) sketch.fill(rgb(255, 255, 255));
+      if (!game.paused.get() && game.board.tourDeQui == Player.Black) sketch.fill(rgb(255, 255, 255));
       else sketch.fill(rgb(130, 128, 126));
       sketch.text(game.timers[Player.Black].formattedTime(), offsetX/2, blackTimeY);
     }
-  }
-
-  public void setGame(Game g) {
-    game = g;
   }
 
   private void toggleAttach() {
@@ -129,6 +114,17 @@ public class GameScene extends Scene<MainApplet> {
   private void flipPov() {
     isWhitePov.toggle();
     boardDisplay.setPov(isWhitePov.get() ? Player.White : Player.Black);
+  }
+
+  private void revanche() {
+    game.end();
+    Game newGame = game.copy();
+    sketch.startDisplayGame(newGame);
+  }
+
+  private void quit() {
+    game.end();
+    sketch.goToMenu();
   }
 
   private void init() {
@@ -143,8 +139,8 @@ public class GameScene extends Scene<MainApplet> {
 
     addShortcut("kK", this::flipPov);
     addShortcut("lL", this::toggleAttach);
-    addShortcut('Q', sketch::goToMenu);
-    addShortcut(' ', () -> play.toggle() );
+    addShortcut('Q', this::quit);
+    addShortcut(' ', () -> game.paused.toggle() );
     addShortcut("fF", () -> Debug.log(game.board) );
     addShortcut("vV", () -> showVariante.toggle() );
     // TODO
@@ -193,15 +189,15 @@ public class GameScene extends Scene<MainApplet> {
         .setAction(this::flipPov)
         .linkTo(isWhitePov),
 
-      new ImageToggle(sketch, calcX.apply(7), offsetY/2, iconSize, iconSize, "data/icons/pause.png", "data/icons/play.png")
+      new ImageToggle(sketch, calcX.apply(7), offsetY/2, iconSize, iconSize, "data/icons/play.png", "data/icons/pause.png")
         .setState(true)
-        .linkTo(play),
+        .linkTo(game.paused),
 
       new ImageButton(sketch, calcX.apply(8), offsetY/2, iconSize, iconSize, "data/icons/computer.png")
         .setAction( () -> Debug.log("todo", "Afficher Search Controller / Stats displayer (?)") ),
 
       new ImageButton(sketch, calcX.apply(9), offsetY/2, iconSize, iconSize, "data/icons/quit.png")
-        .setAction(sketch::goToMenu)
+        .setAction(this::quit)
     );
   }
 
@@ -222,39 +218,39 @@ public class GameScene extends Scene<MainApplet> {
         .setFullSize(false)
         .setArrondi(10)
         .setAction( () -> Debug.log("todo", "Abandon blanc") )
-        .setCondition( () -> !game.useHacker && !game.gameEnded && !white.isBot )
+        .setCondition( () -> !game.useHacker && !game.ended && !white.isBot )
         .setMovablePosition(() -> space + buttonSize/2f, whiteYPos),
 
       new ImageButton(sketch, 0, 0, buttonSize, buttonSize, "data/icons/helpMove.png")
         .setFullSize(false)
         .setArrondi(10)
         .setAction( () -> Debug.log("todo", "Aide blanc") )
-        .setCondition( () -> !game.useHacker && !game.gameEnded && !white.isBot )
+        .setCondition( () -> !game.useHacker && !game.ended && !white.isBot )
         .setMovablePosition(() -> space*2 + 3*buttonSize/2f, whiteYPos),
 
       new ImageButton(sketch, 0, 0, buttonSize, buttonSize, "data/icons/resign.png")
         .setFullSize(false)
         .setArrondi(10)
         .setAction( () -> Debug.log("todo", "Abandon noir") )
-        .setCondition( () -> !game.useHacker && !game.gameEnded && !black.isBot )
+        .setCondition( () -> !game.useHacker && !game.ended && !black.isBot )
         .setMovablePosition(() -> space + buttonSize/2f, blackYPos),
 
       new ImageButton(sketch, 0, 0, buttonSize, buttonSize, "data/icons/helpMove.png")
         .setFullSize(false)
         .setArrondi(10)
         .setAction( () -> Debug.log("todo", "Aide noir") )
-        .setCondition( () -> !game.useHacker && !game.gameEnded && !black.isBot )
+        .setCondition( () -> !game.useHacker && !game.ended && !black.isBot )
         .setMovablePosition(() -> space*2 + 3*buttonSize/2f, blackYPos),
 
       new TextButton(sketch, offsetX/2, offsetY + 4*w - 16*w/70, "Revanche", 15 * w/70, 3)
         .setDimensions(79 * w / 70, 26 * w / 70)
-        .setAction( () -> Debug.log("todo", "Revanche") )
-        .setCondition( () -> game.gameEnded && !game.useHacker ),
+        .setAction(this::revanche)
+        .setCondition( () -> game.ended && !game.useHacker ),
 
       new TextButton(sketch, offsetX/2, offsetY + 4*w + 16*w/70, "Menu", 15 * w/70, 3)
         .setDimensions(79 * w / 70, 26 * w / 70)
-        .setAction( () -> Debug.log("todo", "Menu") )
-        .setCondition( () -> game.gameEnded && !game.useHacker )
+        .setAction(this::quit)
+        .setCondition( () -> game.ended && !game.useHacker )
     );
   }
 }
