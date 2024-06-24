@@ -15,11 +15,11 @@ public class SearchSettings {
     time = null;
   }
 
-  public static SearchSettings FixedSearch(int depth) {
+  public static SearchSettings Fixed(int depth) {
     return new SearchSettings(depth);
   }
 
-  public static SearchSettings IterativeSearch(Time time) {
+  public static SearchSettings Iterative(Time time) {
     return new SearchSettings(time);
   }
 

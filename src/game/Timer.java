@@ -7,6 +7,10 @@ public class Timer {
     this.increment = increment.copy();
   }
 
+  public static Timer fromMillis(long timeMs, long incMs) {
+    return new Timer(Time.fromMillis(timeMs), Time.fromMillis(incMs));
+  }
+
   public Time getTime() {
     return time;
   }

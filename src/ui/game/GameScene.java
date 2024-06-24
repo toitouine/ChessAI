@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-public class GameScene extends Scene<MainApplet> {
+public class GameScene extends Scene<MainApplet> implements GameDisplayer {
 
   private int w = Config.UI.caseWidth;
   private float offsetX = Config.UI.offsetX;
@@ -16,34 +16,52 @@ public class GameScene extends Scene<MainApplet> {
   private BoardDisplay boardDisplay;
   private Player white, black;
   private PImage whiteImage, blackImage;
-  private PImage errorImage;
 
-  private final Game game;
+  private Game game;
 
-  public GameScene(MainApplet sketch, Game g, int width, int height) {
+  public GameScene(MainApplet sketch, int width, int height) {
     super(sketch, width, height);
+  }
+
+  @Override
+  public void setGame(Game g) {
     game = g;
     init();
+  }
+
+  @Override
+  public void onGameStart() {
+  }
+
+  @Override
+  public void onGameEnd() {
+  }
+
+  @Override
+  public void onMovePlayed(Move move) {
   }
 
   protected void setup() {
     Debug.log("ui", "Nouvelle scène : Partie");
     PSurface surface = sketch.getSurface();
-    sketch.setTitle(game.getWhite().pseudo + " contre " + game.getBlack().pseudo);
+    if (game != null) sketch.setTitle(game.getWhite().pseudo + " contre " + game.getBlack().pseudo);
+    else sketch.setTitle("Scène de partie");
     java.awt.Rectangle bounds = sketch.getScreenBounds();
     surface.setLocation(bounds.x + bounds.width-width, bounds.y);
     surface.setAlwaysOnTop(attach.get());
     surface.setVisible(true);
-
-    white = game.getWhite();
-    black = game.getBlack();
-    whiteImage = sketch.loadImage("data/joueurs/" + white.name.toLowerCase() + "Img.jpg");
-    blackImage = sketch.loadImage("data/joueurs/" + black.name.toLowerCase() + "Img.jpg");
-    boardDisplay.setBoard(game.board);
   }
 
   protected void draw() {
     sketch.background(49, 46, 43);
+
+    if (game == null) {
+      sketch.textSize(35);
+      sketch.fill(255);
+      sketch.textAlign(sketch.CENTER, sketch.CENTER);
+      sketch.text("En attente d'une partie", width/2, height/2);
+      return;
+    }
 
     int pov = (isWhitePov.get() ? Player.White : Player.Black);
 
@@ -129,10 +147,14 @@ public class GameScene extends Scene<MainApplet> {
 
   private void init() {
     controllers.clear();
-
-    errorImage = sketch.loadImage("data/icons/notfound.png");
     boardDisplay = new BoardDisplay(sketch, offsetX + 4*w, offsetY + 4*w, w);
     controllers.add(boardDisplay);
+
+    white = game.getWhite();
+    black = game.getBlack();
+    whiteImage = sketch.loadImage("data/joueurs/" + white.name.toLowerCase() + "Img.jpg");
+    blackImage = sketch.loadImage("data/joueurs/" + black.name.toLowerCase() + "Img.jpg");
+    boardDisplay.setBoard(game.board);
 
     addUpControllers();
     addLeftControllers();

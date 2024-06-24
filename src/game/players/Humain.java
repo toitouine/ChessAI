@@ -16,7 +16,7 @@ public class Humain extends Player {
   @Override
   public Move play(Board board) {
     try {
-      Thread.sleep(10);
+      Thread.sleep(1);
     } catch (Exception e) {
     }
 

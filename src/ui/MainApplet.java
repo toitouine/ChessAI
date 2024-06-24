@@ -1,16 +1,17 @@
 final public class MainApplet extends SApplet {
   private MenuScene menuScene;
+  private GameScene gameScene;
   private EditorScene editorScene;
-  private int boardWindowWidth, boardWindowHeight;
 
   public void setup() {
     textFont(createFont("data/fonts/LucidaSans.ttf", 12));
     printStartMessage();
 
-    boardWindowWidth = Math.round(Config.UI.offsetX + 8*Config.UI.caseWidth);
-    boardWindowHeight = Math.round(Config.UI.offsetY + 8*Config.UI.caseWidth);
+    int boardWindowWidth = Math.round(Config.UI.offsetX + 8*Config.UI.caseWidth);
+    int boardWindowHeight = Math.round(Config.UI.offsetY + 8*Config.UI.caseWidth);
 
     menuScene = new MenuScene(this, 1100, 460);
+    gameScene = new GameScene(this, boardWindowWidth, boardWindowHeight);
     editorScene = new EditorScene(this, boardWindowWidth, boardWindowHeight);
     setScene(menuScene);
   }
@@ -24,10 +25,12 @@ final public class MainApplet extends SApplet {
   }
 
   public void startDisplayGame(Game game) {
-    GameManager gm = GameManager.getInstance();
-    gm.addGame(game);
-    GameScene gs = new GameScene(this, game, boardWindowWidth, boardWindowHeight);
-    setScene(gs);
+    GameManager.addGame(game);
+    setScene(gameScene);
+  }
+
+  public GameDisplayer getGameDisplayer() {
+    return gameScene;
   }
 
   public static void printStartMessage() {

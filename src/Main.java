@@ -24,7 +24,6 @@ import processing.core.PApplet;
 public class Main {
   public static void main(String[] args) {
     // Initialisation
-    GameManager gameManager = GameManager.getInstance();
     MainApplet mainApplet = new MainApplet();
 
     // Démarre l'applet principal
