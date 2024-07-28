@@ -3,14 +3,22 @@ import java.util.ArrayList;
 public class LeMaire extends Player {
 
   public LeMaire(SearchSettings settings) {
-    name = "LeMaire";
-    pseudo = "LeMaire";
-    elo = "3845";
-    title = "GM";
-    victoryTitle = "Cmaire";
-    ouvertureNumber = 10;
-    isBot = true;
-    this.settings = settings;
+    super(settings);
+  }
+
+  @Override
+  public String elo() {
+    return "3845";
+  }
+
+  @Override
+  public String victoryTitle() {
+    return "Cmaire";
+  }
+
+  @Override
+  public boolean isBot() {
+    return true;
   }
 
   @Override

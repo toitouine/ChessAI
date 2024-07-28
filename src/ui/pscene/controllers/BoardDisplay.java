@@ -1,5 +1,7 @@
 import java.util.HashMap;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 import processing.core.PImage;
 import processing.core.PShape;
 
@@ -10,12 +12,19 @@ public class BoardDisplay extends Controller<BoardDisplay> {
   private int pov = Player.White;
   private HashMap<Integer, PImage> imgs;
 
+  // Dessin sur le plateau
+  private Integer lastSquareRightClicked = null;
+  private Arrow drawingArrow = null;
   private ArrayList<Integer> rouges = new ArrayList<Integer>();
   private ArrayList<Integer> jaunes = new ArrayList<Integer>();
   private ArrayList<Arrow> arrows = new ArrayList<Arrow>();
 
-  private Integer lastSquareRightClicked = null;
-  private Arrow drawingArrow = null;
+  // Sélection d'un coup
+  private Integer squareSelected = null;
+  private Move moveSelected = null;
+  private boolean dragging = false;
+  private SyncBoolean askingMove = new SyncBoolean(false);
+  private ArrayList<Move> possibleMoves = new ArrayList<Move>();
 
   public BoardDisplay(SApplet sketch, float x, float y, int caseWidth) {
     this.sketch = sketch;
@@ -37,8 +46,27 @@ public class BoardDisplay extends Controller<BoardDisplay> {
     pov = p;
   }
 
-  public void addArrow(Arrow arrow) {
-    arrows.add(arrow);
+  public Move getMove() {
+    moveSelected = null;
+    squareSelected = null;
+    dragging = false;
+    possibleMoves.clear();
+    askingMove.set(true);
+    synchronized (askingMove) {
+      try {
+        while (askingMove.get()) askingMove.wait();
+        deselectAll();
+        return moveSelected;
+      } catch (Exception e) {
+        Debug.error("Erreur pendant la récupération du coup d'un humain.");
+        deselectAll();
+        return board.getLegalMoves().get(0);
+      }
+    }
+  }
+
+  public void stopAskMove() {
+    askingMove.set(false);
   }
 
   public void show() {
@@ -49,14 +77,15 @@ public class BoardDisplay extends Controller<BoardDisplay> {
 
     sketch.rectMode(sketch.CORNER);
     sketch.imageMode(sketch.CENTER);
-    sketch.noStroke();
 
     // Affiche le plateau et les pièces
     for (int i = 0; i < 8; i++) {
       for (int j = 0; j < 8; j++) {
+        sketch.noStroke();
         if ((i+j) % 2 == 0) sketch.fill(rgb(240, 217, 181)); // Case blanche
         else sketch.fill(rgb(181, 136, 99)); // Case noire
 
+        int square = 8*i + j;
         float casex, casey;
         if (pov == Player.White) {
           casex = j * caseWidth;
@@ -68,17 +97,36 @@ public class BoardDisplay extends Controller<BoardDisplay> {
 
         sketch.rect(casex, casey, caseWidth, caseWidth);
 
-        if (rouges.contains(8*i+j)) {
+        if (rouges.contains(square)) {
           sketch.fill(224, 76, 56, 230);
           sketch.rect(casex, casey, caseWidth, caseWidth);
         }
-        else if (jaunes.contains(8*i+j)) {
+        else if (jaunes.contains(square)) {
           sketch.fill(235, 214, 35, 230);
           sketch.rect(casex, casey, caseWidth, caseWidth);
         }
+        else if (squareSelected != null && squareSelected == square) {
+          sketch.fill(189, 186, 34, 100);
+          sketch.rect(casex, casey, caseWidth, caseWidth);
+        }
 
-        if (board.grid(i, j) != null) {
-          sketch.image(imgs.get(board.grid(i, j).index), casex+caseWidth/2, casey+caseWidth/2, caseWidth, caseWidth);
+        Move move = getMoveFromTarget(square);
+        if (move != null && move.endSquare() == square) {
+          int w = caseWidth;
+          if (board.grid(i, j) == null) {
+            sketch.fill(75, 75, 75, 100);
+            sketch.ellipse(casex + w/2, casey + w/2, w/4, w/4);
+          } else {
+            sketch.noFill();
+            sketch.stroke(75, 75, 75, 100);
+            sketch.strokeWeight(w/16);
+            sketch.ellipse(casex + w/2, casey + w/2, w - w/16, w - w/16);
+          }
+        }
+
+        if (dragging && square == squareSelected) continue;
+        if (board.grid(square) != null) {
+          sketch.image(imgs.get(board.grid(square).index), casex+caseWidth/2, casey+caseWidth/2, caseWidth, caseWidth);
         }
       }
     }
@@ -86,6 +134,10 @@ public class BoardDisplay extends Controller<BoardDisplay> {
     sketch.pop();
 
     for (Arrow arrow : arrows) arrow.show();
+    if (dragging) {
+      PImage img = imgs.get(board.grid(squareSelected).index);
+      sketch.image(img, sketch.mouseX, sketch.mouseY, caseWidth, caseWidth);
+    }
   }
 
   private void toggleYellow(Integer s) {
@@ -111,12 +163,19 @@ public class BoardDisplay extends Controller<BoardDisplay> {
   }
 
   public void onUserEvent(UserEvent e) {
-    if (board == null) return;
+    // S'assure que le plateau est bien concerné
+    if (e.keyPressed() || board == null) return;
     if (!contains(e.x, e.y)) {
-      if (e.mouseReleased()) lastSquareRightClicked = null;
+      if (e.mouseReleased()) {
+        lastSquareRightClicked = null;
+        squareSelected = null;
+        dragging = false;
+        possibleMoves.clear();
+      }
       return;
     }
 
+    // Récupère la case et la pièce concernée
     int i = getGridLine(e.x, e.y);
     int j = getGridColumn(e.x, e.y);
     if (i < 0 || i > 7 || j < 0 || j > 7) return;
@@ -124,33 +183,57 @@ public class BoardDisplay extends Controller<BoardDisplay> {
     int square = 8*i + j;
     Piece piece = board.grid(square);
 
-    if (e.mouseMoved()) {
-      if (piece != null && board.tourDeQui == piece.color) sketch.cursor(sketch.HAND);
+    // Si la souris bouge, actualise le curseur
+    if (e.mouseMoved() && askingMove.get()) {
+      if (piece != null && piece.color == board.tourDeQui) sketch.cursor(sketch.HAND);
       else sketch.cursor(sketch.ARROW);
     }
+
+    // Dans le cas d'un clic, sélectionne une pièce ou déselectionne
     else if (e.mousePressed()) {
       if (sketch.mouseButton == sketch.LEFT) {
-        if (piece == null || piece.color != board.tourDeQui) deselectAll();
+        if (squareSelected == null && (piece == null || piece.color != board.tourDeQui)) {
+          deselectAll();
+        }
+        else if (askingMove.get()) {
+          if (piece != null && piece.color == board.tourDeQui) {
+            squareSelected = square;
+            possibleMoves = getMoves(squareSelected);
+          } else {
+            tryGetMove(square);
+          }
+        }
       }
       else if (sketch.mouseButton == sketch.RIGHT) {
         lastSquareRightClicked = square;
       }
     }
-    else if (e.mouseDragged()) {
-      if (lastSquareRightClicked == null || sketch.mouseButton != sketch.RIGHT) return;
 
-      if (drawingArrow == null) drawingArrow = new Arrow(i, j, i, j);
-      if (lastSquareRightClicked != square) {
-        if (drawingArrow.i+drawingArrow.deltaI != i || drawingArrow.j+drawingArrow.deltaJ != j) {
-          Arrow arr = new Arrow(lastSquareRightClicked/8, lastSquareRightClicked%8, i, j);
-          arrows.remove(drawingArrow);
-          arrows.add(arr);
-          drawingArrow = arr;
+    // Si la souris glisse, fait glisser une pièce (et curseur) TODO ou dessine une flèche
+    else if (e.mouseDragged()) {
+      if (sketch.mouseButton == sketch.LEFT && squareSelected != null) {
+        if (!dragging) dragging = true;
+      }
+      else if (lastSquareRightClicked != null && sketch.mouseButton == sketch.RIGHT) {
+        if (drawingArrow == null) drawingArrow = new Arrow(i, j, i, j);
+        if (lastSquareRightClicked != square) {
+          if (drawingArrow.i+drawingArrow.deltaI != i || drawingArrow.j+drawingArrow.deltaJ != j) {
+            Arrow arr = new Arrow(lastSquareRightClicked/8, lastSquareRightClicked%8, i, j);
+            arrows.remove(drawingArrow);
+            arrows.add(arr);
+            drawingArrow = arr;
+          }
         }
       }
     }
+
+    // Si la souris est relachée, dessine une flèche ou joue un coup si la souris glissait
     else if (e.mouseReleased()) {
-      if (sketch.mouseButton == sketch.RIGHT) {
+      if (sketch.mouseButton == sketch.LEFT && askingMove.get() && dragging) {
+        tryGetMove(square);
+        dragging = false;
+      }
+      else if (sketch.mouseButton == sketch.RIGHT) {
         if (lastSquareRightClicked == null || lastSquareRightClicked == square) {
           if (sketch.keyPressed && sketch.keyCode == sketch.CONTROL) toggleYellow(square);
           else toggleRed(square);
@@ -170,11 +253,44 @@ public class BoardDisplay extends Controller<BoardDisplay> {
     }
   }
 
+  private ArrayList<Move> getMoves(int square) {
+    // Si le coup est une promotion, ne garde que la promotion en dame
+    ArrayList<Move> moves = board.getSquareMoves(square);
+    moves.removeIf(
+      m -> MoveFlag.isPromotion(m.flag()) && m.flag() != MoveFlag.PromotionDame
+    );
+    return moves;
+  }
+
+  private Move getMoveFromTarget(int target) {
+    List<Move> match = possibleMoves.stream()
+      .filter(m -> m.endSquare() == target)
+      .collect(Collectors.toList());
+    if (match.size() != 0) return match.get(0);
+
+    return null;
+  }
+
+  private void tryGetMove(int square) {
+    Move move = getMoveFromTarget(square);
+    if (move != null) {
+      moveSelected = move;
+      askingMove.set(false);
+      sketch.cursor(sketch.ARROW);
+    } else if (square != squareSelected) {
+      possibleMoves.clear();
+      squareSelected = null;
+    }
+  }
+
   private void deselectAll() {
     rouges.clear();
     jaunes.clear();
     arrows.clear();
     lastSquareRightClicked = null;
+    squareSelected = null;
+    dragging = false;
+    possibleMoves.clear();
   }
 
   private void initImages() {
@@ -198,7 +314,7 @@ public class BoardDisplay extends Controller<BoardDisplay> {
     private PShape shape;
     private int arrowColor;
 
-    Arrow(int i, int j, int ti, int tj) {
+    public Arrow(int i, int j, int ti, int tj) {
       this.i = i;
       this.j = j;
       deltaI = ti - i;
@@ -212,7 +328,7 @@ public class BoardDisplay extends Controller<BoardDisplay> {
       createArrow();
     }
 
-    void createArrow() {
+    private void createArrow() {
       shape = null;
       shape = sketch.createShape(sketch.GROUP);
       sketch.strokeWeight(5 * caseWidth/70);
@@ -226,7 +342,7 @@ public class BoardDisplay extends Controller<BoardDisplay> {
       shape.addChild(right);
     }
 
-    void show() {
+    public void show() {
       float posx, posy;
       if (pov == Player.White) {
         posx = x - w/2 + j*caseWidth + caseWidth/2;
@@ -244,7 +360,7 @@ public class BoardDisplay extends Controller<BoardDisplay> {
       sketch.pop();
     }
 
-    boolean equals(Arrow other) {
+    public boolean equals(Arrow other) {
       return(i == other.i && j == other.j && deltaI == other.deltaI && deltaJ == other.deltaJ);
     }
   }

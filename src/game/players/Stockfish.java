@@ -3,14 +3,22 @@ import java.util.ArrayList;
 public class Stockfish extends Player {
 
   public Stockfish(SearchSettings settings) {
-    name = "Stockfish";
-    pseudo = "Stockfish";
-    elo = "284";
-    title = "Noob";
-    victoryTitle = "??!?";
-    ouvertureNumber = 0;
-    isBot = true;
-    this.settings = settings;
+    super(settings);
+  }
+
+  @Override
+  public String elo() {
+    return "284";
+  }
+
+  @Override
+  public String victoryTitle() {
+    return "??!?";
+  }
+
+  @Override
+  public boolean isBot() {
+    return true;
   }
 
   @Override

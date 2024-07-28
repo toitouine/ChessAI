@@ -391,6 +391,18 @@ public final class Board implements Serializable {
     return getLegalMoves(tourDeQui);
   }
 
+  public ArrayList<Move> getSquareMoves(int square) {
+    ArrayList<Move> allMoves = getLegalMoves(Player.White);
+    allMoves.addAll(getLegalMoves(Player.Black));
+    ArrayList<Move> moves = new ArrayList<Move>();
+
+    for (Move move : allMoves) {
+      if (move.startSquare() == square) moves.add(move);
+    }
+
+    return moves;
+  }
+
   // Renvoie si le joueur dont c'est le tour est en échec ou non
   public boolean inCheck() {
     long occupancy = colorBitboard[Player.White] | colorBitboard[Player.Black];

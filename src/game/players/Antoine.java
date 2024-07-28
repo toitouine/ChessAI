@@ -3,14 +3,22 @@ import java.util.ArrayList;
 public class Antoine extends Player {
 
   public Antoine(SearchSettings settings) {
-    name = "Antoine";
-    pseudo = "Antoine";
-    elo = "100";
-    title = "";
-    victoryTitle = "Tu t'es fait mater !";
-    ouvertureNumber = 0;
-    isBot = true;
-    this.settings = settings;
+    super(settings);
+  }
+
+  @Override
+  public String elo() {
+    return "100";
+  }
+
+  @Override
+  public String victoryTitle() {
+    return "Tu t'es fait mater !";
+  }
+
+  @Override
+  public boolean isBot() {
+    return true;
   }
 
   @Override

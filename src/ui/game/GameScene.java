@@ -41,10 +41,22 @@ public class GameScene extends Scene<MainApplet> implements GameDisplayer {
   public void onMovePlayed(Move move) {
   }
 
+  @Override
+  public Move askHumanMove(Board board) {
+    // S'assure que le plateau affiché est le bon
+    boardDisplay.setBoard(board);
+    return boardDisplay.getMove();
+  }
+
+  @Override
+  public void stopAskMove() {
+    boardDisplay.stopAskMove();
+  }
+
   protected void setup() {
     Debug.log("ui", "Nouvelle scène : Partie");
     PSurface surface = sketch.getSurface();
-    if (game != null) sketch.setTitle(game.getWhite().pseudo + " contre " + game.getBlack().pseudo);
+    if (game != null) sketch.setTitle(game.getWhite().pseudo() + " contre " + game.getBlack().pseudo());
     else sketch.setTitle("Scène de partie");
     java.awt.Rectangle bounds = sketch.getScreenBounds();
     surface.setLocation(bounds.x + bounds.width-width, bounds.y);
@@ -95,12 +107,12 @@ public class GameScene extends Scene<MainApplet> implements GameDisplayer {
 
     sketch.image(whiteImage, offsetX/2, whiteImgY, w, w);
     sketch.image(blackImage, offsetX/2, blackImgY, w, w);
-    sketch.text(white.pseudo + " (" + white.elo + ")", offsetX/2, whiteTextY);
-    sketch.text(black.pseudo + " (" + black.elo + ")", offsetX/2, blackTextY);
-    if (white.isBot) sketch.text("Eval : 1,294", offsetX/2, whiteEvalY);
-    if (black.isBot) sketch.text("Eval : MAT EN 1", offsetX/2, blackEvalY);
+    sketch.text(white.pseudo() + " (" + white.elo() + ")", offsetX/2, whiteTextY);
+    sketch.text(black.pseudo() + " (" + black.elo() + ")", offsetX/2, blackTextY);
+    if (white.isBot()) sketch.text("Eval : 1,294", offsetX/2, whiteEvalY);
+    if (black.isBot()) sketch.text("Eval : MAT EN 1", offsetX/2, blackEvalY);
 
-    if (game.useTime) {
+    if (game.useTime && !game.ended()) {
       sketch.rectMode(sketch.CENTER);
       sketch.textSize(23*w/70);
       sketch.noStroke();
@@ -148,17 +160,17 @@ public class GameScene extends Scene<MainApplet> implements GameDisplayer {
   private void init() {
     controllers.clear();
     boardDisplay = new BoardDisplay(sketch, offsetX + 4*w, offsetY + 4*w, w);
-    controllers.add(boardDisplay);
 
     white = game.getWhite();
     black = game.getBlack();
-    whiteImage = sketch.loadImage("data/joueurs/" + white.name.toLowerCase() + "Img.jpg");
-    blackImage = sketch.loadImage("data/joueurs/" + black.name.toLowerCase() + "Img.jpg");
+    whiteImage = sketch.loadImage("data/joueurs/" + white.name().toLowerCase() + "Img.jpg");
+    blackImage = sketch.loadImage("data/joueurs/" + black.name().toLowerCase() + "Img.jpg");
     boardDisplay.setBoard(game.board);
 
     addUpControllers();
     addLeftControllers();
-
+    controllers.add(boardDisplay);
+    
     addShortcut("kK", this::flipPov);
     addShortcut("lL", this::toggleAttach);
     addShortcut('Q', this::quit);
@@ -240,39 +252,39 @@ public class GameScene extends Scene<MainApplet> implements GameDisplayer {
         .setFullSize(false)
         .setArrondi(10)
         .setAction( () -> Debug.log("todo", "Abandon blanc") )
-        .setCondition( () -> !game.useHacker && !game.ended && !white.isBot )
+        .setCondition( () -> !game.useHacker && !game.ended() && !white.isBot() )
         .setMovablePosition(() -> space + buttonSize/2f, whiteYPos),
 
       new ImageButton(sketch, 0, 0, buttonSize, buttonSize, "data/icons/helpMove.png")
         .setFullSize(false)
         .setArrondi(10)
         .setAction( () -> Debug.log("todo", "Aide blanc") )
-        .setCondition( () -> !game.useHacker && !game.ended && !white.isBot )
+        .setCondition( () -> !game.useHacker && !game.ended() && !white.isBot() )
         .setMovablePosition(() -> space*2 + 3*buttonSize/2f, whiteYPos),
 
       new ImageButton(sketch, 0, 0, buttonSize, buttonSize, "data/icons/resign.png")
         .setFullSize(false)
         .setArrondi(10)
         .setAction( () -> Debug.log("todo", "Abandon noir") )
-        .setCondition( () -> !game.useHacker && !game.ended && !black.isBot )
+        .setCondition( () -> !game.useHacker && !game.ended() && !black.isBot() )
         .setMovablePosition(() -> space + buttonSize/2f, blackYPos),
 
       new ImageButton(sketch, 0, 0, buttonSize, buttonSize, "data/icons/helpMove.png")
         .setFullSize(false)
         .setArrondi(10)
         .setAction( () -> Debug.log("todo", "Aide noir") )
-        .setCondition( () -> !game.useHacker && !game.ended && !black.isBot )
+        .setCondition( () -> !game.useHacker && !game.ended() && !black.isBot() )
         .setMovablePosition(() -> space*2 + 3*buttonSize/2f, blackYPos),
 
       new TextButton(sketch, offsetX/2, offsetY + 4*w - 16*w/70, "Revanche", 15 * w/70, 3)
         .setDimensions(79 * w / 70, 26 * w / 70)
         .setAction(this::revanche)
-        .setCondition( () -> game.ended && !game.useHacker ),
+        .setCondition( () -> game.ended() && !game.useHacker ),
 
       new TextButton(sketch, offsetX/2, offsetY + 4*w + 16*w/70, "Menu", 15 * w/70, 3)
         .setDimensions(79 * w / 70, 26 * w / 70)
         .setAction(this::quit)
-        .setCondition( () -> game.ended && !game.useHacker )
+        .setCondition( () -> game.ended() && !game.useHacker )
     );
   }
 }

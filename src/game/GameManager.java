@@ -52,7 +52,7 @@ public final class GameManager {
   public static synchronized void endGame(Game game) {
     // Si la partie est encore en cours, demande l'arrêt
     // La partie sera donc retirée de la liste quand elle sera finie
-    if (!game.ended) {
+    if (!game.ended()) {
       game.end();
       return;
     }

@@ -1,16 +1,31 @@
 import java.util.ArrayList;
 
 public class LesMoutons extends Player {
+  private int eloValue = 0;
 
   public LesMoutons(SearchSettings settings) {
-    name = "LesMoutons";
-    pseudo = "Mouton";
-    elo = String.valueOf((int)(1300 + Math.random() * 200));
-    title = "Mouton";
-    victoryTitle = "YOU LOUSE";
-    ouvertureNumber = 5;
-    isBot = true;
-    this.settings = settings;
+    super(settings);
+  }
+
+  @Override
+  public String pseudo() {
+    return "Mouton";
+  }
+
+  @Override
+  public String elo() {
+    if (eloValue == 0) eloValue = (int)(1300 + Math.random() * 200);
+    return String.valueOf(eloValue);
+  }
+
+  @Override
+  public String victoryTitle() {
+    return "YOU LOUSE";
+  }
+
+  @Override
+  public boolean isBot() {
+    return true;
   }
 
   @Override

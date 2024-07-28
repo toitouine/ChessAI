@@ -3,4 +3,6 @@ interface GameDisplayer {
   public void onGameStart();
   public void onGameEnd();
   public void onMovePlayed(Move move);
+  public Move askHumanMove(Board board);
+  public void stopAskMove();
 }
