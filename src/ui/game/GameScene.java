@@ -39,6 +39,7 @@ public class GameScene extends Scene<MainApplet> implements GameDisplayer {
 
   @Override
   public void onMovePlayed(Move move) {
+    boardDisplay.setMoveMark(move.startSquare(), move.endSquare());
   }
 
   @Override
@@ -170,7 +171,7 @@ public class GameScene extends Scene<MainApplet> implements GameDisplayer {
     addUpControllers();
     addLeftControllers();
     controllers.add(boardDisplay);
-    
+
     addShortcut("kK", this::flipPov);
     addShortcut("lL", this::toggleAttach);
     addShortcut('Q', this::quit);

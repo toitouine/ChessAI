@@ -14,6 +14,8 @@ public class BoardDisplay extends Controller<BoardDisplay> {
 
   // Dessin sur le plateau
   private Integer lastSquareRightClicked = null;
+  private Integer moveMarkFrom = null;
+  private Integer moveMarkTo = null;
   private Arrow drawingArrow = null;
   private ArrayList<Integer> rouges = new ArrayList<Integer>();
   private ArrayList<Integer> jaunes = new ArrayList<Integer>();
@@ -105,6 +107,14 @@ public class BoardDisplay extends Controller<BoardDisplay> {
           sketch.fill(235, 214, 35, 230);
           sketch.rect(casex, casey, caseWidth, caseWidth);
         }
+        else if (moveMarkFrom != null && moveMarkFrom == square) {
+          sketch.fill(209, 206, 25, 100);
+          sketch.rect(casex, casey, caseWidth, caseWidth);
+        }
+        else if (moveMarkTo != null && moveMarkTo == square) {
+          sketch.fill(209, 206, 25, 100);
+          sketch.rect(casex, casey, caseWidth, caseWidth);
+        }
         else if (squareSelected != null && squareSelected == square) {
           sketch.fill(189, 186, 34, 100);
           sketch.rect(casex, casey, caseWidth, caseWidth);
@@ -113,7 +123,7 @@ public class BoardDisplay extends Controller<BoardDisplay> {
         Move move = getMoveFromTarget(square);
         if (move != null && move.endSquare() == square) {
           int w = caseWidth;
-          if (board.grid(i, j) == null) {
+          if (board.grid(i, j) == null && move.flag() != MoveFlag.EnPassant) {
             sketch.fill(75, 75, 75, 100);
             sketch.ellipse(casex + w/2, casey + w/2, w/4, w/4);
           } else {
@@ -251,6 +261,11 @@ public class BoardDisplay extends Controller<BoardDisplay> {
 
       lastSquareRightClicked = null;
     }
+  }
+
+  public void setMoveMark(Integer from, Integer to) {
+    moveMarkFrom = from;
+    moveMarkTo = to;
   }
 
   private ArrayList<Move> getMoves(int square) {
