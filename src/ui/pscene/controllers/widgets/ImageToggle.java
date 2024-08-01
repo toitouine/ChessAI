@@ -13,14 +13,18 @@ public class ImageToggle extends CallableWidget<ImageToggle> {
   MutableBoolean linkedState = null;
 
   ImageToggle(SApplet sketch, float x, float y, float w, float h, String imgPath1, String imgPath2) {
+    this(sketch, x, y, w, h, sketch.loadImage(imgPath1), sketch.loadImage(imgPath2));
+  }
+
+  ImageToggle(SApplet sketch, float x, float y, float w, float h, PImage img1, PImage img2) {
     me = this;
     this.sketch = sketch;
     this.x = x;
     this.y = y;
     this.w = w;
     this.h = h;
-    this.img1 = sketch.loadImage(imgPath1);
-    this.img2 = sketch.loadImage(imgPath2);
+    this.img1 = img1;
+    this.img2 = img2;
     this.backgroundColor = sketch.color(40, 37, 34);
   }
 

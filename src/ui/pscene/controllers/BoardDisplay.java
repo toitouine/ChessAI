@@ -25,8 +25,11 @@ public class BoardDisplay extends Controller<BoardDisplay> {
   private Integer squareSelected = null;
   private Move moveSelected = null;
   private boolean dragging = false;
+  private boolean inPromotion = false;
+  private Integer endSquarePromotion = null;
   private SyncBoolean askingMove = new SyncBoolean(false);
   private ArrayList<Move> possibleMoves = new ArrayList<Move>();
+  private ArrayList<ArrayList<ImageButton>> promoButtons = new ArrayList<ArrayList<ImageButton>>();
 
   public BoardDisplay(SApplet sketch, float x, float y, int caseWidth) {
     this.sketch = sketch;
@@ -37,6 +40,19 @@ public class BoardDisplay extends Controller<BoardDisplay> {
     this.h = caseWidth*8;
 
     initImages();
+
+    for (int i = 0; i < 2; i++) {
+      promoButtons.add(new ArrayList<ImageButton>());
+      ArrayList<ImageButton> list = promoButtons.get(i);
+      list.add(new ImageButton(sketch, x-3*caseWidth, y, 1.5f*caseWidth, 1.5f*caseWidth, imgs.get(i * Piece.Number + 1))
+                 .setAction(() -> selectPromotion(MoveFlag.PromotionDame)));
+      list.add(new ImageButton(sketch, x-caseWidth, y, 1.5f*caseWidth, 1.5f*caseWidth, imgs.get(i * Piece.Number + 2))
+                 .setAction(() -> selectPromotion(MoveFlag.PromotionTour)));
+      list.add(new ImageButton(sketch, x+caseWidth, y, 1.5f*caseWidth, 1.5f*caseWidth, imgs.get(i * Piece.Number + 3))
+                 .setAction(() -> selectPromotion(MoveFlag.PromotionFou)));
+      list.add(new ImageButton(sketch, x+3*caseWidth, y, 1.5f*caseWidth, 1.5f*caseWidth, imgs.get(i * Piece.Number + 4))
+                 .setAction(() -> selectPromotion(MoveFlag.PromotionCavalier)));
+    }
   }
 
   public void setBoard(Board b) {
@@ -51,7 +67,9 @@ public class BoardDisplay extends Controller<BoardDisplay> {
   public Move getMove() {
     moveSelected = null;
     squareSelected = null;
+    endSquarePromotion = null;
     dragging = false;
+    inPromotion = false;
     possibleMoves.clear();
     askingMove.set(true);
     synchronized (askingMove) {
@@ -68,6 +86,7 @@ public class BoardDisplay extends Controller<BoardDisplay> {
   }
 
   public void stopAskMove() {
+    inPromotion = false;
     askingMove.set(false);
   }
 
@@ -148,6 +167,16 @@ public class BoardDisplay extends Controller<BoardDisplay> {
       PImage img = imgs.get(board.grid(squareSelected).index);
       sketch.image(img, sketch.mouseX, sketch.mouseY, caseWidth, caseWidth);
     }
+
+    if (inPromotion) {
+      sketch.rectMode(sketch.CENTER);
+      sketch.fill(220, 220, 220, 220);
+      sketch.rect(x, y, w, h);
+
+      for (ImageButton b : promoButtons.get(board.tourDeQui)) {
+        b.show();
+      }
+    }
   }
 
   private void toggleYellow(Integer s) {
@@ -173,6 +202,16 @@ public class BoardDisplay extends Controller<BoardDisplay> {
   }
 
   public void onUserEvent(UserEvent e) {
+    // S'occupe des boutons de promotion
+    if (inPromotion) {
+      for (ImageButton b : promoButtons.get(board.tourDeQui)) {
+        b.onUserEvent(e);
+        if (b.contains(e.x, e.y)) return;
+      }
+      if (e.mouseMoved()) sketch.cursor(sketch.ARROW);
+      return;
+    }
+
     // S'assure que le plateau est bien concerné
     if (e.keyPressed() || board == null) return;
     if (!contains(e.x, e.y)) {
@@ -210,7 +249,7 @@ public class BoardDisplay extends Controller<BoardDisplay> {
             squareSelected = square;
             possibleMoves = getMoves(squareSelected);
           } else {
-            tryGetMove(square);
+            trySelectMove(square);
           }
         }
       }
@@ -240,7 +279,7 @@ public class BoardDisplay extends Controller<BoardDisplay> {
     // Si la souris est relachée, dessine une flèche ou joue un coup si la souris glissait
     else if (e.mouseReleased()) {
       if (sketch.mouseButton == sketch.LEFT && askingMove.get() && dragging) {
-        tryGetMove(square);
+        trySelectMove(square);
         dragging = false;
       }
       else if (sketch.mouseButton == sketch.RIGHT) {
@@ -268,7 +307,7 @@ public class BoardDisplay extends Controller<BoardDisplay> {
     moveMarkTo = to;
   }
 
-  private ArrayList<Move> getMoves(int square) {
+  private synchronized ArrayList<Move> getMoves(int square) {
     // Si le coup est une promotion, ne garde que la promotion en dame
     ArrayList<Move> moves = board.getSquareMoves(square);
     moves.removeIf(
@@ -277,7 +316,7 @@ public class BoardDisplay extends Controller<BoardDisplay> {
     return moves;
   }
 
-  private Move getMoveFromTarget(int target) {
+  private synchronized Move getMoveFromTarget(int target) {
     List<Move> match = possibleMoves.stream()
       .filter(m -> m.endSquare() == target)
       .collect(Collectors.toList());
@@ -286,16 +325,28 @@ public class BoardDisplay extends Controller<BoardDisplay> {
     return null;
   }
 
-  private void tryGetMove(int square) {
+  private synchronized void trySelectMove(int square) {
     Move move = getMoveFromTarget(square);
+    boolean isPromotion = move != null && MoveFlag.isPromotion(move.flag());
     if (move != null) {
-      moveSelected = move;
-      askingMove.set(false);
       sketch.cursor(sketch.ARROW);
+      if (isPromotion) {
+        inPromotion = true;
+        endSquarePromotion = square;
+      } else {
+        moveSelected = move;
+        askingMove.set(false);
+      }
     } else if (square != squareSelected) {
       possibleMoves.clear();
       squareSelected = null;
     }
+  }
+
+  private synchronized void selectPromotion(int flag) {
+    Move move = new Move(squareSelected, endSquarePromotion, flag);
+    moveSelected = move;
+    askingMove.set(false);
   }
 
   private void deselectAll() {
@@ -304,6 +355,8 @@ public class BoardDisplay extends Controller<BoardDisplay> {
     arrows.clear();
     lastSquareRightClicked = null;
     squareSelected = null;
+    endSquarePromotion = null;
+    inPromotion = false;
     dragging = false;
     possibleMoves.clear();
   }

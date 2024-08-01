@@ -104,15 +104,17 @@ public final class Game extends Thread {
         }
       }
 
-      // Le joueur joue le coup
+      // Le joueur joue le coup (on ignore la suite si la partie a été interrompue)
       int tourDeQui = board.tourDeQui;
 
       if (gameState.state == GameState.Interrupted) break;
       Move move = players[tourDeQui].play(board.copy());
-
-      // On ignore la suite si la partie a été interrompue
       if (gameState.state == GameState.Interrupted) break;
 
+      if (!isMoveValid(board, move)) {
+        gameState = GameState.IllegalMove(tourDeQui);
+        break;
+      }
       boolean isCapture = board.grid(move.endSquare()) != null;
       board.make(move);
 
@@ -132,6 +134,14 @@ public final class Game extends Thread {
     if (isDisplayed) displayer.onGameEnd();
     Debug.log("game", "Partie #" + number + " terminée : " + gameState);
     GameManager.endGame(this);
+  }
+
+  private boolean isMoveValid(Board b, Move move) {
+    ArrayList<Move> moves = b.getLegalMoves();
+    for (Move m : moves) {
+      if (m.equals(move)) return true;
+    }
+    return false;
   }
 
   private GameState getGameState() {

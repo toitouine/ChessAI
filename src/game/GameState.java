@@ -6,6 +6,7 @@ public final class GameState {
   static public final int Repetition = 4;
   static public final int CinquanteCoups = 5;
   static public final int Interrupted = 6;
+  static public final int IllegalMove = 7;
 
   public boolean gameEnded;
   public int state;
@@ -25,8 +26,8 @@ public final class GameState {
     return new GameState(Going);
   }
 
-  static public GameState Mat(int w) {
-    return new GameState(Mat, w);
+  static public GameState Mat(int win) {
+    return new GameState(Mat, win);
   }
 
   static public GameState Pat() {
@@ -49,6 +50,10 @@ public final class GameState {
     return new GameState(Interrupted);
   }
 
+  static public GameState IllegalMove(int looser) {
+    return new GameState(IllegalMove, 1 - looser);
+  }
+
   @Override
   public String toString() {
     if (state == Going) return "Partie en cours";
@@ -58,6 +63,7 @@ public final class GameState {
     if (state == Repetition) return "Nulle par répétition";
     if (state == CinquanteCoups) return "Nulle par règle des cinquante coups";
     if (state == Interrupted) return "Partie interrompue";
+    if (state == IllegalMove) return "Coup illégal";
     return "";
   }
 }
