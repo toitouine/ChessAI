@@ -148,13 +148,13 @@ public class GameScene extends Scene<MainApplet> implements GameDisplayer {
   }
 
   private void revanche() {
-    game.end();
+    game.terminate();
     Game newGame = game.copy();
     sketch.startDisplayGame(newGame);
   }
 
   private void quit() {
-    game.end();
+    game.terminate();
     sketch.goToMenu();
   }
 
@@ -252,7 +252,7 @@ public class GameScene extends Scene<MainApplet> implements GameDisplayer {
       new ImageButton(sketch, 0, 0, buttonSize, buttonSize, "data/icons/resign.png")
         .setFullSize(false)
         .setArrondi(10)
-        .setAction( () -> Debug.log("todo", "Abandon blanc") )
+        .setAction( () -> game.getWhite().resign() )
         .setCondition( () -> !game.useHacker && !game.ended() && !white.isBot() )
         .setMovablePosition(() -> space + buttonSize/2f, whiteYPos),
 
@@ -266,7 +266,7 @@ public class GameScene extends Scene<MainApplet> implements GameDisplayer {
       new ImageButton(sketch, 0, 0, buttonSize, buttonSize, "data/icons/resign.png")
         .setFullSize(false)
         .setArrondi(10)
-        .setAction( () -> Debug.log("todo", "Abandon noir") )
+        .setAction( () -> game.getBlack().resign() )
         .setCondition( () -> !game.useHacker && !game.ended() && !black.isBot() )
         .setMovablePosition(() -> space + buttonSize/2f, blackYPos),
 

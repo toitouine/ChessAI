@@ -23,6 +23,6 @@ public class Humain extends Player {
 
   @Override
   public Move play(Board board) {
-    return askHumanMove();
+    return askHumanMove(board);
   }
 }

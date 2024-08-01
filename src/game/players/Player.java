@@ -28,8 +28,8 @@ abstract public class Player {
     gameInterface.resign();
   }
 
-  final public Move askHumanMove() {
-    return gameInterface.askHumanMove();
+  final public Move askHumanMove(Board board) {
+    return gameInterface.askHumanMove(board);
   }
 
   public String pseudo() {

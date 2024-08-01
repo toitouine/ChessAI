@@ -107,9 +107,9 @@ public final class Game extends Thread {
       // Le joueur joue le coup (on ignore la suite si la partie a été interrompue)
       int tourDeQui = board.tourDeQui;
 
-      if (gameState.state == GameState.Interrupted) break;
+      if (gameState != null && gameState.gameEnded()) break;
       Move move = players[tourDeQui].play(board.copy());
-      if (gameState.state == GameState.Interrupted) break;
+      if (gameState != null && gameState.gameEnded()) break;
 
       if (!isMoveValid(board, move)) {
         gameState = GameState.IllegalMove(tourDeQui);
@@ -137,6 +137,8 @@ public final class Game extends Thread {
   }
 
   private boolean isMoveValid(Board b, Move move) {
+    if (move == null) return false;
+
     ArrayList<Move> moves = b.getLegalMoves();
     for (Move m : moves) {
       if (m.equals(move)) return true;
@@ -146,7 +148,7 @@ public final class Game extends Thread {
 
   private GameState getGameState() {
     // Partie interrompue
-    if (gameState.state == GameState.Interrupted) return GameState.Interrupted();
+    if (gameState.state() == GameState.Interrupted) return GameState.Interrupted();
 
     // Mat ou pat
     if (board.getLegalMoves().size() == 0) {
@@ -181,16 +183,23 @@ public final class Game extends Thread {
     return GameState.Going();
   }
 
-  public void end() {
-    if (gameState == null || !gameState.gameEnded) {
+  public void terminate() {
+    if (gameState == null || !gameState.gameEnded()) {
       gameState = GameState.Interrupted();
+      if (isDisplayed) displayer.stopAskMove();
+    }
+  }
+
+  private void resign(int color) {
+    if (gameState == null || !gameState.gameEnded()) {
+      gameState = GameState.Resign(color);
       if (isDisplayed) displayer.stopAskMove();
     }
   }
 
   public boolean ended() {
     if (gameState == null) return false;
-    return gameState.gameEnded;
+    return gameState.gameEnded();
   }
 
   public Player getWhite() {
@@ -228,11 +237,13 @@ public final class Game extends Thread {
     }
 
     public void resign() {
-      Debug.log("todo", "Joueur " + this + " abandonne");
+      if (players[Player.White] == player) Game.this.resign(Player.White);
+      else if (players[Player.Black] == player) Game.this.resign(Player.Black);
     }
 
-    public Move askHumanMove() {
-      return displayer.askHumanMove(board);
+    public Move askHumanMove(Board b) {
+      if (!isDisplayed) return b.getLegalMoves().get(0);
+      return displayer.askHumanMove(b);
     }
   }
 }

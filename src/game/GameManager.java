@@ -53,7 +53,7 @@ public final class GameManager {
     // Si la partie est encore en cours, demande l'arrêt
     // La partie sera donc retirée de la liste quand elle sera finie
     if (!game.ended()) {
-      game.end();
+      game.terminate();
       return;
     }
 
