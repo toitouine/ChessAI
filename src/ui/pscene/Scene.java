@@ -68,6 +68,10 @@ public abstract class Scene<T extends SApplet> {
     currentOverlay = overlay;
   }
 
+  protected void clearOverlay(Overlay overlay) {
+    if (currentOverlay == overlay) currentOverlay = null;
+  }
+
   protected void toggleOverlay(Overlay overlay) {
     if (currentOverlay != overlay) currentOverlay = overlay;
     else currentOverlay = null;

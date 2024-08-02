@@ -210,6 +210,11 @@ public final class Game extends Thread {
     return players[Player.Black];
   }
 
+  public Player getPlayer(int color) {
+    if (color != Player.White && color != Player.Black) return players[Player.White];
+    return players[color];
+  }
+
   private void announce() {
     String hackerText = (useHacker ? " [HACKER]" : "");
     Debug.log("game", "Partie #" + number + " démarrée : " + getWhite().name() + " contre " + getBlack().name() + hackerText);

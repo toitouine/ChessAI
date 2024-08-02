@@ -6,9 +6,9 @@ import java.util.function.Supplier;
 
 public class GameScene extends Scene<MainApplet> implements GameDisplayer {
 
-  private int w = Config.UI.caseWidth;
-  private float offsetX = Config.UI.offsetX;
-  private float offsetY = Config.UI.offsetY;
+  private final int w = Config.UI.caseWidth;
+  private final float offsetX = Config.UI.offsetX;
+  private final float offsetY = Config.UI.offsetY;
 
   private MutableBoolean attach = new MutableBoolean(true);
   private MutableBoolean isWhitePov = new MutableBoolean(true);
@@ -17,10 +17,13 @@ public class GameScene extends Scene<MainApplet> implements GameDisplayer {
   private Player white, black;
   private PImage whiteImage, blackImage;
 
+  private EndOverlay endOverlay;
+
   private Game game;
 
   public GameScene(MainApplet sketch, int width, int height) {
     super(sketch, width, height);
+    endOverlay = new EndOverlay(this, offsetX + 4*w, offsetY + 4*w, 8*w, 8*w);
   }
 
   @Override
@@ -35,6 +38,7 @@ public class GameScene extends Scene<MainApplet> implements GameDisplayer {
 
   @Override
   public void onGameEnd() {
+    endOverlay.startEndAnimation(game);
   }
 
   @Override
@@ -44,8 +48,6 @@ public class GameScene extends Scene<MainApplet> implements GameDisplayer {
 
   @Override
   public Move askHumanMove(Board board) {
-    // S'assure que le plateau affiché est le bon
-    boardDisplay.setBoard(board);
     return boardDisplay.getMove();
   }
 
@@ -160,6 +162,7 @@ public class GameScene extends Scene<MainApplet> implements GameDisplayer {
 
   private void init() {
     controllers.clear();
+    clearOverlay(endOverlay);
     boardDisplay = new BoardDisplay(sketch, offsetX + 4*w, offsetY + 4*w, w);
 
     white = game.getWhite();

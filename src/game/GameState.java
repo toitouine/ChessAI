@@ -38,7 +38,7 @@ public final class GameState {
   }
 
   public boolean isDraw() {
-    return gameEnded && winner != Player.None;
+    return gameEnded && winner == Player.None;
   }
 
   public boolean whiteWin() {
@@ -99,8 +99,20 @@ public final class GameState {
     if (state == Repetition) return "Nulle par répétition";
     if (state == CinquanteCoups) return "Nulle par règle des cinquante coups";
     if (state == Interrupted) return "Partie interrompue";
-    if (state == IllegalMove) return "Victoire des " + wstr + " (coup illégal)";
+    if (state == IllegalMove) return "Victoire des " + wstr + " par coup illégal";
     if (state == Resign) return "Victoire des " + wstr + " par abandon";
+    return "";
+  }
+
+  public String reason() {
+    if (state == Mat) return "par échec et mat";
+    if (state == Pat) return "par pat";
+    if (state == Materiel) return "par manque de matériel";
+    if (state == Repetition) return "par répétition";
+    if (state == CinquanteCoups) return "par règle des cinquante coups";
+    if (state == Interrupted) return "partie interrompue";
+    if (state == IllegalMove) return "par coup illégal";
+    if (state == Resign) return "par abandon";
     return "";
   }
 }

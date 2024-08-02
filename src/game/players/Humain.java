@@ -13,7 +13,7 @@ public class Humain extends Player {
 
   @Override
   public String victoryTitle() {
-    return "";
+    return "Vous avez gagné !";
   }
 
   @Override
