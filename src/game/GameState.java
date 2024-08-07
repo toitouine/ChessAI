@@ -9,6 +9,7 @@ public final class GameState {
   static public final int IllegalMove = 7;
   static public final int Resign = 8;
   static public final int Timeout = 9;
+  static public final int TimeoutAndMateriel = 10;
 
   private final boolean gameEnded;
   private final int state;
@@ -92,6 +93,10 @@ public final class GameState {
     return new GameState(Timeout, 1 - looser);
   }
 
+  static public GameState TimeoutAndMateriel() {
+    return new GameState(TimeoutAndMateriel);
+  }
+
   /////////////////////////////////////////////////////////////////
 
   @Override
@@ -107,6 +112,7 @@ public final class GameState {
     if (state == IllegalMove) return "Victoire des " + wstr + " par coup illégal";
     if (state == Resign) return "Victoire des " + wstr + " par abandon";
     if (state == Timeout) return "Victoire des " + wstr + " au temps";
+    if (state == TimeoutAndMateriel) return "Nulle par hors-délai contre manque de matériel";
     return "";
   }
 
@@ -120,6 +126,7 @@ public final class GameState {
     if (state == IllegalMove) return "par coup illégal";
     if (state == Resign) return "par abandon";
     if (state == Timeout) return "au temps";
+    if (state == TimeoutAndMateriel) return "par hors-délai contre manque de matériel";
     return "";
   }
 }

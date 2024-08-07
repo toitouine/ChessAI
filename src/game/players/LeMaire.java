@@ -23,11 +23,6 @@ public class LeMaire extends Player {
 
   @Override
   public Move play(Board board) {
-    try {
-      Thread.sleep(100);
-    } catch (Exception e) {
-    }
-
     ArrayList<Move> moves = board.getLegalMoves();
     int index = (int)(Math.random() * moves.size());
     return moves.get(index);

@@ -168,15 +168,21 @@ public final class Game extends Thread {
     Future<Move> future = executor.submit(task);
 
     try {
+      // Si la recherche retourne un coup à temps, le renvoie
       Move result = future.get(maxTime.millis(), TimeUnit.MILLISECONDS);
       return result;
-    } catch (TimeoutException ex) {
+    }
+    catch (TimeoutException ex) {
+      // Sinon, interrompt la recherche et gère la fin de partie
       player.cancelSearch();
-      gameState = GameState.Timeout(tourDeQui);
+      if (hasSufficientMaterial(1-tourDeQui)) gameState = GameState.Timeout(tourDeQui);
+      else gameState = GameState.TimeoutAndMateriel();
       return null;
-    } catch (Exception e) {
+    }
+    catch (Exception e) {
       return null;
-    } finally {
+    }
+    finally {
       future.cancel(true);
     }
   }
@@ -226,6 +232,24 @@ public final class Game extends Thread {
     }
 
     return GameState.Going();
+  }
+
+  public boolean hasSufficientMaterial(int color) {
+    // Si il reste un pion, une dame ou une tour, il y a assez de matériel
+    if (board.getPieces(Piece.Pion, color) != 0 ||
+        board.getPieces(Piece.Tour, color) != 0 ||
+        board.getPieces(Piece.Dame, color) != 0) return true;
+
+    // Si il reste deux cavaliers ou deux fous, il y a assez de matériel
+    if (Long.bitCount(board.getPieces(Piece.Cavalier, color)) >= 2 ||
+        Long.bitCount(board.getPieces(Piece.Fou, color)) >= 2) return true;
+
+    // Si il reste un fou et un cavalier, il y a assez de matériel
+    if (Long.bitCount(board.getPieces(Piece.Cavalier, color)) == 1 &&
+        Long.bitCount(board.getPieces(Piece.Fou, color)) == 1) return true;
+
+    // Sinon, il n'y a plus assez de matériel
+    return false;
   }
 
   public void terminate() {

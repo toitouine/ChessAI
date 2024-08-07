@@ -98,7 +98,7 @@ public class EndOverlay extends Overlay<MainApplet> {
 
     // Petit rectangle et texte
     int fillColor;
-    if (players[0] instanceof Humain && players[1] instanceof Humain) {
+    if (!nulle && players[0] instanceof Humain && players[1] instanceof Humain) {
       fillColor = vert;
     } else {
       fillColor = (nulle || players[1-winnerColor] instanceof Humain) ? gris : vert;

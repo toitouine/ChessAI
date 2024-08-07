@@ -124,6 +124,10 @@ public final class Board implements Serializable {
     return pieceBitboard[type] | pieceBitboard[type + Piece.Number];
   }
 
+  public long getPieces(int type, int color) {
+    return pieceBitboard[type + Piece.Number*color];
+  }
+
   /////////////////////////////////////////////////////////////////
 
   // Ajoute la pièce sur le plateau et recalcule les données de la position (lent)

@@ -83,7 +83,7 @@ public class Timer {
 
     int seconds = minSec[1];
     long millis = remaining.millis() - seconds*1000;
-    return seconds + "." + String.valueOf(millis).charAt(0);
+    return seconds + "." + (millis/100);
   }
 
   public Timer copy() {
