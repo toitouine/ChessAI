@@ -12,7 +12,7 @@ public class GameScene extends Scene<MainApplet> implements GameDisplayer {
 
   private MutableBoolean attach = new MutableBoolean(true);
   private MutableBoolean isWhitePov = new MutableBoolean(true);
-  private MutableBoolean showVariante = new MutableBoolean(false); // TODO
+  private MutableBoolean showVariante = new MutableBoolean(false); // TODO: Variante
   private BoardDisplay boardDisplay;
   private Player white, black;
   private PImage whiteImage, blackImage;
@@ -181,7 +181,7 @@ public class GameScene extends Scene<MainApplet> implements GameDisplayer {
     addShortcut(' ', () -> game.paused.toggle() );
     addShortcut("fF", () -> Debug.log(game.board) );
     addShortcut("vV", () -> showVariante.toggle() );
-    // TODO
+    // TODO: Raccourcis clavier partie
     // addShortcut("pP", () -> printPGN() );
     // addShortcut("gG", () -> toggleGraph() );
     // addShortcut("sS", () -> runPerft() );

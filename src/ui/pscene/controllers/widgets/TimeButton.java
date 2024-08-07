@@ -179,7 +179,7 @@ public class TimeButton extends Widget<TimeButton> {
         sketch.line(x + w/2, y + h/2 + arrowOffset, x + w/2 - arrowEspace, y + h/2 - arrowOffset);
       }
 
-      if (isPressed && Time.now().millis() - pressedAt.millis() >= 500) updateTime();
+      if (isPressed && Time.elapsed(pressedAt).millis() >= 500) updateTime();
     }
 
     void pressed() {

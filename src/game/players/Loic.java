@@ -28,4 +28,7 @@ public class Loic extends Player {
     return moves.get(index);
   }
 
+  @Override
+  public void cancelSearch() {
+  }
 }

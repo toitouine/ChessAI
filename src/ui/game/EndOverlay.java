@@ -23,7 +23,7 @@ public class EndOverlay extends Overlay<MainApplet> {
   }
 
   public void draw() {
-    if (Time.now().millis() - timeAtEndStart.millis() > timeBeforeEndDisplay.millis()) {
+    if (Time.elapsed(timeAtEndStart).millis() > timeBeforeEndDisplay.millis()) {
       sketch.fill(220, 220, 220, 220);
       sketch.rectMode(sketch.CENTER);
       sketch.rect(x, y, width, height);

@@ -258,7 +258,7 @@ public class BoardDisplay extends Controller<BoardDisplay> {
       }
     }
 
-    // Si la souris glisse, fait glisser une pièce (et curseur) TODO ou dessine une flèche
+    // Si la souris glisse, fait glisser une pièce ou dessine une flèche
     else if (e.mouseDragged()) {
       if (sketch.mouseButton == sketch.LEFT && squareSelected != null) {
         if (!dragging) dragging = true;

@@ -62,7 +62,7 @@ public class EditorScene extends Scene<MainApplet> {
     addShortcut("lL", this::toggleAttach);
     addShortcut('Q', sketch::goToMenu);
     addShortcut("kK", () -> isWhitePov.toggle() );
-    // TODO
+    // TODO: Raccoucis clavier éditeur
     // addShortcut(sketch.BACKSPACE, () -> clearPosition() );
     // addShortcut('fF', () -> Debug.log(board) );
     // addShortcut('cC', () -> copyFEN() );

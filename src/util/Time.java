@@ -5,12 +5,14 @@ public class Time {
     this.millis = millis;
   }
 
-  public void set(Time other) {
+  public Time set(Time other) {
     millis = other.millis;
+    return this;
   }
 
-  public void add(Time ts) {
+  public Time add(Time ts) {
     millis += ts.millis();
+    return this;
   }
 
   public Time copy() {
@@ -36,23 +38,31 @@ public class Time {
     return time;
   }
 
-  static Time now() {
+  public static Time now() {
     return new Time(System.currentTimeMillis());
   }
 
-  static Time fromMillis(long t) {
+  public static Time subtract(Time a, Time b) {
+    return Time.fromMillis(a.millis() - b.millis());
+  }
+
+  public static Time elapsed(Time a) {
+    return Time.subtract(Time.now(), a);
+  }
+
+  public static Time fromMillis(long t) {
     return new Time(t);
   }
 
-  static Time fromSeconds(float t) {
+  public static Time fromSeconds(float t) {
     return new Time(Math.round(1000*t));
   }
 
-  static Time fromMinutes(float t) {
+  public static Time fromMinutes(float t) {
     return new Time(Math.round(60000*t));
   }
 
-  static Time fromMinutesSeconds(int m, float s) {
+  public static Time fromMinutesSeconds(int m, float s) {
     return new Time(60000*m + Math.round(1000*s));
   }
 

@@ -25,4 +25,9 @@ public class Humain extends Player {
   public Move play(Board board) {
     return askHumanMove(board);
   }
+
+  @Override
+  public void cancelSearch() {
+    stopAskHumanMove();
+  }
 }

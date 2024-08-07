@@ -8,6 +8,7 @@ abstract public class Player {
   private Game.PlayerInterface gameInterface;
 
   public abstract Move play(Board board);
+  public abstract void cancelSearch();
   public abstract String elo();
   public abstract String victoryTitle();
   public abstract boolean isBot();
@@ -30,6 +31,10 @@ abstract public class Player {
 
   final public Move askHumanMove(Board board) {
     return gameInterface.askHumanMove(board);
+  }
+
+  final public void stopAskHumanMove() {
+    gameInterface.stopAskHumanMove();
   }
 
   public String pseudo() {

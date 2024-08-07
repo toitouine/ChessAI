@@ -35,4 +35,7 @@ public class LesMoutons extends Player {
     return moves.get(index);
   }
 
+  @Override
+  public void cancelSearch() {
+  }
 }

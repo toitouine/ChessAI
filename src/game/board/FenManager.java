@@ -47,7 +47,7 @@ public final class FenManager {
       else throw new Exception("FEN non valide : Trait");
 
       // Roques
-      // TODO : vérifier si ils sont vraiment possibles, désactiver sinon
+      // TODO: Vérifier si ils sont vraiment possibles, désactiver sinon
       for (int i = endOfPosition+3; i < fen.length(); i++) {
         char c = fen.charAt(i);
         if (c == 'K') board.enablePetitRoque(Player.White);

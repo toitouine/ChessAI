@@ -5,7 +5,7 @@
 // Permet d'obtenir une clé presque unique pour chaque position de manière rapide
 // RNG : XOR-Shift algorithm (avec rngState)
 
-// TODO : case en passant
+// TODO: Case en passant
 
 /////////////////////////////////////////////////////////////////
 

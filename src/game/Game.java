@@ -18,6 +18,12 @@
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Future;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
 
 public final class Game extends Thread {
   public final Board board;
@@ -51,7 +57,7 @@ public final class Game extends Thread {
     timers[0] = t1;
     timers[1] = t2;
     displayer = gd;
-    useTime = t1.getTime().millis() > 0 && t2.getTime().millis() > 0;
+    useTime = t1.getTotalTime().millis() > 0 && t2.getTotalTime().millis() > 0;
     isDisplayed = gd != null;
     totalGames++;
     number = totalGames;
@@ -91,6 +97,11 @@ public final class Game extends Thread {
     announce();
     paused.set(false);
     if (isDisplayed) displayer.onGameStart();
+    if (useTime) {
+      timers[Player.White].start();
+      timers[Player.Black].start();
+      timers[Player.Black].pause(false);
+    }
 
     while (!ended()) {
       // Si la partie a été mise en pause, on attend le redémarrage
@@ -108,7 +119,7 @@ public final class Game extends Thread {
       int tourDeQui = board.tourDeQui;
 
       if (gameState != null && gameState.gameEnded()) break;
-      Move move = players[tourDeQui].play(board.copy());
+      Move move = getPlayerMove(tourDeQui);
       if (gameState != null && gameState.gameEnded()) break;
 
       if (!isMoveValid(board, move)) {
@@ -117,6 +128,10 @@ public final class Game extends Thread {
       }
       boolean isCapture = board.grid(move.endSquare()) != null;
       board.make(move);
+
+      // Gère les pendules
+      timers[tourDeQui].pause();
+      timers[1-tourDeQui].resume();
 
       // Actualise les infos
       hashHistory.add(board.zobrist);
@@ -131,9 +146,39 @@ public final class Game extends Thread {
       gameState = getGameState();
     }
 
+    if (useTime) {
+      timers[Player.White].pause(false);
+      timers[Player.Black].pause(false);
+    }
     if (isDisplayed) displayer.onGameEnd();
     Debug.log("game", "Partie #" + number + " terminée : " + gameState);
     GameManager.endGame(this);
+  }
+
+  private Move getPlayerMove(int tourDeQui) {
+    Player player = players[tourDeQui];
+
+    // Si il n'y a pas de temps, demande simplement le coup
+    if (!useTime) return player.play(board.copy());
+
+    // Sinon, demande le coup et si il n'y a plus de temps, interrompt la recherche
+    Time maxTime = timers[tourDeQui].timeRemaining();
+    ExecutorService executor = Executors.newCachedThreadPool();
+    Callable<Move> task = () -> { return player.play(board.copy()); };
+    Future<Move> future = executor.submit(task);
+
+    try {
+      Move result = future.get(maxTime.millis(), TimeUnit.MILLISECONDS);
+      return result;
+    } catch (TimeoutException ex) {
+      player.cancelSearch();
+      gameState = GameState.Timeout(tourDeQui);
+      return null;
+    } catch (Exception e) {
+      return null;
+    } finally {
+      future.cancel(true);
+    }
   }
 
   private boolean isMoveValid(Board b, Move move) {
@@ -249,6 +294,10 @@ public final class Game extends Thread {
     public Move askHumanMove(Board b) {
       if (!isDisplayed) return b.getLegalMoves().get(0);
       return displayer.askHumanMove(b);
+    }
+
+    public void stopAskHumanMove() {
+      if (isDisplayed) displayer.stopAskMove();
     }
   }
 }
