@@ -1,6 +1,6 @@
 import java.util.ArrayList;
 
-public class LesMoutons extends Player {
+public class LesMoutons extends IA {
   private int eloValue = 0;
 
   public LesMoutons(SearchSettings settings) {
@@ -24,18 +24,19 @@ public class LesMoutons extends Player {
   }
 
   @Override
-  public boolean isBot() {
-    return true;
-  }
-
-  @Override
-  public Move play(Board board) {
+  public SearchResult search(Board board, int depth) {
     ArrayList<Move> moves = board.getLegalMoves();
     int index = (int)(Math.random() * moves.size());
-    return moves.get(index);
+
+    try {
+      Thread.sleep((int) (1000*(Math.pow(1.12, depth) - 1)));
+    } catch (Exception e) {
+    }
+
+    return new SearchResult(moves.get(index));
   }
 
   @Override
-  public void cancelSearch() {
+  public void stopSearch() {
   }
 }

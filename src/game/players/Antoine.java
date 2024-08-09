@@ -1,6 +1,6 @@
 import java.util.ArrayList;
 
-public class Antoine extends Player {
+public class Antoine extends IA {
 
   public Antoine(SearchSettings settings) {
     super(settings);
@@ -17,18 +17,20 @@ public class Antoine extends Player {
   }
 
   @Override
-  public boolean isBot() {
-    return true;
+  public SearchResult play(Board board) {
+    return search(board, 0);
   }
 
   @Override
-  public Move play(Board board) {
+  public SearchResult search(Board board, int depth) {
     ArrayList<Move> moves = board.getLegalMoves();
     int index = (int)(Math.random() * moves.size());
-    return moves.get(index);
+    Move move = moves.get(index);
+    float eval = (float)(Math.random()-0.5f)*10f;
+    return new SearchResult(move, eval, (int)(Math.random()*6));
   }
 
   @Override
-  public void cancelSearch() {
+  public void stopSearch() {
   }
 }

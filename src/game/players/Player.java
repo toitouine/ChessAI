@@ -7,7 +7,7 @@ abstract public class Player {
   public final SearchSettings settings;
   private Game.PlayerInterface gameInterface;
 
-  public abstract Move play(Board board);
+  public abstract SearchResult play(Board board);
   public abstract void cancelSearch();
   public abstract String elo();
   public abstract String victoryTitle();

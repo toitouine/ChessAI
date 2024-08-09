@@ -22,8 +22,8 @@ public class Humain extends Player {
   }
 
   @Override
-  public Move play(Board board) {
-    return askHumanMove(board);
+  public SearchResult play(Board board) {
+    return new SearchResult(askHumanMove(board));
   }
 
   @Override

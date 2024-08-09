@@ -119,7 +119,8 @@ public final class Game extends Thread {
       int tourDeQui = board.tourDeQui;
 
       if (gameState != null && gameState.gameEnded()) break;
-      Move move = getPlayerMove(tourDeQui);
+      SearchResult result = getPlayerSearch(tourDeQui);
+      Move move = (result != null) ? result.move() : null;
       if (gameState != null && gameState.gameEnded()) break;
 
       if (!isMoveValid(board, move)) {
@@ -155,7 +156,7 @@ public final class Game extends Thread {
     GameManager.endGame(this);
   }
 
-  private Move getPlayerMove(int tourDeQui) {
+  private SearchResult getPlayerSearch(int tourDeQui) {
     Player player = players[tourDeQui];
 
     // Si il n'y a pas de temps, demande simplement le coup
@@ -164,12 +165,12 @@ public final class Game extends Thread {
     // Sinon, demande le coup et si il n'y a plus de temps, interrompt la recherche
     Time maxTime = timers[tourDeQui].timeRemaining();
     ExecutorService executor = Executors.newCachedThreadPool();
-    Callable<Move> task = () -> { return player.play(board.copy()); };
-    Future<Move> future = executor.submit(task);
+    Callable<SearchResult> task = () -> { return player.play(board.copy()); };
+    Future<SearchResult> future = executor.submit(task);
 
     try {
       // Si la recherche retourne un coup à temps, le renvoie
-      Move result = future.get(maxTime.millis(), TimeUnit.MILLISECONDS);
+      SearchResult result = future.get(maxTime.millis(), TimeUnit.MILLISECONDS);
       return result;
     }
     catch (TimeoutException ex) {
@@ -184,6 +185,7 @@ public final class Game extends Thread {
     }
     finally {
       future.cancel(true);
+      executor.shutdownNow();
     }
   }
 

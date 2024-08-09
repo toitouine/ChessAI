@@ -1,12 +1,13 @@
 /////////////////////////////////////////////////////////////////
 
+// Board
 // Représente une position à un moment donné dans la partie (pièces, informations,
 // suivi du matériel...). Contient également les informations nécessaires pour
 // passer à la position précédente en annulant un coup.
 // Note : pour annuler un coup, il est nécessaire de l'annuler dans la position
 // obtenue juste après avoir joué le coup
 
-// Les bitboards sont beaucoup utilisés :
+// La position des pièces est stockée sous forme de bitboards :
 // Chaque case est représentée par un indice (de 0 à 63,  8 * ligne + colonne)
 // La case en haut à gauche correspond à 0, et celle en bas à droite à 63.
 // Chaque bit du bitboard correspond à une case (le bit n correspond à la case

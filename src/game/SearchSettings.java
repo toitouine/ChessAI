@@ -1,3 +1,11 @@
+/////////////////////////////////////////////////////////////////
+
+// SearchSettings
+// Représente les paramètres pour la recherche de coup. Pour
+// plus de détails, voir la description dans IA.java
+
+/////////////////////////////////////////////////////////////////
+
 public class SearchSettings {
   public final Search type;
   public final Time time;
