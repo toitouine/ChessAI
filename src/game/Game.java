@@ -104,11 +104,16 @@ public final class Game extends Thread {
     }
 
     while (!ended()) {
+      int tourDeQui = board.tourDeQui;
+
       // Si la partie a été mise en pause, on attend le redémarrage
       if (paused.get()) {
         synchronized (paused) {
           try {
+            timers[Player.White].pause(false);
+            timers[Player.Black].pause(false);
             while (paused.get()) paused.wait();
+            timers[tourDeQui].resume();
           } catch (Exception e) {
             Debug.error("Erreur pendant la pause de " + this);
           }
@@ -116,8 +121,6 @@ public final class Game extends Thread {
       }
 
       // Le joueur joue le coup (on ignore la suite si la partie a été interrompue)
-      int tourDeQui = board.tourDeQui;
-
       if (gameState != null && gameState.gameEnded()) break;
       SearchResult result = getPlayerSearch(tourDeQui);
       Move move = (result != null) ? result.move() : null;
