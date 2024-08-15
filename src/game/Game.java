@@ -44,7 +44,6 @@ public final class Game extends Thread {
   private final int number;
   private static int totalGames = 0;
 
-  private final ArrayList<Long> hashHistory = new ArrayList<Long>();
   private final ArrayList<Move> moveHistory = new ArrayList<Move>();
   private int demicoups = 0; // Nombre de demi-coups au total
   private int fiftymoves = 0; // Demi-coups depuis la dernière capture/poussée de pion
@@ -93,7 +92,6 @@ public final class Game extends Thread {
 
     // Prépare la partie et annone le début
     board.loadFEN(startFEN);
-    hashHistory.add(board.zobrist);
     announce();
     paused.set(false);
     if (isDisplayed) displayer.onGameStart();
@@ -138,13 +136,12 @@ public final class Game extends Thread {
       timers[1-tourDeQui].resume();
 
       // Actualise les infos
-      hashHistory.add(board.zobrist);
       moveHistory.add(move);
       demicoups++;
       if (isCapture || board.grid(move.endSquare()).type == Piece.Pion) fiftymoves = 0;
       else fiftymoves++;
 
-      if (isDisplayed) displayer.onMovePlayed(move);
+      if (isDisplayed) displayer.onMovePlayed(result, tourDeQui);
 
       // Vérifie si c'est la fin de la partie ou non
       gameState = getGameState();
@@ -213,7 +210,7 @@ public final class Game extends Thread {
     }
 
     // Répétition
-    if (Collections.frequency(hashHistory, board.zobrist) >= 3) {
+    if (board.isRepeated(board.zobrist)) {
       return GameState.Repetition();
     }
 
@@ -260,14 +257,16 @@ public final class Game extends Thread {
   public void terminate() {
     if (gameState == null || !gameState.gameEnded()) {
       gameState = GameState.Interrupted();
-      if (isDisplayed) displayer.stopAskMove();
+      players[Player.White].cancelSearch();
+      players[Player.Black].cancelSearch();
     }
   }
 
   private void resign(int color) {
     if (gameState == null || !gameState.gameEnded()) {
       gameState = GameState.Resign(color);
-      if (isDisplayed) displayer.stopAskMove();
+      players[Player.White].cancelSearch();
+      players[Player.Black].cancelSearch();
     }
   }
 

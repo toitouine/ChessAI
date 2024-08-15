@@ -19,6 +19,11 @@ CLASSES = \
 ./src/ui/pscene/controllers/widgets/*.java \
 ./src/game/*.java \
 ./src/game/players/*.java \
+./src/game/players/antoine/*.java \
+./src/game/players/lemaire/*.java \
+./src/game/players/lesmoutons/*.java \
+./src/game/players/loic/*.java \
+./src/game/players/stockfish/*.java \
 ./src/game/hacker/*.java \
 ./src/game/board/*.java \
 ./src/game/board/move/*.java

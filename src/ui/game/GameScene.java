@@ -1,5 +1,7 @@
 import processing.core.PSurface;
 import processing.core.PImage;
+import java.util.Optional;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -16,6 +18,8 @@ public class GameScene extends Scene<MainApplet> implements GameDisplayer {
   private BoardDisplay boardDisplay;
   private Player white, black;
   private PImage whiteImage, blackImage;
+  private ArrayList<Optional<Float>> evals = new ArrayList<Optional<Float>>();
+  private ArrayList<Optional<Integer>> depths = new ArrayList<Optional<Integer>>();
 
   private EndOverlay endOverlay;
 
@@ -24,6 +28,10 @@ public class GameScene extends Scene<MainApplet> implements GameDisplayer {
   public GameScene(MainApplet sketch, int width, int height) {
     super(sketch, width, height);
     endOverlay = new EndOverlay(this, offsetX + 4*w, offsetY + 4*w, 8*w, 8*w);
+    evals.add(Optional.empty());
+    evals.add(Optional.empty());
+    depths.add(Optional.empty());
+    depths.add(Optional.empty());
   }
 
   @Override
@@ -42,8 +50,11 @@ public class GameScene extends Scene<MainApplet> implements GameDisplayer {
   }
 
   @Override
-  public void onMovePlayed(Move move) {
+  public void onMovePlayed(SearchResult result, int color) {
+    Move move = result.move();
     boardDisplay.setMoveMark(move.startSquare(), move.endSquare());
+    evals.set(color, result.eval());
+    depths.set(color, result.depth());
   }
 
   @Override
@@ -81,8 +92,8 @@ public class GameScene extends Scene<MainApplet> implements GameDisplayer {
     int pov = (isWhitePov.get() ? Player.White : Player.Black);
 
     float space = 0.19f * w;
-    float whiteImgY, whiteTextY, whiteEvalY, whiteTimeY;
-    float blackImgY, blackTextY, blackEvalY, blackTimeY;
+    float whiteImgY, whiteTextY, whiteEvalY, whiteTimeY, whiteDepthY;
+    float blackImgY, blackTextY, blackEvalY, blackTimeY, blackDepthY;
     if (pov == Player.White) {
       whiteImgY = height - (space + w/2);
       blackImgY = offsetY + w/2;
@@ -90,6 +101,8 @@ public class GameScene extends Scene<MainApplet> implements GameDisplayer {
       blackTextY = offsetY + w + space;
       whiteEvalY = height - (space*3.5f + 82*w/70);
       blackEvalY = offsetY + space*2.5f + 82*w/70;
+      whiteDepthY = whiteEvalY - 1.75f*space;
+      blackDepthY = blackEvalY + 1.75f*space;
       whiteTimeY = offsetY + 4*w + 0.39f*w;
       blackTimeY = offsetY + 4*w - 0.39f*w;
     } else {
@@ -99,6 +112,8 @@ public class GameScene extends Scene<MainApplet> implements GameDisplayer {
       blackTextY = height - (space*2 + w);
       whiteEvalY = offsetY + space*2.5f + 82*w/70;
       blackEvalY = height - (space*3.5f + 82*w/70);
+      whiteDepthY = whiteEvalY + 1.75f*space;
+      blackDepthY = blackEvalY - 1.75f*space;
       whiteTimeY = offsetY + 4*w - 0.39f*w;
       blackTimeY = offsetY + 4*w + 0.39f*w;
     }
@@ -112,8 +127,14 @@ public class GameScene extends Scene<MainApplet> implements GameDisplayer {
     sketch.image(blackImage, offsetX/2, blackImgY, w, w);
     sketch.text(white.pseudo() + " (" + white.elo() + ")", offsetX/2, whiteTextY);
     sketch.text(black.pseudo() + " (" + black.elo() + ")", offsetX/2, blackTextY);
-    if (white.isBot()) sketch.text("Eval : 1,294", offsetX/2, whiteEvalY);
-    if (black.isBot()) sketch.text("Eval : MAT EN 1", offsetX/2, blackEvalY);
+    Optional<Float> wEval = evals.get(Player.White);
+    Optional<Float> bEval = evals.get(Player.Black);
+    Optional<Integer> wDepth = depths.get(Player.White);
+    Optional<Integer> bDepth = depths.get(Player.Black);
+    if (wEval.isPresent()) sketch.text("Eval : " + wEval.get()/100f, offsetX/2, whiteEvalY);
+    if (bEval.isPresent()) sketch.text("Eval : " + bEval.get()/100f, offsetX/2, blackEvalY);
+    if (wDepth.isPresent()) sketch.text("Profondeur : " + wDepth.get(), offsetX/2, whiteDepthY);
+    if (bDepth.isPresent()) sketch.text("Profondeur : " + bDepth.get(), offsetX/2, blackDepthY);
 
     if (game.useTime && !game.ended()) {
       sketch.rectMode(sketch.CENTER);
@@ -164,6 +185,11 @@ public class GameScene extends Scene<MainApplet> implements GameDisplayer {
     controllers.clear();
     clearOverlay(endOverlay);
     boardDisplay = new BoardDisplay(sketch, offsetX + 4*w, offsetY + 4*w, w);
+    if (!isWhitePov.get()) flipPov();
+    evals.set(0, Optional.empty());
+    evals.set(1, Optional.empty());
+    depths.set(0, Optional.empty());
+    depths.set(1, Optional.empty());
 
     white = game.getWhite();
     black = game.getBlack();

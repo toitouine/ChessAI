@@ -52,7 +52,6 @@ public final class Config {
     static final int totalPhase = 2*phases[1] + 4*(phases[2] + phases[3] + phases[4]) + 16*phases[5];
 
     // Valeurs des pièces
-    static final float[] maireValues = {100000, 900, 500, 330, 320, 100};
-    static final float[] loicValues = {100000, 900, 150, 300, 300, 100};
+    static final float[] maireValues = {0, 900, 500, 330, 320, 100};
   }
 }

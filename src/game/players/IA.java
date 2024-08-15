@@ -21,16 +21,21 @@
 
 // Une recherche doit pouvoir être arrêtée le plus vite possible lorsque
 // la méthode stopSearch() est appelée. Cette méthode doit être implémentée
-// par la classe-fille. La recherche renvoie un objet SearchResult avec le
-// coup et éventuellement des informations complémentaires, comme l'évaluation
-// par exemple. Cette évaluation permet aussi d'indiquer qu'un mat a été
-// trouvé si elle vaut SearchResult.mateValue. Pour cette raison, il est
-// recommandé que l'évaluation des ias ne monte pas jusqu'à cette valeur
-// si il n'y a pas mat, pour éviter une fausse communication de l'évaluation
-// calculée.
+// par la classe-fille.
+
+// La recherche renvoie un objet SearchResult avec le coup et éventuellement
+// des informations complémentaires, comme l'évaluation par exemple. Cette
+// évaluation doit être positive si les blancs ont l'avantage, et négative
+// si les noirs ont l'avantage. Elle est comptée en centipions. L'évaluation
+// permet aussi d'indiquer qu'un mat a été trouvé si elle vaut la valeur
+// SearchResult.mateValue. Pour cette raison, il est recommandé que l'évaluation
+// des ias ne monte pas jusqu'à cette valeur si il n'y a pas mat, pour éviter une
+// fausse communication de l'évaluation calculée. Voir Evaluation.java pour plus
+// de précision sur les évaluations de position.
 
 /////////////////////////////////////////////////////////////////
 
+import java.util.ArrayList;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.Future;
@@ -112,5 +117,23 @@ abstract public class IA extends Player {
   public void cancelSearch() {
     searchCancelled = true;
     stopSearch();
+  }
+
+  // Trie les coups par ordre décroissant en fonction des scores (tri par insertion)
+  // Note : moves et scores doivent avoir la même taille
+  protected void sortMoves(ArrayList<Move> moves, float[] scores) {
+    for (int i = 1; i < moves.size(); ++i) {
+      float key = scores[i];
+      Move moveKey = moves.get(i);
+      int j = i - 1;
+
+      while (j >= 0 && scores[j] < key) {
+        scores[j+1] = scores[j];
+        moves.set(j+1, moves.get(j));
+        j -= 1;
+      }
+      scores[j + 1] = key;
+      moves.set(j+1, moveKey);
+    }
   }
 }

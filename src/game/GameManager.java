@@ -49,6 +49,16 @@ public final class GameManager {
     return addGame(game);
   }
 
+  public static synchronized Game addGame(Player p1, Player p2, String startFEN) {
+    Game game = new Game(p1, p2, startFEN);
+    return addGame(game);
+  }
+
+  public static synchronized Game addGame(Player p1, Player p2) {
+    Game game = new Game(p1, p2);
+    return addGame(game);
+  }
+
   public static synchronized void endGame(Game game) {
     // Si la partie est encore en cours, demande l'arrêt
     // La partie sera donc retirée de la liste quand elle sera finie

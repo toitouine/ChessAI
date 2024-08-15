@@ -1,19 +1,19 @@
 import java.util.ArrayList;
 
-public class Loic extends IA {
+public class Stockfish extends IA {
 
-  public Loic(SearchSettings settings) {
+  public Stockfish(SearchSettings settings) {
     super(settings);
   }
 
   @Override
   public String elo() {
-    return "-142";
+    return "284";
   }
 
   @Override
   public String victoryTitle() {
-    return "Tu t'es fait mater !";
+    return "??!?";
   }
 
   @Override

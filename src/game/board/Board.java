@@ -13,11 +13,17 @@
 // Chaque bit du bitboard correspond à une case (le bit n correspond à la case
 // d'indice n) : le bit est à 1 si il y a une pièce, et 0 sinon
 
+// La méthode setEvaluation() permet d'attacher une évaluation au plateau
+// pour actualiser material et positional, qui indiquent respectivement
+// les évaluations matérielles et positionnelles.
+// (voir Evaluation.java pour plus d'informations sur l'évaluation)
+
 /////////////////////////////////////////////////////////////////
 
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.ArrayDeque;
+import java.util.HashMap;
 import java.io.Serializable;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectOutputStream;
@@ -49,8 +55,16 @@ public final class Board implements Serializable {
   // Sauvegardes pour pouvoir annuler correctement un coup
   public Deque<MoveSave> saves = new ArrayDeque<MoveSave>();
 
+  // Positions rencontrées pour détecter les répétitions
+  public HashMap<Long, Integer> hashHistory = new HashMap<Long, Integer>();
+
   // Générateur de coups
   private MoveGenerator generator;
+
+  // Évaluation pour actualiser des données d'évaluation de la position
+  private Evaluation evaluation = new DefaultEvaluation();
+  private float[] material = new float[2];
+  private float[] positional = new float[2];
 
   public Board(String fen) {
     colorBitboard = new long[2];
@@ -67,14 +81,15 @@ public final class Board implements Serializable {
 
   // Génère la position à partir d'une fen
   public void loadFEN(String f) {
-    FenManager.loadPosition(this, f);
-    zobrist = Zobrist.calculateHash(this);
-    phase = calculatePhase();
+    Fen.loadPosition(this, f);
+    calculatePhase();
+    calculateAndPushHash();
+    updateEvaluation();
   }
 
   // Génère la fen de la position
   public String generateFEN() {
-    return FenManager.generateFEN(this);
+    return Fen.generateFEN(this);
   }
 
   // Renvoie la pièce située sur une case
@@ -85,6 +100,13 @@ public final class Board implements Serializable {
   // Renvoie la pièce située sur une case (ligne puis colonne)
   public Piece grid(int i, int j) {
     return grid[8*i + j];
+  }
+
+  public void setEvaluation(Evaluation eval) {
+    if (eval != null) {
+      evaluation = eval;
+      updateEvaluation();
+    }
   }
 
   // Renvoie la case du roi color
@@ -129,6 +151,18 @@ public final class Board implements Serializable {
     return pieceBitboard[type + Piece.Number*color];
   }
 
+  public boolean isRepeated(long hash) {
+    return hashHistory.containsKey(hash) && hashHistory.get(hash) >= 3;
+  }
+
+  public float materialScore(int color) {
+    return material[color];
+  }
+
+  public float positionalScore(int color) {
+    return positional[color];
+  }
+
   /////////////////////////////////////////////////////////////////
 
   // Ajoute la pièce sur le plateau et recalcule les données de la position (lent)
@@ -149,12 +183,14 @@ public final class Board implements Serializable {
     grid[square] = p;
     colorBitboard[p.color] |= 1L << square;
     pieceBitboard[index] |= 1L << square;
-    phase = calculatePhase();
-    zobrist = Zobrist.calculateHash(this);
+    calculatePhase();
+    calculateAndPushHash();
+    material[p.color] += evaluation.materialValue(p);
+    positional[p.color] += evaluation.positionalValue(p, square);
   }
 
   // Calcule le coefficient indiquant la phase de jeu (0 pour l'ouverture et 1 pour la finale)
-  public float calculatePhase() {
+  public void calculatePhase() {
     phase = 0;
 
     for (int i = 0; i < Piece.Number; i++) {
@@ -163,7 +199,12 @@ public final class Board implements Serializable {
     }
 
     phase = Math.clamp(1 - (phase / Config.Piece.totalPhase), 0, 1);
-    return phase;
+  }
+
+  // Calcule le hash de la position et actualise le compteur de hash
+  public void calculateAndPushHash() {
+    zobrist = Zobrist.calculateHash(this);
+    hashHistory.merge(zobrist, 1, Integer::sum);
   }
 
   // Vide complètement le plateau et réinitialise les variables
@@ -184,8 +225,23 @@ public final class Board implements Serializable {
 
     tourDeQui = Player.White;
     castleState = 0;
-    phase = calculatePhase();
-    zobrist = Zobrist.calculateHash(this);
+    hashHistory.clear();
+    calculatePhase();
+    calculateAndPushHash();
+    updateEvaluation();
+  }
+
+  private void updateEvaluation() {
+    material[Player.White] = material[Player.Black] = 0;
+    positional[Player.White] = positional[Player.Black] = 0;
+
+    for (int i = 0; i  < 64; i++) {
+      if (grid[i] != null) {
+        Piece p = grid[i];
+        material[p.color] += evaluation.materialValue(p);
+        positional[p.color] += evaluation.positionalValue(p, i);
+      }
+    }
   }
 
   /////////////////////////////////////////////////////////////////
@@ -201,12 +257,17 @@ public final class Board implements Serializable {
     int opponent = 1 - color;
 
     // Sauvegarde les données de la position dans l'historique
-    MoveSave save = new MoveSave(capture, castleState, phase, zobrist, enPassantSquare[opponent]);
+    MoveSave save = new MoveSave(capture, castleState,
+                                 phase, zobrist,
+                                 enPassantSquare[opponent],
+                                 material, positional);
     saves.push(save);
 
     // Déplacement de la pièce
     grid[endSquare] = grid[startSquare];
     grid[startSquare] = null;
+    positional[color] -= evaluation.positionalValue(piece, startSquare);
+    positional[color] += evaluation.positionalValue(piece, endSquare);
     if (piece.type == Piece.Roi) rois[color] = endSquare;
 
     // Actualise la clé de la position (XOR out et in)
@@ -223,6 +284,8 @@ public final class Board implements Serializable {
       zobrist ^= Zobrist.piecesOnSquare[capture.index][endSquare]; // XOR out la capture
       colorBitboard[opponent] ^= (1L << endSquare);
       pieceBitboard[capture.index] ^= (1L << endSquare);
+      material[opponent] -= evaluation.materialValue(capture);
+      positional[opponent] -= evaluation.positionalValue(capture, endSquare);
     }
 
     // Enlève tous les droits du roque du hash
@@ -236,9 +299,14 @@ public final class Board implements Serializable {
     // Capture le pion pris en passant
     else if (flag == MoveFlag.EnPassant) {
       int capturedSquare = endSquare + (color == Player.White ? 8 : -8);
+      Piece capturedPawn = grid[capturedSquare];
       colorBitboard[opponent] ^= (1L << capturedSquare);
-      pieceBitboard[grid[capturedSquare].index] ^= (1L << capturedSquare);
+      pieceBitboard[capturedPawn.index] ^= (1L << capturedSquare);
       grid[capturedSquare] = null;
+      // XOR out la capture du pion en passant
+      zobrist ^= Zobrist.piecesOnSquare[capturedPawn.index][capturedSquare];
+      material[opponent] -= evaluation.materialValue(capturedPawn);
+      positional[opponent] -= evaluation.positionalValue(capturedPawn, capturedSquare);
     }
 
     // Roques (déplace la tour au bon endroit)
@@ -250,6 +318,8 @@ public final class Board implements Serializable {
       zobrist ^= Zobrist.piecesOnSquare[tour.index][startSquare+1];
       pieceBitboard[tour.index] ^= (1L << (startSquare+3) | 1L << (startSquare+1));
       colorBitboard[color] ^= (1L << (startSquare+3) | 1L << (startSquare+1));
+      positional[color] -= evaluation.positionalValue(Piece.Tour, color, startSquare+3);
+      positional[color] += evaluation.positionalValue(Piece.Tour, color, startSquare+1);
     }
     else if (flag == MoveFlag.GrandRoque) {
       Piece tour = grid[startSquare-4];
@@ -259,6 +329,8 @@ public final class Board implements Serializable {
       zobrist ^= Zobrist.piecesOnSquare[tour.index][startSquare-1];
       pieceBitboard[tour.index] ^= (1L << (startSquare-4) | 1L << (startSquare-1));
       colorBitboard[color] ^= (1L << (startSquare-4) | 1L << (startSquare-1));
+      positional[color] -= evaluation.positionalValue(Piece.Tour, color, startSquare-4);
+      positional[color] += evaluation.positionalValue(Piece.Tour, color, startSquare-1);
     }
 
     // Promotion
@@ -271,6 +343,10 @@ public final class Board implements Serializable {
       // (colorBitboard n'est pas modifié car il y a toujours une pièce sur la case de promotion)
       pieceBitboard[piece.index] ^= (1L << endSquare);
       pieceBitboard[promotion.index] |= (1L << endSquare);
+      material[color] -= evaluation.materialValue(Piece.Pion);
+      material[color] += evaluation.materialValue(promotion);
+      positional[color] -= evaluation.positionalValue(Piece.Pion, color, endSquare);
+      positional[color] += evaluation.positionalValue(promotion, endSquare);
     }
 
     // Actualise les droits au roque
@@ -297,8 +373,11 @@ public final class Board implements Serializable {
 
     // Actualise la phase du jeu si nécessaire
     if (capture != null || flag == MoveFlag.EnPassant || MoveFlag.isPromotion(flag)) {
-      phase = calculatePhase();
+      calculatePhase();
     }
+
+    // Ajoute la position au compteur de positions
+    hashHistory.merge(zobrist, 1, Integer::sum);
   }
 
   // Annule un coup sur le plateau
@@ -315,10 +394,15 @@ public final class Board implements Serializable {
 
     // Retour des sauvegardes
     MoveSave save = saves.pop();
+    hashHistory.put(zobrist, hashHistory.get(zobrist) - 1);
     phase = save.phase;
     zobrist = save.zobrist;
     castleState = save.castleState;
     enPassantSquare[opponent] = save.opponentEnPassant;
+    material[Player.White] = save.material[Player.White];
+    material[Player.Black] = save.material[Player.Black];
+    positional[Player.White] = save.positional[Player.White];
+    positional[Player.Black] = save.positional[Player.Black];
     Piece capture = save.capture;
 
     // Déplacement de la pièce
@@ -408,10 +492,14 @@ public final class Board implements Serializable {
     return moves;
   }
 
-  // Renvoie si le joueur dont c'est le tour est en échec ou non
-  public boolean inCheck() {
+  // Renvoie si le joueur est en échec ou non
+  public boolean inCheck(int color) {
     long occupancy = colorBitboard[Player.White] | colorBitboard[Player.Black];
-    return generator.isAttacked(rois[tourDeQui], occupancy);
+    return generator.isAttacked(rois[color], occupancy);
+  }
+
+  public boolean inCheck() {
+    return inCheck(tourDeQui);
   }
 
   /////////////////////////////////////////////////////////////////

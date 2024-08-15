@@ -1,32 +1,33 @@
 import java.util.ArrayList;
 
-public class Stockfish extends IA {
+public class Antoine extends IA {
 
-  public Stockfish(SearchSettings settings) {
+  public Antoine(SearchSettings settings) {
     super(settings);
   }
 
   @Override
   public String elo() {
-    return "284";
+    return "100";
   }
 
   @Override
   public String victoryTitle() {
-    return "??!?";
+    return "Tu t'es fait mater !";
+  }
+
+  @Override
+  public SearchResult play(Board board) {
+    return search(board, 0);
   }
 
   @Override
   public SearchResult search(Board board, int depth) {
     ArrayList<Move> moves = board.getLegalMoves();
     int index = (int)(Math.random() * moves.size());
-
-    try {
-      Thread.sleep((int) (1000*(Math.pow(1.12, depth) - 1)));
-    } catch (Exception e) {
-    }
-    
-    return new SearchResult(moves.get(index));
+    Move move = moves.get(index);
+    float eval = (int)((Math.random()-0.5f)*1000f);
+    return new SearchResult(move, eval, (int)(Math.random()*6));
   }
 
   @Override

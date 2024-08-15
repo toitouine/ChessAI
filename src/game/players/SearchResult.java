@@ -2,6 +2,7 @@ import java.util.Optional;
 
 public final class SearchResult {
   public static final float mateValue = 100000f;
+  public static final float infinity = 999999999f;
 
   private final Move move;
   private final Optional<Float> eval;

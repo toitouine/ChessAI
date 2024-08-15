@@ -1,8 +1,5 @@
-public final class FenManager {
-
-  Board board;
-
-  private FenManager() { }
+public final class Fen {
+  private Fen() { }
 
   private static int getIndexFromCode(char c) {
     for (int i = 0; i < Config.Piece.codes.length; i++) {
