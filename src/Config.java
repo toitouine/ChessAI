@@ -50,8 +50,5 @@ public final class Config {
 
     // Représente la somme des phases de chaque pièce au début de la partie
     static final int totalPhase = 2*phases[1] + 4*(phases[2] + phases[3] + phases[4]) + 16*phases[5];
-
-    // Valeurs des pièces
-    static final float[] maireValues = {0, 900, 500, 330, 320, 100};
   }
 }
