@@ -3,7 +3,7 @@ import java.util.ArrayList;
 public class Loic extends IA {
 
   private final Evaluation evaluation;
-  private final float infinity = SearchResult.infinity;
+  private final float Infinity = SearchResult.Infinity;
   private Move bestMoveFound = null;
   private boolean stopSearch = false;
 
@@ -28,7 +28,7 @@ public class Loic extends IA {
     bestMoveFound = null;
     stopSearch = false;
     board.setEvaluation(evaluation);
-    float eval = minimax(board, depth, 0, -infinity, infinity);
+    float eval = minimax(board, depth, 0, -Infinity, Infinity);
     eval *= (color == Player.White ? 1 : -1);
     return new SearchResult(bestMoveFound, eval, depth);
   }
@@ -70,11 +70,11 @@ public class Loic extends IA {
     if (moves.size() == 0) {
       if (board.inCheck()) {
         // Loic aime les mats, mais préfère les pats
-        float mateScore = SearchResult.mateValue/2 - plyFromRoot;
+        float mateScore = SearchResult.MateValue/2 - plyFromRoot;
         return -mateScore;
       } else {
         // Loic adore les pats, et veut à tout prix pater son adversaire
-        float patScore = SearchResult.mateValue - plyFromRoot;
+        float patScore = SearchResult.MateValue - plyFromRoot;
         return -patScore;
       }
     }
@@ -84,7 +84,7 @@ public class Loic extends IA {
      return 0;
     }
 
-    float bestEval = -infinity;
+    float bestEval = -Infinity;
 
     // Implémentation du négamax alpha-bêta
     for (Move move : moves) {

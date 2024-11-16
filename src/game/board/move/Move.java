@@ -51,7 +51,7 @@ public class Move {
   }
 
   public boolean equals(Move otherMove) {
-    return value == otherMove.value;
+    return otherMove != null && value == otherMove.value;
   }
 
   public String notation() {

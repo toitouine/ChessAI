@@ -480,6 +480,14 @@ public final class Board implements Serializable {
     return getLegalMoves(tourDeQui);
   }
 
+  public ArrayList<Move> getLegalCaptures(int color) {
+    return generator.getLegalCaptures(color);
+  }
+
+  public ArrayList<Move> getLegalCaptures() {
+    return getLegalCaptures(tourDeQui);
+  }
+
   public ArrayList<Move> getSquareMoves(int square) {
     ArrayList<Move> allMoves = getLegalMoves(Player.White);
     allMoves.addAll(getLegalMoves(Player.Black));

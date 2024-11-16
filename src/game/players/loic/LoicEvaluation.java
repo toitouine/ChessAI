@@ -1,4 +1,7 @@
 public class LoicEvaluation implements Evaluation {
+  private final float[] material = {0, 900, 150, 300, 300, 100};
+  private final float[][] positional = new float[Piece.Number][64];
+
   public LoicEvaluation() {
     initPositional();
   }
@@ -18,9 +21,6 @@ public class LoicEvaluation implements Evaluation {
   public float playerScore(Board board, int color) {
     return board.materialScore(color) + 2*board.positionalScore(color);
   }
-
-  private final float[] material = {0, 900, 150, 300, 300, 100};
-  private final float[][] positional = new float[Piece.Number][64];
 
   private void initPositional() {
     float[] kingPos = {-30, -40, -40, -50, -50, -40, -40, -30,

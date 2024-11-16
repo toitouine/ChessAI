@@ -27,7 +27,7 @@ public class Stockfish extends IA {
     bestMoveFound = null;
     stopSearch = false;
     board.setEvaluation(evaluation);
-    float eval = minimax(board, depth, 0, -SearchResult.infinity, SearchResult.infinity);
+    float eval = minimax(board, depth, 0, -SearchResult.Infinity, SearchResult.Infinity);
     eval *= (color == Player.White ? 1 : -1);
     return new SearchResult(bestMoveFound, eval, depth);
   }
@@ -48,7 +48,7 @@ public class Stockfish extends IA {
 
     if (moves.size() == 0) {
       if (board.inCheck()) {
-        float mateScore = SearchResult.mateValue - plyFromRoot;
+        float mateScore = SearchResult.MateValue - plyFromRoot;
         return -mateScore;
       } else {
         return 0;
@@ -59,7 +59,7 @@ public class Stockfish extends IA {
      return 0;
     }
 
-    float worstEval = SearchResult.infinity;
+    float worstEval = SearchResult.Infinity;
 
     for (Move move : moves) {
       board.make(move);

@@ -78,6 +78,14 @@ public class MoveGenerator implements Serializable {
   /////////////////////////////////////////////////////////////////
 
   public ArrayList<Move> getLegalMoves(int c) {
+    return generateLegalMoves(c, false);
+  }
+
+  public ArrayList<Move> getLegalCaptures(int c) {
+    return generateLegalMoves(c, true);
+  }
+
+  public ArrayList<Move> generateLegalMoves(int c, boolean onlyCaptures) {
     ArrayList<Move> moves = new ArrayList<Move>(45);
     color = c;
     opponent = 1-c;
@@ -94,7 +102,7 @@ public class MoveGenerator implements Serializable {
     kingInCheck = checkers != 0;
 
     // Génère les coups du roi
-    addKingMoves(moves);
+    addKingMoves(moves, onlyCaptures);
 
     // En cas de double échec, seul le roi peut bouger
     if (Long.bitCount(checkers) >= 2) return moves;
@@ -105,6 +113,9 @@ public class MoveGenerator implements Serializable {
     } else {
       legalSquares = -1L;
     }
+
+    // Si on ne génère que les captures, n'autorise que les cases avec des adversaires
+    if (onlyCaptures) legalSquares &= allOpponentPieces;
 
     // Récupère les pièces clouées
     pinned = getPinnedPieces();
@@ -278,12 +289,14 @@ public class MoveGenerator implements Serializable {
   }
 
   // Coups du roi
-  private void addKingMoves(ArrayList<Move> moves) {
+  private void addKingMoves(ArrayList<Move> moves, boolean onlyCaptures) {
     // Récupère les attaques du roi
     long attacks = MGData.kingAttacks(kingSquare);
 
     // Convertit le bitboard des attaques en coups
     long endSquares = attacks & ~allFriendlyPieces;
+    if (onlyCaptures) endSquares &= allOpponentPieces;
+
     while (endSquares != 0) {
       int square = Long.numberOfTrailingZeros(endSquares);
 
@@ -294,7 +307,7 @@ public class MoveGenerator implements Serializable {
     }
 
     // Ajoute éventuellement les roques
-    if (kingInCheck) return;
+    if (kingInCheck || onlyCaptures) return;
 
     if (board.petitRoque(color)) {
       if ((MGData.petitRoquePiecesMask[color] & occupied) == 0) {

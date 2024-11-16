@@ -28,7 +28,7 @@
 // évaluation doit être positive si les blancs ont l'avantage, et négative
 // si les noirs ont l'avantage. Elle est comptée en centipions. L'évaluation
 // permet aussi d'indiquer qu'un mat a été trouvé si elle vaut la valeur
-// SearchResult.mateValue. Pour cette raison, il est recommandé que l'évaluation
+// SearchResult.MateValue. Pour cette raison, il est recommandé que l'évaluation
 // des ias ne monte pas jusqu'à cette valeur si il n'y a pas mat, pour éviter une
 // fausse communication de l'évaluation calculée. Voir Evaluation.java pour plus
 // de précision sur les évaluations de position.
@@ -49,6 +49,7 @@ abstract public class IA extends Player {
 
   public abstract SearchResult search(Board board, int depth);
   protected abstract void stopSearch();
+  protected void endOfMove() {}
 
   protected IA(SearchSettings settings) {
     super(settings);
@@ -62,19 +63,21 @@ abstract public class IA extends Player {
   @Override
   public SearchResult play(Board board) {
     searchCancelled = false;
+    SearchResult result = null;
 
     if (settings.type == Search.Fixed) {
-      return search(board, settings.depth);
+      result = search(board, settings.depth);
     }
 
-    if (settings.type == Search.Iterative) {
-      return iterativeDeepening(board, settings.time);
+    else if (settings.type == Search.Iterative) {
+      result = iterativeDeepening(board, settings.time);
     }
 
-    return null;
+    endOfMove();
+    return result;
   }
 
-  private SearchResult iterativeDeepening(Board board, Time searchTime) {
+  protected SearchResult iterativeDeepening(Board board, Time searchTime) {
     searchCancelled = false;
     int depth = 1;
     Time startSearchTime = Time.now();

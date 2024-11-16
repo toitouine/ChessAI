@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.text.DecimalFormat;
 
 public class GameScene extends Scene<MainApplet> implements GameDisplayer {
 
@@ -20,6 +21,7 @@ public class GameScene extends Scene<MainApplet> implements GameDisplayer {
   private PImage whiteImage, blackImage;
   private ArrayList<Optional<Float>> evals = new ArrayList<Optional<Float>>();
   private ArrayList<Optional<Integer>> depths = new ArrayList<Optional<Integer>>();
+  private final DecimalFormat df = new DecimalFormat("0.00");
 
   private EndOverlay endOverlay;
 
@@ -131,8 +133,8 @@ public class GameScene extends Scene<MainApplet> implements GameDisplayer {
     Optional<Float> bEval = evals.get(Player.Black);
     Optional<Integer> wDepth = depths.get(Player.White);
     Optional<Integer> bDepth = depths.get(Player.Black);
-    if (wEval.isPresent()) sketch.text("Eval : " + wEval.get()/100f, offsetX/2, whiteEvalY);
-    if (bEval.isPresent()) sketch.text("Eval : " + bEval.get()/100f, offsetX/2, blackEvalY);
+    if (wEval.isPresent()) sketch.text("Eval : " + df.format(wEval.get()/100f), offsetX/2, whiteEvalY);
+    if (bEval.isPresent()) sketch.text("Eval : " + df.format(bEval.get()/100f), offsetX/2, blackEvalY);
     if (wDepth.isPresent()) sketch.text("Profondeur : " + wDepth.get(), offsetX/2, whiteDepthY);
     if (bDepth.isPresent()) sketch.text("Profondeur : " + bDepth.get(), offsetX/2, blackDepthY);
 
